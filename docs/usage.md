@@ -8,11 +8,28 @@ The screen has three sections :
 * Taxonomy List
 
 This gives a list of the previous entered Custom Taxonomies which is empty when first used.
-![Empty Taxonomy List](./CustTaxEmpty.png)
+
+![Empty Taxonomy List](../images/CustTaxEmpty.png)
 
 The taxonomy label name will be used to identify the taxonly used in the plugin screens.
 
-A number of significant properties of each taxonomy is shown in this list. 
+A number of significant properties of each taxonomy is shown in this list.
+
+Once there are some taxonomies, the list will be populated.
+
+![Taxonomy Listing](../images/AddTaxList.png)
+
+Some options will appear in the space under each taxonomy label when the pointer is over the area.
+
+
+| Option | Processing |
+| ---------------- | ----------------------------------------- |
+|Modify          | Modify data - in a new panel [Add/Modify Taxonomy](./addmod.md)
+|Export PHP      | Creates a download file containing the parameters |
+|Delete          | Delete the parameter entries; leaves the term data |
+|Flush & Delete  | Deletes the parameter entries and the term data |
+
+See the [example page](./example.md) for an example download file.
 
 * Add a new taxonomy
 
@@ -28,7 +45,7 @@ This section allows the entire Custom Taxonomy definitions to be exported and/or
 
 The data is held in JSON format and is incompatible with data stored by the plugin [Simple Taxonomy]{https://github.com/herewithme/simple-taxonomy/}
 
-![Empty Taxonomy List](./CustTaxEmpty.png)
+![Export/Import](../images/ExportImport.png)
 
 ## Tools
 
@@ -38,7 +55,7 @@ When the plugin is activated, two tools are available in the administration scre
 
 This allows you to extract the existing terms held against a taxonomy and prepare them for importing into another taxonomy.
 
-See [Terms migrate]{./TermsMig.md} for more information.
+See [Terms migrate](./TermsMig.md) for more information.
 
 Its output is a pre-filled Terms import screen - allowing for further editing before the actual import.
 
@@ -46,4 +63,4 @@ Its output is a pre-filled Terms import screen - allowing for further editing be
 
 This allows you to import new terms into a taxonomy.
 
-See [Terms import]{./TermsImp.md} for more information.
+See [Terms import](./TermsImp.md) for more information.
