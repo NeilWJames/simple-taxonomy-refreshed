@@ -20,7 +20,7 @@ This part of the form is available to add a new Custom Taxonomy at any time. It 
 
 When modifying an existing taxonomy a panel with only this section is displayed with the existing data held.
 
-See [Add/Modify Taxonomy](./addmod.md) for further information.
+See [Add/Modify Taxonomy](./addmod.md) for further information of the process.
 
 * Export/Import
 
