@@ -28,6 +28,8 @@ For those wishing to code, a number of filters are available. These are summaris
 
 For full info go the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2) page.
 
+Also see the [example page](./example.md) to see usage of the update screen and the tools. 
+
 ## Frequently Asked Questions
 
 ### Does this plugin handle custom fields, roles or post types?
