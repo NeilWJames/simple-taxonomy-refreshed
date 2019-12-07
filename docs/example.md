@@ -1,19 +1,21 @@
-# Add/Modify a Taxonomy
+# Example Plug-in Usage
 
 ## Creation of a Taxonomy
 
 We will add a taxonomy called test_hier with a few minimal attributes on the various panels:
 
-<u>Main Options</u>
-Name: test_hier
-Type: Hierarchical
-Attached to: Posts
-Display terms on: Content
+<u>Main Options</u>       
+
+	Name: test_hier
+	Type: Hierarchical
+	Attached to: Posts
+	Display terms on: Content
 
 <u>Labels</u>
-Name: Test Terms
-Menu Name: Test Terms
-Singular Name: Test Term
+
+	Name: Test Terms
+	Menu Name: Test Terms
+	Singular Name: Test Term
 
 And then added using the *Add Taxonomy* button.
 

@@ -49,7 +49,7 @@ The data is held in JSON format and is incompatible with data stored by the plug
 
 ## Tools
 
-When the plugin is activated, two tools are available in the administration screen under *Tools*. They are *Terms migrate* and *Terms import*.
+When the plugin is activated, two tools are available in the administration menu under *Tools*. They are *Terms migrate* and *Terms import*.
 
 ### Terms migrate
 
