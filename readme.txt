@@ -24,7 +24,7 @@ This plugin allows you to add taxonomy just by giving them a name and some optio
 
 You can also export the Taxonomy definition to include it directly in your own code.
 
-For full information go the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2) page.
+For full information go the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2/blob/master/docs/readme.md) page.
 
 == Frequently Asked Questions ==
 
