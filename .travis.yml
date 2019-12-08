@@ -27,6 +27,7 @@ matrix:
 
 before_script:
   - mkdir -p build/logs
+  - chmod +x script/*
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
   - script/setup
   - |
@@ -63,6 +64,3 @@ script:
     if [[ "$WP_TRAVISCI" == "phpcs" ]] ; then
       script/cibuild-phpcs
     fi
-
-after_success:
-  - script/coveralls
