@@ -260,20 +260,21 @@ class SimpleTaxonomy_Admin_Conversion {
 
 						<tbody id="the-list" class="list:taxonomies">
 							<?php
-							$i = 0;
-							foreach ( get_taxonomies(
 
 								/*
 								 *
 								 * @param array array default list of taxonomy selection criteria
 								 */
-								apply_filters(
-									'staxo_taxo_import_convert_select',
-									array(
-										'show_ui' => true,
-										'public'  => true,
-									)
-								),
+							$selectors = apply_filters(
+								'staxo_taxo_import_convert_select',
+								array(
+									'show_ui' => true,
+									'public'  => true,
+								)
+							);
+							$i = 0;
+							foreach ( get_taxonomies(
+								$selectors,
 								'object'
 							) as $taxonomy ) {
 								?>
