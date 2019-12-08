@@ -17,7 +17,7 @@
 	<filter>
 	  <whitelist addUncoveredFilesFromWhitelist="true" processUncoveredFilesFromWhitelist="false">
 	    <directory suffix=".php">./includes</directory>
-	    <file>./simple-taxonomy-2.php</file>
+	    <file>./class_test_staxo_2.php</file>
 	  </whitelist>
 	</filter>
 </phpunit>

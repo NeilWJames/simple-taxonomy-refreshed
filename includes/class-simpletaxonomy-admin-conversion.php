@@ -260,7 +260,6 @@ class SimpleTaxonomy_Admin_Conversion {
 
 						<tbody id="the-list" class="list:taxonomies">
 							<?php
-
 								/*
 								 *
 								 * @param array array default list of taxonomy selection criteria
@@ -272,7 +271,7 @@ class SimpleTaxonomy_Admin_Conversion {
 									'public'  => true,
 								)
 							);
-							$i = 0;
+							$i         = 0;
 							foreach ( get_taxonomies(
 								$selectors,
 								'object'
