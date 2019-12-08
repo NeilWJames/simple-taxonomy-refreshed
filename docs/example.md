@@ -142,3 +142,35 @@ Now create a post using the block editor with some Terms added:
 When viewing the Post, we can see the terms that have been added:
 
 ![View Post](../images/ShowPostTerms.png)
+
+## Migrating Terms
+
+We can use the Terms migrator to copy the terms from one taxonomy to another.
+
+We will copy the ones just entered into Categories. After clicking on the *Copy From* of the Test Terms taxonomy.
+
+![Terms migrate screen](../images/MigScreen1.png)
+
+Various options have been made unavailable as a result of that initial click. Click on the *To* option of the Category taxonomy. 
+
+![Terms migrate screen](../images/MigScreen2.png)
+
+Now that both options have been selected, the Copy Terms button has become available.
+
+![Terms migrate screen](../images/MigScreen3.png)
+
+Once this is clicked, it is now possible to click the *Copy Terms* button. This extracts the *all* the terms making them available in the Terms import form.
+
+### Importing the Terms
+
+![Terms migrate screen](../images/MigScreen4.png)
+
+When the data is entered, they can be seen within the Categories Terms
+
+![Terms migrate screen](../images/MigScreen5.png)
+
+As the data has been entered hierarchically, this is how it is loaded.
+
+![Terms migrate screen](../images/MigScreen6.png)
+
+
