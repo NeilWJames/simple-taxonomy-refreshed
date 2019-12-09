@@ -13,18 +13,14 @@ class Test_STaxo_2 extends WP_UnitTestCase {
 
 	/**
 	 * Setup Initial Testing Environment
+	 *
+	 * Called for every defined test
+	 *
 	 */
 	public function setUp() {
 
 		wp_cache_flush();
 
-	}
-
-	/**
-	 * If called via rewrites tests.
-	 */
-	public function __construct() {
-		$this->setUp();
 	}
 
 	/**

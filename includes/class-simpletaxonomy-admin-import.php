@@ -102,7 +102,7 @@ class SimpleTaxonomy_Admin_Import {
 						$added += (int) $term[1];
 						$termlines++;
 					}
-				}				
+				}
 			}
 
 			if ( 0 === $termlines ) {
