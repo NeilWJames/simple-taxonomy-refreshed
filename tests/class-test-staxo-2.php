@@ -15,7 +15,6 @@ class Test_STaxo_2 extends WP_UnitTestCase {
 	 * Setup Initial Testing Environment
 	 *
 	 * Called for every defined test
-	 *
 	 */
 	public function setUp() {
 
