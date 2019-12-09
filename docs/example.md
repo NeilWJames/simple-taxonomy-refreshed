@@ -165,6 +165,16 @@ Once this is clicked, it is now possible to click the *Copy Terms* button. This 
 
 ![Terms migrate screen](../images/MigScreen4.png)
 
+When the Import button is clicked, the data will be loaded. Confirmation messages are output.
+
+![Initial messages](../images/Imp1st.png)
+
+These show the number of non-blank lines processed, together with the number of terms created (if any).
+
+As the same screen (and data) is returned to the user, clicking the Import button again shows a slightly different message. The same number of items have been processed, but nothing has added. 
+
+![Update messages](../images/Imp2nd.png)
+
 When the data is entered, they can be seen within the Categories Terms
 
 ![Terms migrate screen](../images/MigScreen5.png)

@@ -63,7 +63,7 @@ class SimpleTaxonomy_Admin_Import {
 			$terms = explode( "\n", str_replace( array( "\r\n", "\n\r", "\r" ), "\n", $_POST['import_content'] ) );
 			// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
 			$hierarchy = ( isset( $_POST['hierarchy'] ) ? sanitize_text_field( wp_unslash( $_POST['hierarchy'] ) ) : 'no' );
-			$j         = 0;
+			$termlines = 0;
 			$added     = 0;
 			foreach ( $terms as $term_line ) {
 				if ( 'no' !== $hierarchy ) {
@@ -75,10 +75,13 @@ class SimpleTaxonomy_Admin_Import {
 
 					$level = strlen( $term_line ) - strlen( ltrim( $term_line, $sep ) );
 
-					if ( 0 === $j ) {
-						$term        = self::create_term( $taxonomy, $term_line, 0 );
-						$prev_ids[0] = $term[0];
-						$added      += (int) $term[1];
+					if ( 0 === $termlines ) {
+						$term = self::create_term( $taxonomy, $term_line, 0 );
+						if ( false !== $term ) {
+							$prev_ids[0] = $term[0];
+							$added      += (int) $term[1];
+							$termlines++;
+						}
 					} else {
 						if ( ( $level - 1 ) < 0 ) {
 							$parent = 0;
@@ -86,31 +89,35 @@ class SimpleTaxonomy_Admin_Import {
 							$parent = $prev_ids[ $level - 1 ];
 						}
 
-						$term               = self::create_term( $taxonomy, $term_line, $parent );
-						$prev_ids[ $level ] = $term[0];
-						$added             += (int) $term[1];
+						$term = self::create_term( $taxonomy, $term_line, $parent );
+						if ( false !== $term ) {
+							$prev_ids[ $level ] = $term[0];
+							$added             += (int) $term[1];
+							$termlines++;
+						}
 					}
 				} else {
-					$term   = self::create_term( $taxonomy, $term_line, 0 );
-					$added += (int) $term[1];
-				}
-
-				$j++;
+					$term = self::create_term( $taxonomy, $term_line, 0 );
+					if ( false !== $term ) {
+						$added += (int) $term[1];
+						$termlines++;
+					}
+				}				
 			}
 
-			if ( 0 === $j ) {
+			if ( 0 === $termlines ) {
 				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html__( 'Done, but you have not imported any term.', 'simple-taxonomy-2' ), 'error' );
-			} elseif ( 1 === $j ) {
-				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html__( 'Done, 1 term processed successfully !', 'simple-taxonomy-2' ), 'updated' );
+			} elseif ( 1 === $termlines ) {
+				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html__( 'Done, 1 term lines processed successfully !', 'simple-taxonomy-2' ), 'updated' );
 			} else {
-				// translators: %d is the count of terms that were successfully imported.
-				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html( sprintf( __( 'Done, %d terms processed successfully !', 'simple-taxonomy-2' ), $j ) ), 'updated' );
+				// translators: %d is the count of terms that were successfully processed.
+				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html( sprintf( __( 'Done, %d term lines processed successfully !', 'simple-taxonomy-2' ), $termlines ) ), 'updated' );
 			}
 			if ( 1 === $added ) {
-				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html( sprintf( __( '1 new term was created.', 'simple-taxonomy-2' ), $j ) ), 'updated' );
+				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html__( '1 new term was created.', 'simple-taxonomy-2' ), 'updated' );
 			} elseif ( $added > 1 ) {
-				// translators: %d is the count of terms that were added.
-				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html( sprintf( __( ' %d new terms were created.', 'simple-taxonomy-2' ), $j ) ), 'updated' );
+				// translators: %d is the count of terms that were created.
+				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html( sprintf( __( ' %d new terms were created.', 'simple-taxonomy-2' ), $added ) ), 'updated' );
 			}
 		}
 	}
