@@ -1,6 +1,6 @@
 # Simple Taxonomy 2
 
-WordPress provides reasonably simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code.
+WordPress provides a simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code.
 
 * Contributors: 
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, hierarchical, termmeta, meta, term meta, term conversion, conversion
@@ -12,7 +12,7 @@ WordPress provides reasonably simple custom taxonomy, this plugin makes it even 
 
 ## Description
 
-WordPress provides reasonably simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code.
+WordPress provides a simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code.
 
 Add support for hierarchical taxonomies or simple tags.
 
@@ -23,6 +23,8 @@ This plugin was converted and developed on WordPress 5.1/5.2/5.3 and PHP 7.2.
 This plugin allows you to add taxonomy just by giving them a name and some options in the backend. It creates the taxonomy for you, takes care of the URL rewrites, provides a widget you can use to display a "taxonomy cloud" or a list of the terms, and it allows you to show the taxonomy contents at the end of posts and excerpts as well.
 
 You can also create terms easily by typing them into a list; or by copying them from an existing taxonomy.
+
+Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/)
 
 For those wishing to code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
 
@@ -41,9 +43,11 @@ There are a number of very good plugins for these functions.
 
 ## Migration process
 
-Functionally replaces [Simple Taxonomy](https://github.com/herewithme/simple-taxonomy) so if this is installed, deactivate it first.
+Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) so if this is installed, deactivate it first.
 
 If you are an existing user of the Simple Taxonomy plugin as this plugin uses the Simple Taxonomy options data to save setting it up again completely, before starting you can use the Simple Taxonomy export function to first take a copy of your data.
+
+You should review the parameters to ensure that your needs are correctly set.
 
 **NB.** The Export/Import functions are not compatible between plugins. So you need to use the file with its version of the plugin.
 

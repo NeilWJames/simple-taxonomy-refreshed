@@ -11,7 +11,7 @@ This gives a list of the previous entered Custom Taxonomies which is empty when 
 
 ![Empty Taxonomy List](../images/CustTaxEmpty.png)
 
-The taxonomy label name will be used to identify the taxonly used in the plugin screens.
+The taxonomy label name will be used to identify the taxonomy used in the plugin screens.
 
 A number of significant properties of each taxonomy is shown in this list.
 
@@ -19,7 +19,7 @@ Once there are some taxonomies, the list will be populated.
 
 ![Taxonomy Listing](../images/AddTaxList.png)
 
-Some options will appear in the space under each taxonomy label when the pointer is over the area.
+Some functional options will appear in the space under each taxonomy label when the pointer is over the area.
 
 
 | Option | Processing |

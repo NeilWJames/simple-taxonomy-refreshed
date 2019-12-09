@@ -123,7 +123,7 @@ You can also use it as a single page reference, which is why the last line comme
 ## Adding Terms to the taxonomy
 Since show_in_menu is set to true, it is available as a sub-menu from the Posts menu.
 
-However, we'll add some via the [Terms Import](./TermImp.md) functionality.
+However, we'll add some via the Terms import]functionality.
 
 Enter the four terms for the taxonomy using leading tabs to denote the levels:
 
