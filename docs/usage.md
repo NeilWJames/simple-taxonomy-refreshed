@@ -67,6 +67,7 @@ If both of these are Hierarchical, then the terms will be output in a format to 
 
 See [example page](./example.md) to see a worked example of its usage.
 
+Whilst it is called migrate, only copy has been implemented at this time. The standard terms deletion functionality WordPress can be used if required.
 
 ### Terms import
 
