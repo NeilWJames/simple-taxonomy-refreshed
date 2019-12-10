@@ -260,7 +260,6 @@ class SimpleTaxonomy_Admin_Conversion {
 
 						<tbody id="the-list" class="list:taxonomies">
 							<?php
-
 							/*
 							 * Modifies the default taxonomy selectors (for displaying which taxonomy to import/convert).
 							 *
