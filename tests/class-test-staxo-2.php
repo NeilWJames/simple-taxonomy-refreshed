@@ -18,6 +18,8 @@ class Test_STaxo_2 extends WP_UnitTestCase {
 	 */
 	public function setUp() {
 
+		parent::setUp();
+		
 		wp_cache_flush();
 
 	}
