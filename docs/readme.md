@@ -2,7 +2,7 @@
 
 WordPress provides a simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code.
 
-* Contributors: 
+* Contributors: nwjames
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, hierarchical, termmeta, meta, term meta, term conversion, conversion
 * Requires at least: 4.8
 * Stable tag: 1.0
@@ -18,13 +18,11 @@ Add support for hierarchical taxonomies or simple tags.
 
 Supports adding taxonomy to any object registered on your installation.
 
-This plugin was converted and developed on WordPress 5.1/5.2/5.3 and PHP 7.2.
+This plugin is a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1/2/3 and PHP 7.2.
 
 This plugin allows you to add taxonomy just by giving them a name and some options in the backend. It creates the taxonomy for you, takes care of the URL rewrites, provides a widget you can use to display a "taxonomy cloud" or a list of the terms, and it allows you to show the taxonomy contents at the end of posts and excerpts as well.
 
 You can also create terms easily by typing them into a list; or by copying them from an existing taxonomy.
-
-Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/)
 
 For those wishing to code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
 

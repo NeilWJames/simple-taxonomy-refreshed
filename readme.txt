@@ -1,5 +1,6 @@
 === Simple Taxonomy 2 ===
 
+Contributors: nwjames
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, hierarchical, termmeta, meta, term meta, term conversion, conversion
 Requires at least: 4.8
 Tested up to: 5.3
@@ -18,15 +19,13 @@ Add support for taxonomies both hierarchical or simple tags.
 
 Supports adding taxonomy to any objects registered on your installation.
 
-This plugin was converted from simple-taxonomy and developed on WordPress 5.1/2/3 and PHP 7.2.
+This plugin is a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1/2/3 and PHP 7.2.
 
 This plugin allows you to add taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you, takes care of the URL rewrites, provides a widget you can use to display a "taxonomy cloud" or a list of all the stuff in there, and it allows you to show the taxonomy contents at the end of posts and excerpts as well.
 
 You can also export the Taxonomy definition to include it directly in your own code.
 
 You can also create terms easily by typing them into a list; or by copying them from an existing taxonomy.
-
-Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/)
 
 For full information go the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2/blob/master/docs/readme.md) page.
 
@@ -38,16 +37,16 @@ No, it is focused only on registering Taxonomies.
 
 == Installation ==
 
-Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy) so if this is installed, deactivate it first.
+Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) so if this is installed, deactivate it first.
 
 1. Download, unzip and upload to your WordPress plugins directory
 2. Activate the plugin within you WordPress Administration Backend
-3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2blob/master/docs/addmod.md) page.
+3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2/blob/master/docs/addmod.md) page.
 
 == Changelog ==
 
 * Version 1.0 :
-	* Initial version with source taken from [Simple Taxonomy](https://github.com/herewithme/simple-taxonomy)
+	* Initial version using source taken from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy) by Amaury Balmer.
 	* Passed though WP Coding Standards.
 	* Incorporates additional fixes made there but not released
 	* Now uses json for export/import, so existing exports cannot be used
@@ -60,9 +59,9 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	
 == Migration Notice ==
 
-= 1.0 =
+= 1.0.0 =
 
-It is a drop-in replacement for [Simple Taxonomy](https://github.com/herewithme/simple-taxonomy) - using the same options table entry.
+It is a drop-in replacement for [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy) - using the same options table entry.
 
 If this is installed, deactivate it first.
 
