@@ -365,7 +365,7 @@ class SimpleTaxonomy_Admin {
 									<td><?php echo esc_html( self::get_true_false( $_t['hierarchical'] ) ); ?></td>
 									<td><?php echo esc_html( self::get_true_false( $_t['rewrite'] ) ); ?></td>
 									<td><?php echo esc_html( self::get_true_false( $_t['public'] ) ); ?></td>
-									<td><?php echo esc_html( self::get_true_false( $_t['show_in_rest'] ) ); ?></td>
+									<td><?php echo esc_html( self::get_true_false( ( isset( $_t['show_in_rest'] ) ? $_t['show_in_rest'] : 1 ) ) ); ?></td>
 								</tr>
 								<?php
 							endforeach;
@@ -435,6 +435,23 @@ class SimpleTaxonomy_Admin {
 		// Get default values if need.
 		$taxonomy = wp_parse_args( SimpleTaxonomy_Client::prepare_args( $taxonomy ), $taxonomy );
 
+		// Migration case - Not updated yet.
+		if ( ! array_key_exists( 'st_slug', $taxonomy ) ) {
+			$taxonomy['st_slug']                  = '';
+			$taxonomy['st_with_front']            = 1;
+			$taxonomy['st_hierarchical']          = 1;
+			$taxonomy['st_ep_mask']               = '';
+			$taxonomy['st_update_count_callback'] = '';
+			$taxonomy['st_meta_box_cb']           = '';
+			$taxonomy['st_meta_box_sanitize_cb']  = '';
+			$taxonomy['st_args']                  = '';
+		}
+
+		// Label menu_name needs to exist to edit (it is removed for registering).
+		if ( ! array_key_exists( 'menu_name', $taxonomy['labels'] ) ) {
+			$taxonomy['labels']['menu_name'] = '';
+		}
+
 		// If rewrite is true, then set st_ variables from rewrite (may have passed through a filter).
 		if ( $taxonomy['rewrite'] ) {
 			$taxonomy['st_slug']         = $taxonomy['rewrite']['slug'];
@@ -451,7 +468,7 @@ class SimpleTaxonomy_Admin {
 			$taxonomy['meta_box_cb'] = ( 'false' === $taxonomy['st_meta_box_cb'] ? false : $taxonomy['st_meta_box_cb'] );
 		}
 		if ( ! isset( $taxonomy['meta_box_sanitize_cb'] ) && isset( $taxonomy['st_meta_box_sanitize_cb'] ) ) {
-			$taxonomy['st_meta_box_sanitize_cb'] = $taxonomy['st_meta_box_sanitize_cb'];
+			$taxonomy['meta_box_sanitize_cb'] = $taxonomy['st_meta_box_sanitize_cb'];
 		}
 		if ( ! isset( $taxonomy['args'] ) && isset( $taxonomy['st_args'] ) ) {
 			$taxonomy['args'] = $taxonomy['st_args'];

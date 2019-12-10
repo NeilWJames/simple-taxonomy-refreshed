@@ -260,10 +260,12 @@ class SimpleTaxonomy_Admin_Conversion {
 
 						<tbody id="the-list" class="list:taxonomies">
 							<?php
-								/*
-								 *
-								 * @param array array default list of taxonomy selection criteria
-								 */
+
+							/*
+							 * Modifies the default taxonomy selectors (for displaying which taxonomy to import/convert).
+							 *
+							 * @param array array default list of taxonomy selection criteria
+							 */
 							$selectors = apply_filters(
 								'staxo_taxo_import_convert_select',
 								array(

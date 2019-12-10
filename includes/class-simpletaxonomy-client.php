@@ -86,6 +86,9 @@ class SimpleTaxonomy_Client {
 		foreach ( $taxonomy['labels'] as $k => $v ) {
 			$taxonomy['labels'][ $k ] = stripslashes( $v );
 		}
+		if ( '' === $taxonomy['labels']['menu_name'] ) {
+			unset( $taxonomy['labels']['menu_name'] );
+		}
 
 		// Output Fields.
 		$tax_out = array(
@@ -214,7 +217,9 @@ class SimpleTaxonomy_Client {
 				if ( ! empty( $terms ) ) {
 					$output .= "\t" . '<div class="taxonomy-' . $taxonomy['name'] . '">' . $terms . "</div>\n";
 				} else {
-					$output .= "\t" . '<!-- Taxonomy : ' . $taxonomy['name'] . ' : ' . $taxonomy['labels']['not_found'] . ' -->' . "\n";
+						// On migration and before update, no value in 'not_found'.
+						$notfound = ( isset( $taxonomy['labels']['not_found'] ) ? $taxonomy['labels']['not_found'] : 'No Terms found' );
+					$output      .= "\t" . '<!-- Taxonomy : ' . $taxonomy['name'] . ' : ' . $notfound . ' -->' . "\n";
 				}
 			}
 		}
@@ -299,7 +304,7 @@ class SimpleTaxonomy_Client {
 	private static function get_taxonomy_default_labels() {
 		return array(
 			'name'                       => _x( 'Post Terms', 'taxonomy general name', 'simple-taxonomy-2' ),
-			'menu_name'                  => _x( 'Post Terms', 'taxonomy general name', 'simple-taxonomy-2' ),
+			'menu_name'                  => '',
 			'singular_name'              => _x( 'Post Term', 'taxonomy singular name', 'simple-taxonomy-2' ),
 			'search_items'               => __( 'Search Terms', 'simple-taxonomy-2' ),
 			'popular_items'              => __( 'Popular Terms', 'simple-taxonomy-2' ),

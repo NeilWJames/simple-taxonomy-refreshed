@@ -70,4 +70,6 @@ However since this plugin uses the Simple Taxonomy options data to save setting 
 
 **NB.** The Export/Import functions are not compatible between plugins. So you need to use the file made with its version of the plugin.
 
-To have the Taxonomy metaboxes available in the Block Editor, ensure that "show_in_rest" has been set to true. (When updating the parameters, this is set as default. It needs to be saved though.)
+To have the Taxonomy metaboxes available in the Block Editor, ensure that "show_in_rest" has been set to true.
+
+When migrating and before an update to the existing parameters, the taxonomy will treat "show_in_rest" as true. If not wanted, set to false.
