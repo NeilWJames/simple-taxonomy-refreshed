@@ -2,16 +2,16 @@
 /**
  * Simple Taxonomy Admin Import class file.
  *
- * @package simple-taxonomy-2
+ * @package simple-taxonomy-refreshed
  * @author Neil James
  */
 
 /**
  * Simple Taxonomy Admin Import class.
  *
- * @package simple-taxonomy-2
+ * @package simple-taxonomy-refreshed
  */
-class SimpleTaxonomy_Admin_Import {
+class SimpleTaxonomyRefreshed_Admin_Import {
 	const IMPORT_SLUG = 'staxo-import';
 
 	/**
@@ -33,7 +33,7 @@ class SimpleTaxonomy_Admin_Import {
 	 * Add settings menu page.
 	 **/
 	public static function add_menu() {
-		add_management_page( __( 'Terms import', 'simple-taxonomy-2' ), __( 'Terms import', 'simple-taxonomy-2' ), 'manage_options', self::IMPORT_SLUG, array( __CLASS__, 'page_importation' ) );
+		add_management_page( __( 'Terms import', 'simple-taxonomy-refreshed' ), __( 'Terms import', 'simple-taxonomy-refreshed' ), 'manage_options', self::IMPORT_SLUG, array( __CLASS__, 'page_importation' ) );
 	}
 
 	/**
@@ -49,12 +49,12 @@ class SimpleTaxonomy_Admin_Import {
 			// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
 			$taxonomy = sanitize_text_field( wp_unslash( $_POST['taxonomy'] ) );
 			if ( ! taxonomy_exists( $taxonomy ) ) {
-				wp_die( esc_html__( 'Cheating ? You are trying to import terms on a taxonomy that does not exist.', 'simple-taxonomy-2' ) );
+				wp_die( esc_html__( 'Cheating ? You are trying to import terms on a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
 			}
 
 			$taxonomy_obj = get_taxonomy( $taxonomy );
 			if ( ! ( current_user_can( 'manage_options' ) || current_user_can( $taxonomy_obj->cap->manage_terms ) ) ) {
-				wp_die( esc_html__( 'Cheating ? You do not have the necessary permissions.', 'simple-taxonomy-2' ) );
+				wp_die( esc_html__( 'Cheating ? You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ) );
 			}
 
 			$prev_ids = array();
@@ -106,18 +106,18 @@ class SimpleTaxonomy_Admin_Import {
 			}
 
 			if ( 0 === $termlines ) {
-				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html__( 'Done, but you have not imported any term.', 'simple-taxonomy-2' ), 'error' );
+				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Done, but you have not imported any term.', 'simple-taxonomy-refreshed' ), 'error' );
 			} elseif ( 1 === $termlines ) {
-				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html__( 'Done, 1 term lines processed successfully !', 'simple-taxonomy-2' ), 'updated' );
+				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Done, 1 term lines processed successfully !', 'simple-taxonomy-refreshed' ), 'updated' );
 			} else {
 				// translators: %d is the count of terms that were successfully processed.
-				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html( sprintf( __( 'Done, %d term lines processed successfully !', 'simple-taxonomy-2' ), $termlines ) ), 'updated' );
+				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html( sprintf( __( 'Done, %d term lines processed successfully !', 'simple-taxonomy-refreshed' ), $termlines ) ), 'updated' );
 			}
 			if ( 1 === $added ) {
-				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html__( '1 new term was created.', 'simple-taxonomy-2' ), 'updated' );
+				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( '1 new term was created.', 'simple-taxonomy-refreshed' ), 'updated' );
 			} elseif ( $added > 1 ) {
 				// translators: %d is the count of terms that were created.
-				add_settings_error( 'simple-taxonomy-2', 'terms_updated', esc_html( sprintf( __( ' %d new terms were created.', 'simple-taxonomy-2' ), $added ) ), 'updated' );
+				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html( sprintf( __( ' %d new terms were created.', 'simple-taxonomy-refreshed' ), $added ) ), 'updated' );
 			}
 		}
 	}
@@ -171,17 +171,17 @@ class SimpleTaxonomy_Admin_Import {
 		}
 		// phpcs:enable  WordPress.Security.NonceVerification.Missing
 
-		settings_errors( 'simple-taxonomy-2' );
+		settings_errors( 'simple-taxonomy-refreshed' );
 		?>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Terms import', 'simple-taxonomy-2' ); ?></h2>
-			<p><?php esc_html_e( 'Import a list of words as terms of a taxonomy using this page.', 'simple-taxonomy-2' ); ?></p>
-			<ul style="margin-left:1em; list-style-type:disc"><li><?php esc_html_e( 'Enter one term per line.', 'simple-taxonomy-2' ); ?></li>
-			<li><?php esc_html_e( 'Existing terms can be entered using either the Term Name or its Slug.', 'simple-taxonomy-2' ); ?></li>
-			<li><?php esc_html_e( 'Use leading spaces or tabs to denote the level of the Term in the hierarchy relative to its parent.', 'simple-taxonomy-2' ); ?></li></ul>
+			<h2><?php esc_html_e( 'Terms import', 'simple-taxonomy-refreshed' ); ?></h2>
+			<p><?php esc_html_e( 'Import a list of words as terms of a taxonomy using this page.', 'simple-taxonomy-refreshed' ); ?></p>
+			<ul style="margin-left:1em; list-style-type:disc"><li><?php esc_html_e( 'Enter one term per line.', 'simple-taxonomy-refreshed' ); ?></li>
+			<li><?php esc_html_e( 'Existing terms can be entered using either the Term Name or its Slug.', 'simple-taxonomy-refreshed' ); ?></li>
+			<li><?php esc_html_e( 'Use leading spaces or tabs to denote the level of the Term in the hierarchy relative to its parent.', 'simple-taxonomy-refreshed' ); ?></li></ul>
 			<form action="<?php echo esc_url( admin_url( 'tools.php?page=' . self::IMPORT_SLUG ) ); ?>" method="post">
 				<p>
-					<label for="taxonomy"><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-2' ); ?></label>
+					<label for="taxonomy"><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></label>
 					<br />
 					<select name="taxonomy" id="taxonomy">
 						<?php
@@ -213,17 +213,17 @@ class SimpleTaxonomy_Admin_Import {
 				$hierarchy = sanitize_text_field( wp_unslash( $_POST['hierarchy'] ) );
 				?>
 				<p>
-					<label for="hierarchy"><?php esc_html_e( 'Import uses a hierarchy ?', 'simple-taxonomy-2' ); ?></label>
+					<label for="hierarchy"><?php esc_html_e( 'Import uses a hierarchy ?', 'simple-taxonomy-refreshed' ); ?></label>
 					<br />
 					<select name="hierarchy" id="hierarchy">
-						<option value="no" <?php selected( $hierarchy, 'no' ); ?>><?php esc_html_e( 'No hierarchy', 'simple-taxonomy-2' ); ?></option>
-						<option value="space" <?php selected( $hierarchy, 'space' ); ?>><?php esc_html_e( 'Hierarchy uses space for levels', 'simple-taxonomy-2' ); ?></option>
-						<option value="tab" <?php selected( $hierarchy, 'tab' ); ?>><?php esc_html_e( 'Hierarchy uses tab for levels', 'simple-taxonomy-2' ); ?></option>
+						<option value="no" <?php selected( $hierarchy, 'no' ); ?>><?php esc_html_e( 'No hierarchy', 'simple-taxonomy-refreshed' ); ?></option>
+						<option value="space" <?php selected( $hierarchy, 'space' ); ?>><?php esc_html_e( 'Hierarchy uses space for levels', 'simple-taxonomy-refreshed' ); ?></option>
+						<option value="tab" <?php selected( $hierarchy, 'tab' ); ?>><?php esc_html_e( 'Hierarchy uses tab for levels', 'simple-taxonomy-refreshed' ); ?></option>
 					</select>
 				</p>
 
 				<p>
-					<label for="import_content"><?php esc_html_e( 'Terms to import', 'simple-taxonomy-2' ); ?></label>
+					<label for="import_content"><?php esc_html_e( 'Terms to import', 'simple-taxonomy-refreshed' ); ?></label>
 					<br />
 					<?php
 					// Output the tag with PHP to avoid these leading format tabs being output in the textarea.
@@ -236,7 +236,7 @@ class SimpleTaxonomy_Admin_Import {
 
 				<p class="submit">
 					<?php wp_nonce_field( 'staxo-import' ); ?>
-					<input type="submit" name="staxo-import" value="<?php esc_html_e( 'Import these words as terms', 'simple-taxonomy-2' ); ?>" class="button-primary" />
+					<input type="submit" name="staxo-import" value="<?php esc_html_e( 'Import these words as terms', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" />
 				</p>
 			</form>
 		</div>
