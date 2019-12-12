@@ -45,10 +45,10 @@ add_action( 'plugins_loaded', 'init_staxo_refreshed' );
  */
 function init_staxo_refreshed() {
 	// Detect if Simple Taxonomy is active. If found then bail with message.
-	if ( in_array( 'simple-taxonomy/simple-taxonomy.php', apply_filters('active_plugins', get_option('active_plugins') ), true ) ) {
-		//plugin is activated.
+	if ( in_array( 'simple-taxonomy/simple-taxonomy.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ), true ) ) {
+		// plugin when activated.
 		alert_if_original_active();
-		add_action('wp_head', 'alert_if_original_active');
+		add_action( 'wp_head', 'alert_if_original_active' );
 		return;
 	}
 
