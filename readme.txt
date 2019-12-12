@@ -1,4 +1,4 @@
-=== Simple Taxonomy 2 ===
+=== Simple Taxonomy Refreshed ===
 
 Contributors: nwjames
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, hierarchical, termmeta, meta, term meta, term conversion, conversion
@@ -27,7 +27,7 @@ You can also export the Taxonomy definition to include it directly in your own c
 
 You can also create terms easily by typing them into a list; or by copying them from an existing taxonomy.
 
-For full information go the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2/blob/master/docs/readme.md) page.
+For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
 
 == Frequently Asked Questions ==
 
@@ -41,7 +41,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 1. Download, unzip and upload to your WordPress plugins directory
 2. Activate the plugin within you WordPress Administration Backend
-3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2/blob/master/docs/addmod.md) page.
+3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
 

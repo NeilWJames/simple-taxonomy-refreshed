@@ -2,16 +2,16 @@
 /**
  * Simple Taxonomy Client class file.
  *
- * @package simple-taxonomy-2
+ * @package simple-taxonomy-refreshed
  * @author Neil James
  */
 
 /**
  * Simple Taxonomy Client class.
  *
- * @package simple-taxonomy-2
+ * @package simple-taxonomy-refreshed
  */
-class SimpleTaxonomy_Client {
+class SimpleTaxonomyRefreshed_Client {
 
 	/**
 	 * Constructor
@@ -34,7 +34,7 @@ class SimpleTaxonomy_Client {
 	 * @return void
 	 */
 	public static function init() {
-		$options = get_option( STAXO_OPTION );
+		$options = get_option( OPTION_STAXO );
 		if ( is_array( $options['taxonomies'] ) ) {
 			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
 				register_taxonomy( $taxonomy['name'], $taxonomy['objects'], self::prepare_args( $taxonomy ) );
@@ -202,7 +202,7 @@ class SimpleTaxonomy_Client {
 
 		$output = '';
 
-		$options = get_option( STAXO_OPTION );
+		$options = get_option( OPTION_STAXO );
 		foreach ( (array) $options['taxonomies'] as $taxonomy ) {
 
 			$filter = false;
@@ -303,29 +303,29 @@ class SimpleTaxonomy_Client {
 	 */
 	private static function get_taxonomy_default_labels() {
 		return array(
-			'name'                       => _x( 'Post Terms', 'taxonomy general name', 'simple-taxonomy-2' ),
+			'name'                       => _x( 'Post Terms', 'taxonomy general name', 'simple-taxonomy-refreshed' ),
 			'menu_name'                  => '',
-			'singular_name'              => _x( 'Post Term', 'taxonomy singular name', 'simple-taxonomy-2' ),
-			'search_items'               => __( 'Search Terms', 'simple-taxonomy-2' ),
-			'popular_items'              => __( 'Popular Terms', 'simple-taxonomy-2' ),
-			'all_items'                  => __( 'All Terms', 'simple-taxonomy-2' ),
-			'parent_item'                => __( 'Parent Term', 'simple-taxonomy-2' ),
-			'parent_item_colon'          => __( 'Parent Term:', 'simple-taxonomy-2' ),
-			'edit_item'                  => __( 'Edit Term', 'simple-taxonomy-2' ),
-			'view_item'                  => __( 'View Term', 'simple-taxonomy-2' ),
-			'update_item'                => __( 'Update Term', 'simple-taxonomy-2' ),
-			'add_new_item'               => __( 'Add New Term', 'simple-taxonomy-2' ),
-			'new_item_name'              => __( 'New Term Name', 'simple-taxonomy-2' ),
-			'separate_items_with_commas' => __( 'Separate terms with commas', 'simple-taxonomy-2' ),
-			'add_or_remove_items'        => __( 'Add or remove terms', 'simple-taxonomy-2' ),
-			'choose_from_most_used'      => __( 'Choose from the most used terms', 'simple-taxonomy-2' ),
-			'not_found'                  => __( 'No Terms found', 'simple-taxonomy-2' ),
-			'no_terms'                   => __( 'No Terms', 'simple-taxonomy-2' ),
-			'items_list_navigation'      => __( 'Terms list navigation', 'simple-taxonomy-2' ),
-			'items_list'                 => __( 'Terms list', 'simple-taxonomy-2' ),
+			'singular_name'              => _x( 'Post Term', 'taxonomy singular name', 'simple-taxonomy-refreshed' ),
+			'search_items'               => __( 'Search Terms', 'simple-taxonomy-refreshed' ),
+			'popular_items'              => __( 'Popular Terms', 'simple-taxonomy-refreshed' ),
+			'all_items'                  => __( 'All Terms', 'simple-taxonomy-refreshed' ),
+			'parent_item'                => __( 'Parent Term', 'simple-taxonomy-refreshed' ),
+			'parent_item_colon'          => __( 'Parent Term:', 'simple-taxonomy-refreshed' ),
+			'edit_item'                  => __( 'Edit Term', 'simple-taxonomy-refreshed' ),
+			'view_item'                  => __( 'View Term', 'simple-taxonomy-refreshed' ),
+			'update_item'                => __( 'Update Term', 'simple-taxonomy-refreshed' ),
+			'add_new_item'               => __( 'Add New Term', 'simple-taxonomy-refreshed' ),
+			'new_item_name'              => __( 'New Term Name', 'simple-taxonomy-refreshed' ),
+			'separate_items_with_commas' => __( 'Separate terms with commas', 'simple-taxonomy-refreshed' ),
+			'add_or_remove_items'        => __( 'Add or remove terms', 'simple-taxonomy-refreshed' ),
+			'choose_from_most_used'      => __( 'Choose from the most used terms', 'simple-taxonomy-refreshed' ),
+			'not_found'                  => __( 'No Terms found', 'simple-taxonomy-refreshed' ),
+			'no_terms'                   => __( 'No Terms', 'simple-taxonomy-refreshed' ),
+			'items_list_navigation'      => __( 'Terms list navigation', 'simple-taxonomy-refreshed' ),
+			'items_list'                 => __( 'Terms list', 'simple-taxonomy-refreshed' ),
 			/* translators: Tab heading when selecting from the most used terms. */
-			'most_used'                  => _x( 'Most Used', 'simple-taxonomy-2' ),
-			'back_to_items'              => __( '&#8592; Back to Terms', 'simple-taxonomy-2' ),
+			'most_used'                  => _x( 'Most Used', 'simple-taxonomy-refreshed' ),
+			'back_to_items'              => __( '&#8592; Back to Terms', 'simple-taxonomy-refreshed' ),
 		);
 	}
 

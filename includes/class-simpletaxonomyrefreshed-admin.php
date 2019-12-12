@@ -2,7 +2,7 @@
 /**
  * Simple Taxonomy Admin class file.
  *
- * @package simple-taxonomy-2
+ * @package simple-taxonomy-refreshed
  * @author Neil James
  */
 
@@ -13,7 +13,7 @@
  *
  * @author Neil James
  */
-class SimpleTaxonomy_Admin {
+class SimpleTaxonomyRefreshed_Admin {
 	const ADMIN_SLUG = 'simple-taxonomy-settings';
 
 	/**
@@ -37,7 +37,7 @@ class SimpleTaxonomy_Admin {
 	 */
 	final public static function get_instance() {
 		if ( null === self::$instance ) {
-			self::$instance = new SimpleTaxonomy_Admin();
+			self::$instance = new SimpleTaxonomyRefreshed_Admin();
 		}
 		return self::$instance;
 	}
@@ -65,7 +65,7 @@ class SimpleTaxonomy_Admin {
 	 * @return void
 	 */
 	public static function activity_box_end() {
-		$options = get_option( STAXO_OPTION );
+		$options = get_option( OPTION_STAXO );
 		if ( ! is_array( $options['taxonomies'] ) ) {
 			return;
 		}
@@ -101,7 +101,7 @@ class SimpleTaxonomy_Admin {
 	 * @return void
 	 */
 	public static function admin_menu() {
-		add_options_page( __( 'Simple Taxonomy : Custom Taxonomies', 'simple-taxonomy-2' ), __( 'Custom Taxonomies', 'simple-taxonomy-2' ), 'manage_options', self::ADMIN_SLUG, array( __CLASS__, 'page_manage' ) );
+		add_options_page( __( 'Simple Taxonomy : Custom Taxonomies', 'simple-taxonomy-refreshed' ), __( 'Custom Taxonomies', 'simple-taxonomy-refreshed' ), 'manage_options', self::ADMIN_SLUG, array( __CLASS__, 'page_manage' ) );
 	}
 
 	/**
@@ -116,7 +116,7 @@ class SimpleTaxonomy_Admin {
 			<h2>
 			<?php
 			// translators: %s is the taxonomy name.
-			echo esc_html( sprintf( __( 'Custom Taxonomy : %s', 'simple-taxonomy-2' ), stripslashes( $taxonomy['labels']['name'] ) ) );
+			echo esc_html( sprintf( __( 'Custom Taxonomy : %s', 'simple-taxonomy-refreshed' ), stripslashes( $taxonomy['labels']['name'] ) ) );
 			?>
 			</h2>
 
@@ -247,29 +247,29 @@ class SimpleTaxonomy_Admin {
 		$admin_url = admin_url( 'options-general.php?page=' . self::ADMIN_SLUG );
 
 		// Get current options.
-		$current_options = get_option( STAXO_OPTION );
+		$current_options = get_option( OPTION_STAXO );
 
 		// Check get for message.
 		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 		if ( isset( $_GET['message'] ) ) {
 			switch ( $_GET['message'] ) { // phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 				case 'flush-deleted':
-					add_settings_error( 'simple-taxonomy-2', 'settings_updated', __( 'Taxonomy and relations deleted with success !', 'simple-taxonomy-2' ), 'updated' );
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Taxonomy and relations deleted with success !', 'simple-taxonomy-refreshed' ), 'updated' );
 					break;
 				case 'deleted':
-					add_settings_error( 'simple-taxonomy-2', 'settings_updated', __( 'Taxonomy deleted with success !', 'simple-taxonomy-2' ), 'updated' );
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Taxonomy deleted with success !', 'simple-taxonomy-refreshed' ), 'updated' );
 					break;
 				case 'added':
-					add_settings_error( 'simple-taxonomy-2', 'settings_updated', __( 'Taxonomy added with success !', 'simple-taxonomy-2' ), 'updated' );
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Taxonomy added with success !', 'simple-taxonomy-refreshed' ), 'updated' );
 					break;
 				case 'updated':
-					add_settings_error( 'simple-taxonomy-2', 'settings_updated', __( 'Taxonomy updated with success !', 'simple-taxonomy-2' ), 'updated' );
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Taxonomy updated with success !', 'simple-taxonomy-refreshed' ), 'updated' );
 					break;
 			}
 		}
 
 		// Display message.
-		settings_errors( 'simple-taxonomy-2' );
+		settings_errors( 'simple-taxonomy-refreshed' );
 
 		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 		if ( isset( $_GET['action'] ) && isset( $_GET['taxonomy_name'] ) && 'edit' === $_GET['action'] && isset( $current_options['taxonomies'][ $_GET['taxonomy_name'] ] ) ) {
@@ -278,13 +278,13 @@ class SimpleTaxonomy_Admin {
 		}
 		?>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Simple Taxonomy : Custom Taxonomies', 'simple-taxonomy-2' ); ?></h2>
+			<h2><?php esc_html_e( 'Simple Taxonomy : Custom Taxonomies', 'simple-taxonomy-refreshed' ); ?></h2>
 
 			<div class="message updated">
 				<p>
 				<?php
 				// phpcs:ignore  WordPress.Security.EscapeOutput
-				wp_kses( _e( '<strong>Warning :</strong> Delete & Flush a taxonomy will also delete all terms of these taxonomy and all object relations.', 'simple-taxonomy-2' ), array( 'strong' ) );
+				wp_kses( _e( '<strong>Warning :</strong> Delete & Flush a taxonomy will also delete all terms of these taxonomy and all object relations.', 'simple-taxonomy-refreshed' ), array( 'strong' ) );
 				?>
 				</p>
 			</div>
@@ -293,31 +293,31 @@ class SimpleTaxonomy_Admin {
 				<table class="widefat tag fixed" cellspacing="0">
 					<thead>
 						<tr>
-							<th scope="col" id="labell" class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" id="nameh"  class="manage-column column-slug"><?php esc_html_e( 'Name', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" id="labelt" class="manage-column column-name"><?php esc_html_e( 'Post Types', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" id="labelh" class="manage-column column-name"><?php esc_html_e( 'Hierarchical', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" id="labelr" class="manage-column column-name"><?php esc_html_e( 'Rewrite', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" id="labelp" class="manage-column column-name"><?php esc_html_e( 'Public', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" id="labelb" class="manage-column column-name"><?php esc_html_e( 'Block Editor', 'simple-taxonomy-2' ); ?></th>
+							<th scope="col" id="labell" class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="nameh"  class="manage-column column-slug"><?php esc_html_e( 'Name', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="labelt" class="manage-column column-name"><?php esc_html_e( 'Post Types', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="labelh" class="manage-column column-name"><?php esc_html_e( 'Hierarchical', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="labelr" class="manage-column column-name"><?php esc_html_e( 'Rewrite', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="labelp" class="manage-column column-name"><?php esc_html_e( 'Public', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="labelb" class="manage-column column-name"><?php esc_html_e( 'Block Editor', 'simple-taxonomy-refreshed' ); ?></th>
 						</tr>
 					</thead>
 					<tfoot>
 						<tr>
-							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" class="manage-column column-slug"><?php esc_html_e( 'Name', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Post Types', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Hierarchical', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Rewrite', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Public', 'simple-taxonomy-2' ); ?></th>
-							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Block Editor', 'simple-taxonomy-2' ); ?></th>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-slug"><?php esc_html_e( 'Name', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Post Types', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Hierarchical', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Rewrite', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Public', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Block Editor', 'simple-taxonomy-refreshed' ); ?></th>
 						</tr>
 					</tfoot>
 
 					<tbody id="the-list" class="list:taxonomies">
 						<?php
 						if ( false === $current_options || empty( $current_options['taxonomies'] ) ) {
-							echo '<tr><td colspan="3">' . esc_html__( 'No custom taxonomy.', 'simple-taxonomy-2' ) . '</td></tr>';
+							echo '<tr><td colspan="3">' . esc_html__( 'No custom taxonomy.', 'simple-taxonomy-refreshed' ) . '</td></tr>';
 						} else {
 							$class = 'alternate';
 							$i     = 0;
@@ -326,11 +326,11 @@ class SimpleTaxonomy_Admin {
 								$class = ( 'alternate' === $class ) ? '' : 'alternate';
 								// phpcs:disable  WordPress.Security.EscapeOutput
 								// translators: %s is the taxonomy name.
-								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-2' ), $_t['labels']['name'] ) );
+								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), $_t['labels']['name'] ) );
 								// translators: %s is the taxonomy name.
-								$del_msg = esc_js( sprintf( __( "You are about to delete this taxonomy '%s'\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-2' ), $_t['labels']['name'] ) );
+								$del_msg = esc_js( sprintf( __( "You are about to delete this taxonomy '%s'\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-refreshed' ), $_t['labels']['name'] ) );
 								// translators: %s is the taxonomy name.
-								$dfl_msg = esc_js( sprintf( __( "You are about to delete and flush this taxonomy '%s' and all relations.\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-2' ), $_t['labels']['name'] ) );
+								$dfl_msg = esc_js( sprintf( __( "You are about to delete and flush this taxonomy '%s' and all relations.\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-refreshed' ), $_t['labels']['name'] ) );
 								// phpcs:enable  WordPress.Security.EscapeOutput
 								?>
 								<tr id="taxonomy-<?php echo esc_attr( $i ); ?>" class="<?php esc_attr( $class ); ?>">
@@ -338,10 +338,10 @@ class SimpleTaxonomy_Admin {
 										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php esc_attr( $edit_msg ); ?>"><?php echo esc_html( stripslashes( $_t['labels']['name'] ) ); ?></a></strong>
 										<br />
 										<div class="row-actions">
-											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>"><?php esc_html_e( 'Modify', 'simple-taxonomy-2' ); ?></a> | </span>
-											<span class="export"><a class="export_php-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=export_php&amp;taxonomy_name=' . esc_attr( $_t_name ), 'staxo-export_php-' . $_t_name ) ); ?>"><?php esc_html_e( 'Export PHP', 'simple-taxonomy-2' ); ?></a> | </span>
-											<span class="delete"><a class="delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=delete&amp;taxonomy_name=' . $_t_name, 'staxo-delete-' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $del_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Delete', 'simple-taxonomy-2' ); ?></a> | </span>
-											<span class="delete"><a class="flush-delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=flush-delete&amp;taxonomy_name=' . $_t_name, 'staxo-flush-delete-' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $dfl_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Flush & Delete', 'simple-taxonomy-2' ); ?></a></span>
+											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>"><?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<span class="export"><a class="export_php-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=export_php&amp;taxonomy_name=' . esc_attr( $_t_name ), 'staxo-export_php-' . $_t_name ) ); ?>"><?php esc_html_e( 'Export PHP', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<span class="delete"><a class="delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=delete&amp;taxonomy_name=' . $_t_name, 'staxo-delete-' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $del_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Delete', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<span class="delete"><a class="flush-delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=flush-delete&amp;taxonomy_name=' . $_t_name, 'staxo-flush-delete-' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $dfl_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Flush & Delete', 'simple-taxonomy-refreshed' ); ?></a></span>
 										</div>
 									</td>
 									<td><?php echo esc_html( $_t['name'] ); ?></td>
@@ -377,17 +377,17 @@ class SimpleTaxonomy_Admin {
 				<br class="clear" />
 
 				<div class="form-wrap">
-					<h3><?php esc_html_e( 'Add a new taxonomy', 'simple-taxonomy-2' ); ?></h3>
+					<h3><?php esc_html_e( 'Add a new taxonomy', 'simple-taxonomy-refreshed' ); ?></h3>
 					<?php self::form_merge_custom_type(); ?>
 				</div>
 			</div><!-- /col-container -->
 		</div>
 
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Simple Taxonomy : Export/Import', 'simple-taxonomy-2' ); ?></h2>
+			<h2><?php esc_html_e( 'Simple Taxonomy : Export/Import', 'simple-taxonomy-refreshed' ); ?></h2>
 
-			<a class="button" href="<?php echo esc_url( wp_nonce_url( $admin_url . '&amp;action=staxo-export-config', 'staxo-export-config' ) ); ?>"><?php esc_html_e( 'Export config file', 'simple-taxonomy-2' ); ?></a>
-			<a class="button" href="#" id="toggle-import_form"><?php esc_html_e( 'Import config file', 'simple-taxonomy-2' ); ?></a>
+			<a class="button" href="<?php echo esc_url( wp_nonce_url( $admin_url . '&amp;action=staxo-export-config', 'staxo-export-config' ) ); ?>"><?php esc_html_e( 'Export config file', 'simple-taxonomy-refreshed' ); ?></a>
+			<a class="button" href="#" id="toggle-import_form"><?php esc_html_e( 'Import config file', 'simple-taxonomy-refreshed' ); ?></a>
 			<script type="text/javascript">
 				jQuery( "#toggle-import_form" ).click(function(event) {
 					event.preventDefault();
@@ -397,12 +397,12 @@ class SimpleTaxonomy_Admin {
 			<div id="import_form" class="hide-if-js">
 				<form action="<?php echo esc_url( $admin_url ); ?>" method="post" enctype="multipart/form-data">
 					<p>
-						<label><?php esc_html_e( 'Config file', 'simple-taxonomy-2' ); ?></label>
+						<label><?php esc_html_e( 'Config file', 'simple-taxonomy-refreshed' ); ?></label>
 						<input type="file" name="config_file" />
 					</p>
 					<p class="submit">
 						<?php wp_nonce_field( 'staxo-import-config-file' ); ?>
-						<input class="button-primary" type="submit" name="staxo-import-config-file" value="<?php esc_html_e( 'I want import a config from a previous backup, this action will REPLACE current configuration', 'simple-taxonomy-2' ); ?>" />
+						<input class="button-primary" type="submit" name="staxo-import-config-file" value="<?php esc_html_e( 'I want import a config from a previous backup, this action will REPLACE current configuration', 'simple-taxonomy-refreshed' ); ?>" />
 					</p>
 				</form>
 			</div>
@@ -421,19 +421,19 @@ class SimpleTaxonomy_Admin {
 		$admin_url = admin_url( 'options-general.php?page=' . self::ADMIN_SLUG );
 
 		if ( null === $taxonomy ) {
-			$taxonomy    = SimpleTaxonomy_Client::get_taxonomy_default_fields();
+			$taxonomy    = SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields();
 			$edit        = false;
 			$_action     = 'add-taxonomy';
-			$submit_val  = __( 'Add taxonomy', 'simple-taxonomy-2' );
+			$submit_val  = __( 'Add taxonomy', 'simple-taxonomy-refreshed' );
 			$nonce_field = 'staxo-add-taxo';
 		} else {
 			$edit        = true;
 			$_action     = 'merge-taxonomy';
-			$submit_val  = __( 'Update taxonomy', 'simple-taxonomy-2' );
+			$submit_val  = __( 'Update taxonomy', 'simple-taxonomy-refreshed' );
 			$nonce_field = 'staxo-edit-taxo';
 		}
 		// Get default values if need.
-		$taxonomy = wp_parse_args( SimpleTaxonomy_Client::prepare_args( $taxonomy ), $taxonomy );
+		$taxonomy = wp_parse_args( SimpleTaxonomyRefreshed_Client::prepare_args( $taxonomy ), $taxonomy );
 
 		// Migration case - Not updated yet.
 		if ( ! array_key_exists( 'st_slug', $taxonomy ) ) {
@@ -519,7 +519,7 @@ class SimpleTaxonomy_Admin {
 		}
 		</style>
 
-		<script>
+		<script type="text/javascript">
 		function openTab(evt, tabName) {
 			var i, tabcontent, tablinks;
 			tabcontent = document.getElementsByClassName("tabcontent");
@@ -544,9 +544,9 @@ class SimpleTaxonomy_Admin {
 			<input type="hidden" name="action" value="<?php echo esc_html( $_action ); ?>" />
 			<?php wp_nonce_field( $nonce_field ); ?>
 
-			<p><?php esc_html_e( 'Click on the tabs to see all the options available.', 'simple-taxonomy-2' ); ?></p>
+			<p><?php esc_html_e( 'Click on the tabs to see all the options available.', 'simple-taxonomy-refreshed' ); ?></p>
 
-			<p><?php esc_html_e( 'The options are spread across all these tabs.', 'simple-taxonomy-2' ); ?></p>
+			<p><?php esc_html_e( 'The options are spread across all these tabs.', 'simple-taxonomy-refreshed' ); ?></p>
 
 			<div id="poststuff" class="metabox-holder">
 				<div id="post-body-content">
@@ -563,12 +563,12 @@ class SimpleTaxonomy_Admin {
 
 					<div id="mainopts" class="meta-box-sortabless tabcontent" style="display: block;">
 						<div class="postbox">
-							<h3 class="hndle"><span><?php esc_html_e( 'Main Options', 'simple-taxonomy-2' ); ?></span></h3>
+							<h3 class="hndle"><span><?php esc_html_e( 'Main Options', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
 									<tr valign="top">
-										<th scope="row"><label for="name"><?php esc_html_e( 'Name', 'simple-taxonomy-2' ); ?></label></th>
+										<th scope="row"><label for="name"><?php esc_html_e( 'Name', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<input name="name" type="text" id="name" onchange="checkNameSet(event)" value="<?php echo esc_attr( $taxonomy['name'] ); ?>" class="regular-text"
 											<?php
@@ -580,7 +580,7 @@ class SimpleTaxonomy_Admin {
 											<span class="description">
 											<?php
 											// phpcs:ignore  WordPress.Security.EscapeOutput
-											_e( '<strong>Name</strong> is used on DB and to register taxonomy. (Lowercase alphanumeric and _ characters only)', 'simple-taxonomy-2' );
+											_e( '<strong>Name</strong> is used on DB and to register taxonomy. (Lowercase alphanumeric and _ characters only)', 'simple-taxonomy-refreshed' );
 											?>
 											</span>
 										</td>
@@ -589,12 +589,12 @@ class SimpleTaxonomy_Admin {
 										self::option_yes_no(
 											$taxonomy,
 											'hierarchical',
-											esc_html__( 'Hierarchical ?', 'simple-taxonomy-2' ),
-											__( "Default <strong>hierarchical</strong> in WordPress are categories. Default post tags WP aren't hierarchical.", 'simple-taxonomy-2' )
+											esc_html__( 'Hierarchical ?', 'simple-taxonomy-refreshed' ),
+											__( "Default <strong>hierarchical</strong> in WordPress are categories. Default post tags WP aren't hierarchical.", 'simple-taxonomy-refreshed' )
 										);
 									?>
 									<tr valign="top">
-										<th scope="row"><label><?php esc_html_e( 'Post types', 'simple-taxonomy-2' ); ?></label></th>
+										<th scope="row"><label><?php esc_html_e( 'Post types', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<?php
 											if ( true === $edit ) {
@@ -607,11 +607,11 @@ class SimpleTaxonomy_Admin {
 												echo '<label class="inline"><input type="checkbox" ' . checked( true, in_array( $type->name, $objects, true ), false ) . ' name="objects[]" value="' . esc_attr( $type->name ) . '" /> ' . esc_html( $type->label ) . '</label>' . "\n";
 											}
 											?>
-											<span class="description"><?php esc_html_e( 'You can add this taxonomy to builtin or custom post types. (compatible Simple Custom Types)', 'simple-taxonomy-2' ); ?></span>
+											<span class="description"><?php esc_html_e( 'You can add this taxonomy to builtin or custom post types. (compatible Simple Custom Types)', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="auto"><?php esc_html_e( 'Display Terms with Posts', 'simple-taxonomy-2' ); ?></label></th>
+										<th scope="row"><label for="auto"><?php esc_html_e( 'Display Terms with Posts', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<select name="auto" id="auto">
 												<?php
@@ -620,7 +620,7 @@ class SimpleTaxonomy_Admin {
 												}
 												?>
 											</select>
-											<span class="description"><?php esc_html_e( 'Option to display the terms on the Post page with associated data', 'simple-taxonomy-2' ); ?></span>
+											<span class="description"><?php esc_html_e( 'Option to display the terms on the Post page with associated data', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
 								</table>
@@ -630,74 +630,74 @@ class SimpleTaxonomy_Admin {
 
 					<div id="visibility" class="meta-box-sortabless tabcontent">
 						<div class="postbox">
-							<h3 class="hndle"><span><?php esc_html_e( 'Visibility', 'simple-taxonomy-2' ); ?></span></h3>
+							<h3 class="hndle"><span><?php esc_html_e( 'Visibility', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
 									<?php
 										self::option_yes_no(
 											$taxonomy,
 											'public',
-											esc_html__( 'Public ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Whether taxonomy queries can be performed from the front page.', 'simple-taxonomy-2' )
+											esc_html__( 'Public ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether taxonomy queries can be performed from the front page.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'publicly_queryable',
-											esc_html__( 'Publicly Queryable ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Whether the taxonomy is publicly queryable.', 'simple-taxonomy-2' )
+											esc_html__( 'Publicly Queryable ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether the taxonomy is publicly queryable.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'show_ui',
-											esc_html__( 'Display on admin ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Whether to generate and allow a UI for managing terms in this taxonomy in the admin.', 'simple-taxonomy-2' )
+											esc_html__( 'Display on admin ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether to generate and allow a UI for managing terms in this taxonomy in the admin.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'show_in_menu',
-											esc_html__( 'Show in Menu ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Whether to show the taxonomy in the admin menu. If true, the taxonomy is shown as a submenu of the object type menu. If false, no menu is shown.', 'simple-taxonomy-2' )
+											esc_html__( 'Show in Menu ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether to show the taxonomy in the admin menu. If true, the taxonomy is shown as a submenu of the object type menu. If false, no menu is shown.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'show_in_nav_menus',
-											esc_html__( 'Show in nav menu ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Makes this taxonomy available for selection in navigation menus.', 'simple-taxonomy-2' )
+											esc_html__( 'Show in nav menu ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Makes this taxonomy available for selection in navigation menus.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'show_tagcloud',
-											esc_html__( 'Show in tag cloud widget ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Put this setting to true for display this taxonomy on settings of tag cloud widget.', 'simple-taxonomy-2' )
+											esc_html__( 'Show in tag cloud widget ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Put this setting to true for display this taxonomy on settings of tag cloud widget.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'show_in_quick_edit',
-											esc_html__( 'Display in Quick Edit panel ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Whether to show the taxonomy in the quick/bulk edit panel.', 'simple-taxonomy-2' )
+											esc_html__( 'Display in Quick Edit panel ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether to show the taxonomy in the quick/bulk edit panel.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'show_admin_column',
-											esc_html__( 'Display a column on post type listings ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Whether to display a column for the taxonomy on its post type listing screens.', 'simple-taxonomy-2' )
+											esc_html__( 'Display a column on post type listings ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether to display a column for the taxonomy on its post type listing screens.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'show_in_rest',
-											esc_html__( 'Show in REST ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Whether to include the taxonomy in the REST API and Block Editor.', 'simple-taxonomy-2' )
+											esc_html__( 'Show in REST ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether to include the taxonomy in the REST API and Block Editor.', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
-								<p style="text-indent: 15px;"><?php esc_html_e( 'Show in REST needs to be set to TRUE for the taxonomy to appear in the Block Editor.', 'simple-taxonomy-2' ); ?></p>
+								<p style="text-indent: 15px;"><?php esc_html_e( 'Show in REST needs to be set to TRUE for the taxonomy to appear in the Block Editor.', 'simple-taxonomy-refreshed' ); ?></p>
 							</div>
 						</div>
 					</div>
 
 					<div id="labels" class="meta-box-sortabless tabcontent">
 						<div class="postbox">
-							<h3 class="hndle"><span><?php esc_html_e( 'Labels Wording', 'simple-taxonomy-2' ); ?></span></h3>
+							<h3 class="hndle"><span><?php esc_html_e( 'Labels Wording', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
@@ -705,133 +705,133 @@ class SimpleTaxonomy_Admin {
 										self::option_label(
 											$taxonomy,
 											'name',
-											esc_html__( 'Name', 'simple-taxonomy-2' ),
-											esc_html__( 'This will be used as the taxonomy label.', 'simple-taxonomy-2' )
+											esc_html__( 'Name', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'This will be used as the taxonomy label.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_label(
 											$taxonomy,
 											'menu_name',
-											esc_html__( 'Menu Name', 'simple-taxonomy-2' ),
-											esc_html__( 'If not set this will default to the taxonomy label.', 'simple-taxonomy-2' )
+											esc_html__( 'Menu Name', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'If not set this will default to the taxonomy label.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_label(
 											$taxonomy,
 											'singular_name',
-											esc_html__( 'Singular Name', 'simple-taxonomy-2' ),
+											esc_html__( 'Singular Name', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'search_items',
-											esc_html__( 'Search Terms', 'simple-taxonomy-2' ),
+											esc_html__( 'Search Terms', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'popular_items',
-											esc_html__( 'Popular Terms', 'simple-taxonomy-2' ),
+											esc_html__( 'Popular Terms', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'all_items',
-											esc_html__( 'All Terms', 'simple-taxonomy-2' ),
+											esc_html__( 'All Terms', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'parent_item',
-											esc_html__( 'Parent Term', 'simple-taxonomy-2' ),
+											esc_html__( 'Parent Term', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'parent_item_colon',
-											esc_html__( 'Parent Term:', 'simple-taxonomy-2' ),
-											esc_html__( 'Parent Term with colon', 'simple-taxonomy-2' )
+											esc_html__( 'Parent Term:', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Parent Term with colon', 'simple-taxonomy-refreshed' )
 										);
 										self::option_label(
 											$taxonomy,
 											'edit_item',
-											esc_html__( 'Edit Term', 'simple-taxonomy-2' ),
+											esc_html__( 'Edit Term', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'view_item',
-											esc_html__( 'View Term', 'simple-taxonomy-2' ),
+											esc_html__( 'View Term', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'update_item',
-											esc_html__( 'Update Term', 'simple-taxonomy-2' ),
+											esc_html__( 'Update Term', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'add_new_item',
-											esc_html__( 'Add New Term', 'simple-taxonomy-2' ),
+											esc_html__( 'Add New Term', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'new_item_name',
-											esc_html__( 'New Term Name', 'simple-taxonomy-2' ),
+											esc_html__( 'New Term Name', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'separate_items_with_commas',
-											esc_html__( 'Separate terms with commas', 'simple-taxonomy-2' ),
+											esc_html__( 'Separate terms with commas', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'add_or_remove_items',
-											esc_html__( 'Add or remove terms', 'simple-taxonomy-2' ),
+											esc_html__( 'Add or remove terms', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'choose_from_most_used',
-											esc_html__( 'Choose from the most used terms', 'simple-taxonomy-2' ),
+											esc_html__( 'Choose from the most used terms', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'not_found',
-											esc_html__( 'No terms found', 'simple-taxonomy-2' ),
+											esc_html__( 'No terms found', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'no_terms',
-											esc_html__( 'No terms', 'simple-taxonomy-2' ),
+											esc_html__( 'No terms', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'items_list_navigation',
-											esc_html__( 'Items list navigation', 'simple-taxonomy-2' ),
+											esc_html__( 'Items list navigation', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'items_list',
-											esc_html__( 'Items list', 'simple-taxonomy-2' ),
+											esc_html__( 'Items list', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'most_used',
-											esc_html__( 'Most used', 'simple-taxonomy-2' ),
+											esc_html__( 'Most used', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
 											'back_to_items',
-											esc_html__( 'Label displayed after a term has been updated', 'simple-taxonomy-2' ),
+											esc_html__( 'Label displayed after a term has been updated', 'simple-taxonomy-refreshed' ),
 											''
 										);
 									?>
@@ -842,58 +842,58 @@ class SimpleTaxonomy_Admin {
 
 					<div id="rewrite" class="meta-box-sortabless tabcontent">
 						<div class="postbox">
-							<h3 class="hndle"><span><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-2' ); ?></span></h3>
+							<h3 class="hndle"><span><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
 									<?php
 										self::option_yes_no(
 											$taxonomy,
 											'rewrite',
-											esc_html__( 'Rewrite ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Rewriting allows to build nice URL for your new custom taxonomy.', 'simple-taxonomy-2' )
+											esc_html__( 'Rewrite ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Rewriting allows to build nice URL for your new custom taxonomy.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
 											'st_slug',
-											esc_html__( 'Rewrite Slug', 'simple-taxonomy-2' ),
-											esc_html__( 'Customize the permastruct slug.', 'simple-taxonomy-2' )
+											esc_html__( 'Rewrite Slug', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Customize the permastruct slug.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'st_with_front',
-											esc_html__( 'With Front ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Should the permastruct be prepended with WP_Rewrite::$front.', 'simple-taxonomy-2' )
+											esc_html__( 'With Front ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Should the permastruct be prepended with WP_Rewrite::$front.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'st_hierarchical',
-											esc_html__( 'Hierarchical ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Either hierarchical rewrite tag or not.', 'simple-taxonomy-2' )
+											esc_html__( 'Hierarchical ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Either hierarchical rewrite tag or not.', 'simple-taxonomy-refreshed' )
 										);
 									?>
 									<tr valign="top">
-										<th scope="row"><label for="st_ep_mask_s"><?php esc_html_e( 'EP_MASK', 'simple-taxonomy-2' ); ?></label></th>
+										<th scope="row"><label for="st_ep_mask_s"><?php esc_html_e( 'EP_MASK', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<select name="st_ep_mask_s[]" id="st_ep_mask_s" multiple size="6">
 												<?php
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'], 0, false ) ) . ' value="0">' . esc_html__( 'EP_NONE', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 1, 1, false ) ) . ' value="1">' . esc_html__( 'EP_PERMALINK', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 2, 2, false ) ) . ' value="2">' . esc_html__( 'EP_ATTACHMENT', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 4, 4, false ) ) . ' value="4">' . esc_html__( 'EP_DATE', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 8, 8, false ) ) . ' value="8">' . esc_html__( 'EP_YEAR', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 16, 16, false ) ) . ' value="16">' . esc_html__( 'EP_MONTH', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 32, 32, false ) ) . ' value="32">' . esc_html__( 'EP_DAY', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 64, 64, false ) ) . ' value="64">' . esc_html__( 'EP_ROOT', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 128, 128, false ) ) . ' value="128">' . esc_html__( 'EP_COMMENTS', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 256, 256, false ) ) . ' value="256">' . esc_html__( 'EP_SEARCH', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 512, 512, false ) ) . ' value="512">' . esc_html__( 'EP_CATEGORIES', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 1024, 1024, false ) ) . ' value="1024">' . esc_html__( 'EP_TAGS', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 2048, 2048, false ) ) . ' value="2048">' . esc_html__( 'EP_AUTHORS', 'simple-taxonomy-2' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 4096, 4096, false ) ) . ' value="4096">' . esc_html__( 'EP_PAGES', 'simple-taxonomy-2' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'], 0, false ) ) . ' value="0">' . esc_html__( 'EP_NONE', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 1, 1, false ) ) . ' value="1">' . esc_html__( 'EP_PERMALINK', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 2, 2, false ) ) . ' value="2">' . esc_html__( 'EP_ATTACHMENT', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 4, 4, false ) ) . ' value="4">' . esc_html__( 'EP_DATE', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 8, 8, false ) ) . ' value="8">' . esc_html__( 'EP_YEAR', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 16, 16, false ) ) . ' value="16">' . esc_html__( 'EP_MONTH', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 32, 32, false ) ) . ' value="32">' . esc_html__( 'EP_DAY', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 64, 64, false ) ) . ' value="64">' . esc_html__( 'EP_ROOT', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 128, 128, false ) ) . ' value="128">' . esc_html__( 'EP_COMMENTS', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 256, 256, false ) ) . ' value="256">' . esc_html__( 'EP_SEARCH', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 512, 512, false ) ) . ' value="512">' . esc_html__( 'EP_CATEGORIES', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 1024, 1024, false ) ) . ' value="1024">' . esc_html__( 'EP_TAGS', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 2048, 2048, false ) ) . ' value="2048">' . esc_html__( 'EP_AUTHORS', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 4096, 4096, false ) ) . ' value="4096">' . esc_html__( 'EP_PAGES', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
 												?>
 											</select>
-											<span class="description"><?php esc_html_e( 'Assign an endpoint mask.', 'simple-taxonomy-2' ); ?></span>
-											<span class="description"><?php esc_html_e( 'N.B. Use CTRL or Mac Cmd to select multiple entries.', 'simple-taxonomy-2' ); ?></span>
+											<span class="description"><?php esc_html_e( 'Assign an endpoint mask.', 'simple-taxonomy-refreshed' ); ?></span>
+											<span class="description"><?php esc_html_e( 'N.B. Use CTRL or Mac Cmd to select multiple entries.', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
 								</table>
@@ -903,33 +903,33 @@ class SimpleTaxonomy_Admin {
 
 					<div id="permissions" class="meta-box-sortabless tabcontent">
 						<div class="postbox">
-							<h3 class="hndle"><span><?php esc_html_e( 'Permissions', 'simple-taxonomy-2' ); ?></span></h3>
+							<h3 class="hndle"><span><?php esc_html_e( 'Permissions', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
 									<?php
 										self::option_cap(
 											$taxonomy,
 											'manage_terms',
-											esc_html__( 'Manager terms', 'simple-taxonomy-2' ),
-											esc_html__( "Ability to view terms in the administration. Defaults to 'manage_categories'.", 'simple-taxonomy-2' )
+											esc_html__( 'Manager terms', 'simple-taxonomy-refreshed' ),
+											esc_html__( "Ability to view terms in the administration. Defaults to 'manage_categories'.", 'simple-taxonomy-refreshed' )
 										);
 										self::option_cap(
 											$taxonomy,
 											'edit_terms',
-											esc_html__( 'Edit terms', 'simple-taxonomy-2' ),
-											esc_html__( "Grants the ability to edit and create terms. Defaults to 'manage_categories'", 'simple-taxonomy-2' )
+											esc_html__( 'Edit terms', 'simple-taxonomy-refreshed' ),
+											esc_html__( "Grants the ability to edit and create terms. Defaults to 'manage_categories'", 'simple-taxonomy-refreshed' )
 										);
 										self::option_cap(
 											$taxonomy,
 											'delete_terms',
-											esc_html__( 'Delete terms', 'simple-taxonomy-2' ),
-											esc_html__( "Gives permission to delete terms from the taxonomy. Defaults to 'manage_categories'.", 'simple-taxonomy-2' )
+											esc_html__( 'Delete terms', 'simple-taxonomy-refreshed' ),
+											esc_html__( "Gives permission to delete terms from the taxonomy. Defaults to 'manage_categories'.", 'simple-taxonomy-refreshed' )
 										);
 										self::option_cap(
 											$taxonomy,
 											'assign_terms',
-											esc_html__( 'Assign terms', 'simple-taxonomy-2' ),
-											esc_html__( "Capability for assigning terms in the new/edit post screen. Defaults to 'edit_terms'.", 'simple-taxonomy-2' )
+											esc_html__( 'Assign terms', 'simple-taxonomy-refreshed' ),
+											esc_html__( "Capability for assigning terms in the new/edit post screen. Defaults to 'edit_terms'.", 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -939,22 +939,22 @@ class SimpleTaxonomy_Admin {
 
 					<div id="rest" class="meta-box-sortabless tabcontent">
 						<div class="postbox">
-							<h3 class="hndle"><span><?php esc_html_e( 'REST Functionality', 'simple-taxonomy-2' ); ?></span></h3>
+							<h3 class="hndle"><span><?php esc_html_e( 'REST Functionality', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
-								<p class="description"><?php esc_html_e( 'These values should only be set when specific processing is required.', 'simple-taxonomy-2' ); ?></p>
+								<p class="description"><?php esc_html_e( 'These values should only be set when specific processing is required.', 'simple-taxonomy-refreshed' ); ?></p>
 								<table class="form-table" style="clear:none;">
 									<?php
 										self::option_text(
 											$taxonomy,
 											'rest_base',
-											esc_html__( 'REST Base', 'simple-taxonomy-2' ),
-											esc_html__( 'To change the base url of REST API route.', 'simple-taxonomy-2' )
+											esc_html__( 'REST Base', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'To change the base url of REST API route.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
 											'rest_controller_class',
-											esc_html__( 'REST Controller Class', 'simple-taxonomy-2' ),
-											esc_html__( "REST API Controller class name. Default is 'WP_REST_Terms_Controller'.", 'simple-taxonomy-2' )
+											esc_html__( 'REST Controller Class', 'simple-taxonomy-refreshed' ),
+											esc_html__( "REST API Controller class name. Default is 'WP_REST_Terms_Controller'.", 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -964,46 +964,46 @@ class SimpleTaxonomy_Admin {
 
 					<div id="other" class="meta-box-sortabless tabcontent">
 						<div class="postbox">
-							<h3 class="hndle"><span><?php esc_html_e( 'Other Options', 'simple-taxonomy-2' ); ?></span></h3>
+							<h3 class="hndle"><span><?php esc_html_e( 'Other Options', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
 									<?php
 										self::option_text(
 											$taxonomy,
 											'query_var',
-											esc_html__( 'Query var', 'simple-taxonomy-2' ),
-											__( '<strong>Query var</strong> is used for build URLs of taxonomy. If this value is empty, Simple Taxonomy will use a slug from label for build URL.', 'simple-taxonomy-2' )
+											esc_html__( 'Query var', 'simple-taxonomy-refreshed' ),
+											__( '<strong>Query var</strong> is used for build URLs of taxonomy. If this value is empty, Simple Taxonomy will use a slug from label for build URL.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
 											'st_update_count_callback',
-											esc_html__( 'Update Count Callback', 'simple-taxonomy-2' ),
-											esc_html__( 'Works much like a hook, in that it will be called when the count is updated.', 'simple-taxonomy-2' ) . '<br/>' .
-											esc_html__( 'Set to the text false to not display the metabox.', 'simple-taxonomy-2' )
+											esc_html__( 'Update Count Callback', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Works much like a hook, in that it will be called when the count is updated.', 'simple-taxonomy-refreshed' ) . '<br/>' .
+											esc_html__( 'Set to the text false to not display the metabox.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
 											'st_meta_box_cb',
-											esc_html__( 'Meta Box Callback', 'simple-taxonomy-2' ),
-											esc_html__( 'Provide a callback function for the meta box display.', 'simple-taxonomy-2' )
+											esc_html__( 'Meta Box Callback', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Provide a callback function for the meta box display.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
 											'st_meta_box_sanitize_cb',
-											esc_html__( 'Meta Box Sanitize Callback', 'simple-taxonomy-2' ),
-											esc_html__( 'Callback function for sanitizing taxonomy data saved from a meta box.', 'simple-taxonomy-2' )
+											esc_html__( 'Meta Box Sanitize Callback', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Callback function for sanitizing taxonomy data saved from a meta box.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'sort',
-											esc_html__( 'Sort ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Whether this taxonomy should remember the order in which terms are added to objects.', 'simple-taxonomy-2' )
+											esc_html__( 'Sort ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether this taxonomy should remember the order in which terms are added to objects.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
 											'st_args',
-											esc_html__( 'Args - Taxonomy Items Sort Query', 'simple-taxonomy-2' ),
-											esc_html__( 'Array giving query to order the taxonomy items attached to objects.', 'simple-taxonomy-2' )
+											esc_html__( 'Args - Taxonomy Items Sort Query', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Array giving query to order the taxonomy items attached to objects.', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -1013,32 +1013,32 @@ class SimpleTaxonomy_Admin {
 
 					<div id="wpgraphql" class="meta-box-sortabless tabcontent">
 						<div class="postbox">
-							<h3 class="hndle"><span><?php esc_html_e( 'WPGraphQL Support', 'simple-taxonomy-2' ); ?></span></h3>
+							<h3 class="hndle"><span><?php esc_html_e( 'WPGraphQL Support', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
 									<?php
 										self::option_yes_no(
 											$taxonomy,
 											'st_show_in_graphql',
-											esc_html__( 'Show in WPGraphQL ?', 'simple-taxonomy-2' ),
-											esc_html__( 'Whether this taxonomy is registered for WPGraphQL usage.', 'simple-taxonomy-2' )
+											esc_html__( 'Show in WPGraphQL ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether this taxonomy is registered for WPGraphQL usage.', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
-								<p class="description"><?php esc_html_e( 'Following parameters are only needed if taxonomy is shown in WPGraphQL', 'simple-taxonomy-2' ); ?></p>
+								<p class="description"><?php esc_html_e( 'Following parameters are only needed if taxonomy is shown in WPGraphQL', 'simple-taxonomy-refreshed' ); ?></p>
 								<table class="form-table" style="clear:none;">
 									<?php
 										self::option_text(
 											$taxonomy,
 											'st_graphql_single',
-											esc_html__( 'Graph QL Single Name', 'simple-taxonomy-2' ),
-											esc_html__( 'Taxonomy Singular Name for WPGraphQL in camel case with no punctuation or spaces.', 'simple-taxonomy-2' )
+											esc_html__( 'Graph QL Single Name', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Taxonomy Singular Name for WPGraphQL in camel case with no punctuation or spaces.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
 											'st_graphql_plural',
-											esc_html__( 'Graph QL Plural Name', 'simple-taxonomy-2' ),
-											esc_html__( 'Taxonomy Plural Name for WPGraphQL in camel case with no punctuation or spaces.', 'simple-taxonomy-2' )
+											esc_html__( 'Graph QL Plural Name', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Taxonomy Plural Name for WPGraphQL in camel case with no punctuation or spaces.', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -1089,25 +1089,25 @@ class SimpleTaxonomy_Admin {
 			// phpcs:ignore
 			header( 'Content-Disposition: attachment; filename=staxo-config-' . date( 'ymdGisT' ) . '.json;' );
 			// phpcs:ignore  WordPress.Security.EscapeOutput
-			die( 'SIMPLETAXONOMY' . wp_json_encode( get_option( STAXO_OPTION ) ) );
+			die( 'SIMPLETAXONOMYREFRESHED' . wp_json_encode( get_option( OPTION_STAXO ) ) );
 		} elseif ( isset( $_POST['staxo-import-config-file'] ) && isset( $_FILES['config_file'] ) ) {  // phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 			check_admin_referer( 'staxo-import-config-file' );
 
 			// phpcs:ignore
 			if ( $_FILES['config_file']['error'] > 0 ) {
-				add_settings_error( 'simple-taxonomy-2', 'settings_updated', __( 'An error occured during the config file upload. Please fix your server configuration and retry.', 'simple-taxonomy-2' ), 'error' );
+				add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'An error occured during the config file upload. Please fix your server configuration and retry.', 'simple-taxonomy-refreshed' ), 'error' );
 			} else {
 				// phpcs:ignore
 				$config_file = file_get_contents( $_FILES['config_file']['tmp_name'] );
-				if ( 'SIMPLETAXONOMY' !== substr( $config_file, 0, strlen( 'SIMPLETAXONOMY' ) ) ) {
-					add_settings_error( 'simple-taxonomy-2', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-2' ), 'error' );
+				if ( 'SIMPLETAXONOMYREFRESHED' !== substr( $config_file, 0, strlen( 'SIMPLETAXONOMYREFRESHED' ) ) ) {
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
 				} else {
-					$config_file = json_decode( substr( $config_file, strlen( 'SIMPLETAXONOMY' ) ), true );
+					$config_file = json_decode( substr( $config_file, strlen( 'SIMPLETAXONOMYREFRESHED' ) ), true );
 					if ( ! is_array( $config_file ) ) {
-						add_settings_error( 'simple-taxonomy-2', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-2' ), 'error' );
+						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
 					} else {
-						update_option( STAXO_OPTION, $config_file );
-						add_settings_error( 'simple-taxonomy-2', 'settings_updated', __( 'OK. Configuration is restored.', 'simple-taxonomy-2' ), 'updated' );
+						update_option( OPTION_STAXO, $config_file );
+						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'OK. Configuration is restored.', 'simple-taxonomy-refreshed' ), 'updated' );
 					}
 				}
 			}
@@ -1124,12 +1124,12 @@ class SimpleTaxonomy_Admin {
 		if ( isset( $_POST['action'] ) && in_array( wp_unslash( $_POST['action'] ), array( 'add-taxonomy', 'merge-taxonomy' ), true ) ) {
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_die( esc_html__( 'You cannot edit the Simple Taxonomy options.', 'simple-taxonomy-2' ) );
+				wp_die( esc_html__( 'You cannot edit the Simple Taxonomy options.', 'simple-taxonomy-refreshed' ) );
 			}
 
 			// Clean values from _POST.
 			$taxonomy = array();
-			foreach ( SimpleTaxonomy_Client::get_taxonomy_default_fields() as $field => $default_value ) {
+			foreach ( SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields() as $field => $default_value ) {
 				// phpcs:ignore  WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput
 				$post_field = ( array_key_exists( $field, $_POST ) ? wp_unslash( $_POST[ $field ] ) : '' );
 				if ( isset( $post_field ) && is_string( $post_field ) ) {// String ?
@@ -1158,7 +1158,7 @@ class SimpleTaxonomy_Admin {
 
 			// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 			if ( 'merge-taxonomy' === $_POST['action'] && empty( $taxonomy['name'] ) ) {
-				wp_die( esc_html__( 'Cheating ? You try to edit a taxonomy without name. Impossible !', 'simple-taxonomy-2' ) );
+				wp_die( esc_html__( 'Cheating ? You try to edit a taxonomy without name. Impossible !', 'simple-taxonomy-refreshed' ) );
 			}
 
 			if ( ! empty( $taxonomy['name'] ) ) { // Label exist ?
@@ -1183,7 +1183,7 @@ class SimpleTaxonomy_Admin {
 				if ( 'add-taxonomy' === $_POST['action'] ) {
 					check_admin_referer( 'staxo-add-taxo' );
 					if ( taxonomy_exists( $taxonomy['name'] ) ) { // Default Taxo already exist ?
-						wp_die( esc_html__( 'Cheating ? You try to add a taxonomy with a name already used by an another taxonomy.', 'simple-taxonomy-2' ) );
+						wp_die( esc_html__( 'Cheating ? You try to add a taxonomy with a name already used by an another taxonomy.', 'simple-taxonomy-refreshed' ) );
 					}
 					self::add_taxonomy( $taxonomy );
 				} else {
@@ -1191,7 +1191,7 @@ class SimpleTaxonomy_Admin {
 					self::update_taxonomy( $taxonomy );
 					// Ensure taxonomy entries updated before flush.
 					unregister_taxonomy( $taxonomy['name'] );
-					register_taxonomy( $taxonomy['name'], $taxonomy['objects'], SimpleTaxonomy_Client::prepare_args( $taxonomy ) );
+					register_taxonomy( $taxonomy['name'], $taxonomy['objects'], SimpleTaxonomyRefreshed_Client::prepare_args( $taxonomy ) );
 				}
 
 				// Flush rewriting rules !
@@ -1199,7 +1199,7 @@ class SimpleTaxonomy_Admin {
 
 				return true;
 			} else {
-				add_settings_error( 'simple-taxonomy-2', 'settings_updated', __( 'Impossible to add your taxonomy... You must enter a taxonomy name.', 'simple-taxonomy-2' ), 'error' );
+				add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Impossible to add your taxonomy... You must enter a taxonomy name.', 'simple-taxonomy-refreshed' ), 'error' );
 			}
 		}
 
@@ -1221,16 +1221,16 @@ class SimpleTaxonomy_Admin {
 			check_admin_referer( 'staxo-export_php-' . $taxonomy_name );
 
 			// Get taxo data.
-			$current_options = get_option( STAXO_OPTION );
+			$current_options = get_option( OPTION_STAXO );
 			if ( ! isset( $current_options['taxonomies'][ $taxo_name ] ) ) { // Taxo not exist ?
-				wp_die( esc_html__( "Cheating, uh ? You try to output a taxonomy that doesn't exist...", 'simple-taxonomy-2' ) );
+				wp_die( esc_html__( "Cheating, uh ? You try to output a taxonomy that doesn't exist...", 'simple-taxonomy-refreshed' ) );
 				return false;
 			} else {
 				$taxo_data = $current_options['taxonomies'][ $taxo_name ];
 			}
 
 			// Get proper args.
-			$args = SimpleTaxonomy_Client::prepare_args( $taxo_data );
+			$args = SimpleTaxonomyRefreshed_Client::prepare_args( $taxo_data );
 
 			// Get args to code.
 			if ( is_array( $taxo_data['objects'] ) && ! empty( $taxo_data['objects'] ) ) {
@@ -1289,7 +1289,7 @@ class SimpleTaxonomy_Admin {
 			$output = str_replace( '%TAXO_CODE%', $code, $output );
 
 			// Set display as comment as not in parameters.
-			$display  = "\n" . '// ' . esc_html__( 'Display Terms with Posts', 'simple-taxonomy-2' ) . ': ';
+			$display  = "\n" . '// ' . esc_html__( 'Display Terms with Posts', 'simple-taxonomy-refreshed' ) . ': ';
 			$display .= ( 'both' === $taxo_data['auto'] ? 'content, excerpt' : $taxo_data['auto'] );
 
 			$output .= $display . ".\n";
@@ -1353,14 +1353,14 @@ class SimpleTaxonomy_Admin {
 	 * @return void
 	 */
 	private static function add_taxonomy( $taxonomy ) {
-		$current_options = get_option( STAXO_OPTION );
+		$current_options = get_option( OPTION_STAXO );
 
 		if ( isset( $current_options['taxonomies'][ $taxonomy['name'] ] ) ) { // User taxo already exist ?
-			wp_die( esc_html__( 'Cheating, uh ? You try to add a taxonomy with a name already used by an another taxonomy.', 'simple-taxonomy-2' ) );
+			wp_die( esc_html__( 'Cheating, uh ? You try to add a taxonomy with a name already used by an another taxonomy.', 'simple-taxonomy-refreshed' ) );
 		}
 		$current_options['taxonomies'][ $taxonomy['name'] ] = $taxonomy;
 
-		update_option( STAXO_OPTION, $current_options );
+		update_option( OPTION_STAXO, $current_options );
 
 		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::ADMIN_SLUG ) . '&message=added' );
 		exit();
@@ -1373,14 +1373,14 @@ class SimpleTaxonomy_Admin {
 	 * @return void
 	 */
 	private static function update_taxonomy( $taxonomy ) {
-		$current_options = get_option( STAXO_OPTION );
+		$current_options = get_option( OPTION_STAXO );
 
 		if ( ! isset( $current_options['taxonomies'][ $taxonomy['name'] ] ) ) { // Taxo not exist ?
-			wp_die( esc_html__( 'Cheating, uh ? You try to edit a taxonomy with a name different as original. Simple Taxonomy dont allow update the name. Propose a patch ;)', 'simple-taxonomy-2' ) );
+			wp_die( esc_html__( 'Cheating, uh ? You try to edit a taxonomy with a name different as original. Simple Taxonomy dont allow update the name. Propose a patch ;)', 'simple-taxonomy-refreshed' ) );
 		}
 		$current_options['taxonomies'][ $taxonomy['name'] ] = $taxonomy;
 
-		update_option( STAXO_OPTION, $current_options );
+		update_option( OPTION_STAXO, $current_options );
 
 		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::ADMIN_SLUG ) . '&message=updated' );
 		exit();
@@ -1394,10 +1394,10 @@ class SimpleTaxonomy_Admin {
 	 * @return boolean|void
 	 */
 	private static function delete_taxonomy( $taxonomy, $flush_relations = false ) {
-		$current_options = get_option( STAXO_OPTION );
+		$current_options = get_option( OPTION_STAXO );
 
 		if ( ! isset( $current_options['taxonomies'][ $taxonomy['name'] ] ) ) { // Taxo not exist ?
-			wp_die( esc_html__( 'Cheating, uh ? You try to delete a taxonomy who not exist...', 'simple-taxonomy-2' ) );
+			wp_die( esc_html__( 'Cheating, uh ? You try to delete a taxonomy who not exist...', 'simple-taxonomy-refreshed' ) );
 			return false;
 		}
 
@@ -1407,7 +1407,7 @@ class SimpleTaxonomy_Admin {
 			self::delete_objects_taxonomy( $taxonomy['name'] ); // Delete object relations/terms.
 		}
 
-		update_option( STAXO_OPTION, $current_options );
+		update_option( OPTION_STAXO, $current_options );
 
 		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::ADMIN_SLUG ) . '&message=deleted' );
 		exit();
@@ -1470,8 +1470,8 @@ class SimpleTaxonomy_Admin {
 	 */
 	private static function get_true_false( $key = '' ) {
 		$types = array(
-			'0' => __( 'False', 'simple-taxonomy-2' ),
-			'1' => __( 'True', 'simple-taxonomy-2' ),
+			'0' => __( 'False', 'simple-taxonomy-refreshed' ),
+			'1' => __( 'True', 'simple-taxonomy-refreshed' ),
 		);
 
 		if ( isset( $types[ $key ] ) ) {
@@ -1489,10 +1489,10 @@ class SimpleTaxonomy_Admin {
 	 */
 	private static function get_auto_content_types( $key = '' ) {
 		$content_types = array(
-			'none'    => __( 'None', 'simple-taxonomy-2' ),
-			'content' => __( 'Content', 'simple-taxonomy-2' ),
-			'excerpt' => __( 'Excerpt', 'simple-taxonomy-2' ),
-			'both'    => __( 'Content and excerpt', 'simple-taxonomy-2' ),
+			'none'    => __( 'None', 'simple-taxonomy-refreshed' ),
+			'content' => __( 'Content', 'simple-taxonomy-refreshed' ),
+			'excerpt' => __( 'Excerpt', 'simple-taxonomy-refreshed' ),
+			'both'    => __( 'Content and excerpt', 'simple-taxonomy-refreshed' ),
 		);
 
 		/*

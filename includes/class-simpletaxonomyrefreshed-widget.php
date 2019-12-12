@@ -2,16 +2,16 @@
 /**
  * Simple Taxonomy Widget class file.
  *
- * @package simple-taxonomy-2
+ * @package simple-taxonomy-refreshed
  * @author Amaury Balmer/Neil James
  */
 
 /**
  * Class to provide a widget for custom taxonomy (tag cloud or list)
  *
- * @package simple-taxonomy-2
+ * @package simple-taxonomy-refreshed
  */
-class SimpleTaxonomy_Widget extends WP_Widget {
+class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	/**
 	 * Constructor
 	 *
@@ -20,10 +20,10 @@ class SimpleTaxonomy_Widget extends WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'staxonomy',
-			__( 'Simple Taxonomy Widget', 'simple-taxonomy-2' ),
+			__( 'Simple Taxonomy Widget', 'simple-taxonomy-refreshed' ),
 			array(
 				'classname'   => 'staxo-widget',
-				'description' => __( 'An advanced tag cloud or list for your custom taxonomy!', 'simple-taxonomy-2' ),
+				'description' => __( 'An advanced tag cloud or list for your custom taxonomy!', 'simple-taxonomy-refreshed' ),
 			)
 		);
 	}
@@ -59,7 +59,7 @@ class SimpleTaxonomy_Widget extends WP_Widget {
 			$title = $instance['title'];
 		} else {
 			if ( 'post_tag' === $current_taxonomy ) {
-				$title = __( 'Tags', 'simple-taxonomy-2' );
+				$title = __( 'Tags', 'simple-taxonomy-refreshed' );
 			} else {
 				$tax   = get_taxonomy( $current_taxonomy );
 				$title = $tax->labels->name;
@@ -109,7 +109,7 @@ class SimpleTaxonomy_Widget extends WP_Widget {
 
 			$terms = get_terms( $current_taxonomy, 'number=' . $instance['number'] . '&order=' . $instance['listorder'] );
 			if ( false === $terms ) {
-				echo '<p>' . esc_html_e( 'No terms actually for this taxonomy.', 'simple-taxonomy-2' ) . '</p>';
+				echo '<p>' . esc_html_e( 'No terms actually for this taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>';
 			} else {
 				echo '<ul class="simpletaxonomy-list">' . "\n";
 				foreach ( (array) $terms as $term ) {
@@ -156,7 +156,7 @@ class SimpleTaxonomy_Widget extends WP_Widget {
 	 */
 	public function form( $instance ) {
 		$defaults = array(
-			'title'      => __( 'Adv Tag Cloud', 'simple-taxonomy-2' ),
+			'title'      => __( 'Adv Tag Cloud', 'simple-taxonomy-refreshed' ),
 			'type'       => 'cloud',
 			'cloudorder' => 'RAND',
 			'listorder'  => 'ASC',
@@ -168,12 +168,12 @@ class SimpleTaxonomy_Widget extends WP_Widget {
 		$current_taxonomy = $this->get_current_taxonomy( $instance );
 		?>
 		<p>
-			<label for="<?php echo esc_html( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title', 'simple-taxonomy-2' ); ?>:</label>
+			<label for="<?php echo esc_html( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title', 'simple-taxonomy-refreshed' ); ?>:</label>
 			<input id="<?php echo esc_html( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'title' ) ); ?>" value="<?php echo esc_html( $instance['title'] ); ?>" class="widefat" />
 		</p>
 
 		<p>
-			<label for="<?php echo esc_html( $this->get_field_id( 'taxonomy' ) ); ?>"><?php esc_html_e( 'What to show', 'simple-taxonomy-2' ); ?>:</label>
+			<label for="<?php echo esc_html( $this->get_field_id( 'taxonomy' ) ); ?>"><?php esc_html_e( 'What to show', 'simple-taxonomy-refreshed' ); ?>:</label>
 			<select id="<?php echo esc_html( $this->get_field_id( 'taxonomy' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'taxonomy' ) ); ?>" class="widefat">
 				<?php
 				foreach ( get_taxonomies() as $taxonomy ) {
@@ -189,12 +189,12 @@ class SimpleTaxonomy_Widget extends WP_Widget {
 		</p>
 
 		<p>
-			<label for="<?php echo esc_html( $this->get_field_id( 'type' ) ); ?>"><?php esc_html_e( 'How to show it', 'simple-taxonomy-2' ); ?>:</label>
+			<label for="<?php echo esc_html( $this->get_field_id( 'type' ) ); ?>"><?php esc_html_e( 'How to show it', 'simple-taxonomy-refreshed' ); ?>:</label>
 			<select id="<?php echo esc_html( $this->get_field_id( 'type' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'type' ) ); ?>" class="widefat">
 				<?php
 				foreach ( array(
-					'cloud' => __( 'Cloud', 'simple-taxonomy-2' ),
-					'list'  => __( 'List', 'simple-taxonomy-2' ),
+					'cloud' => __( 'Cloud', 'simple-taxonomy-refreshed' ),
+					'list'  => __( 'List', 'simple-taxonomy-refreshed' ),
 				) as $optval => $option ) {
 					echo '<option ' . esc_attr( selected( $instance['type'], $optval, false ) ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
 				}
@@ -203,13 +203,13 @@ class SimpleTaxonomy_Widget extends WP_Widget {
 		</p>
 
 		<p>
-			<label for="<?php echo esc_html( $this->get_field_id( 'cloudorder' ) ); ?>"><?php esc_html_e( 'Order for cloud', 'simple-taxonomy-2' ); ?>:</label>
+			<label for="<?php echo esc_html( $this->get_field_id( 'cloudorder' ) ); ?>"><?php esc_html_e( 'Order for cloud', 'simple-taxonomy-refreshed' ); ?>:</label>
 			<select id="<?php echo esc_html( $this->get_field_id( 'cloudorder' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'cloudorder' ) ); ?>" class="widefat">
 				<?php
 				foreach ( array(
-					'RAND' => __( 'Random', 'simple-taxonomy-2' ),
-					'ASC'  => __( 'Ascending', 'simple-taxonomy-2' ),
-					'DESC' => __( 'Descending', 'simple-taxonomy-2' ),
+					'RAND' => __( 'Random', 'simple-taxonomy-refreshed' ),
+					'ASC'  => __( 'Ascending', 'simple-taxonomy-refreshed' ),
+					'DESC' => __( 'Descending', 'simple-taxonomy-refreshed' ),
 				) as $optval => $option ) {
 					echo '<option ' . esc_attr( selected( $instance['cloudorder'], $optval, false ) ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
 				}
@@ -218,12 +218,12 @@ class SimpleTaxonomy_Widget extends WP_Widget {
 		</p>
 
 		<p>
-			<label for="<?php echo esc_html( $this->get_field_id( 'listorder' ) ); ?>"><?php esc_html_e( 'Order for list', 'simple-taxonomy-2' ); ?>:</label>
+			<label for="<?php echo esc_html( $this->get_field_id( 'listorder' ) ); ?>"><?php esc_html_e( 'Order for list', 'simple-taxonomy-refreshed' ); ?>:</label>
 			<select id="<?php echo esc_html( $this->get_field_id( 'listorder' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'listorder' ) ); ?>" class="widefat">
 				<?php
 				foreach ( array(
-					'ASC'  => __( 'Ascending', 'simple-taxonomy-2' ),
-					'DESC' => __( 'Descending', 'simple-taxonomy-2' ),
+					'ASC'  => __( 'Ascending', 'simple-taxonomy-refreshed' ),
+					'DESC' => __( 'Descending', 'simple-taxonomy-refreshed' ),
 				) as $optval => $option ) {
 					echo '<option ' . esc_attr( selected( $instance['listorder'], $optval, false ) ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
 				}
@@ -233,11 +233,11 @@ class SimpleTaxonomy_Widget extends WP_Widget {
 
 		<p>
 			<input type="checkbox" id="<?php echo esc_html( $this->get_field_id( 'showcount' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'showcount' ) ); ?>" <?php checked( $instance['showcount'], true ); ?> />
-			<label for="<?php echo esc_html( $this->get_field_id( 'showcount' ) ); ?>"><?php esc_html_e( 'Show post count in list ?', 'simple-taxonomy-2' ); ?></label>
+			<label for="<?php echo esc_html( $this->get_field_id( 'showcount' ) ); ?>"><?php esc_html_e( 'Show post count in list ?', 'simple-taxonomy-refreshed' ); ?></label>
 		</p>
 
 		<p>
-			<label for="<?php echo esc_html( $this->get_field_id( 'number' ) ); ?>"><?php esc_html_e( 'Number of terms to show', 'simple-taxonomy-2' ); ?>:</label>
+			<label for="<?php echo esc_html( $this->get_field_id( 'number' ) ); ?>"><?php esc_html_e( 'Number of terms to show', 'simple-taxonomy-refreshed' ); ?>:</label>
 			<input id="<?php echo esc_html( $this->get_field_id( 'number' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'number' ) ); ?>" value="<?php echo (int) $instance['number']; ?>" class="widefat" />
 		</p>
 		<?php

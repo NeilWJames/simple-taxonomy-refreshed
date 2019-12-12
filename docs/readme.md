@@ -1,4 +1,4 @@
-# Simple Taxonomy 2
+# Simple Taxonomy Refreshed
 
 WordPress provides a simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code.
 
@@ -26,7 +26,7 @@ You can also create terms easily by typing them into a list; or by copying them 
 
 For those wishing to code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
 
-For full info go the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2) page.
+For full info go the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-refreshed) page.
 
 Also see the [example page](./example.md) to see usage of the update screen and the tools. 
 
@@ -55,13 +55,13 @@ You should review the parameters to ensure that your needs are correctly set.
 
 1. Download, unzip and upload to your WordPress plugins directory
 2. Activate the plugin within you WordPress Administration Backend
-3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-2) page.
+3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed) page.
 
 See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 ## Changelog
 
-* Version 1.0 :
+* Version 1.0.0 :
 	* Initial version with source taken from [Simple Taxonomy](https://github.com/herewithme/simple-taxonomy)
 	* Incorporates additional fixes made there but not released
 	* Passed though WP Coding Standards. This has many significant changes to the naming and structure of the code

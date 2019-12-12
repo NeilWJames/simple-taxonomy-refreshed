@@ -1,15 +1,15 @@
 <?php
 /**
- * Verifies basic CRUD operations of Simple Taxonomy 2
+ * Verifies basic CRUD operations of Simple Taxonomy Refreshed
  *
  * @author Neil W. James <neil@familyjames.com>
- * @package simple-taxonomy-2
+ * @package test-simple-taxonomy-refreshed
  */
 
 /**
  * Main Simple Taxonomy 2 tests
  */
-class Test_STaxo_2 extends WP_UnitTestCase {
+class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 
 	/**
 	 * Setup Initial Testing Environment
@@ -29,7 +29,7 @@ class Test_STaxo_2 extends WP_UnitTestCase {
 	 */
 	public function test_activated() {
 
-		$this->assertTrue( class_exists( 'SimpleTaxonomy_Client' ), 'SimpleTaxonomy_Client class not defined' );
+		$this->assertTrue( class_exists( 'SimpleTaxonomyRefreshed_Client' ), 'SimpleTaxonomy_Client class not defined' );
 
 	}
 
