@@ -6,7 +6,7 @@ WordPress provides a simple custom taxonomy, this plugin makes it even simpler, 
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, hierarchical, termmeta, meta, term meta, term conversion, conversion
 * Requires at least: 4.8
 * Stable tag: 1.0
-* Tested up to: 5.2.3
+* Tested up to: 5.3.1
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -26,7 +26,7 @@ You can also create terms easily by typing them into a list; or by copying them 
 
 For those wishing to code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
 
-For full info go the [Simple Taxonomy 2](https://github.com/NeilWJames/simple-taxonomy-refreshed) page.
+For full info go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed) page.
 
 Also see the [example page](./example.md) to see usage of the update screen and the tools. 
 

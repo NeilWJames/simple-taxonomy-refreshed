@@ -3,7 +3,7 @@
 Contributors: nwjames
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, hierarchical, termmeta, meta, term meta, term conversion, conversion
 Requires at least: 4.8
-Tested up to: 5.3
+Tested up to: 5.3.1
 Requires PHP: 5.6
 Stable tag: 1.0.0
 License: GPLv3 or later

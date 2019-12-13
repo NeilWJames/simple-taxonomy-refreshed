@@ -33,7 +33,7 @@ Clicking on *Export PHP* will download a file call test_hier.php to the browser 
 	Version: x.y.z
 	Plugin URI: http://www.example.com
 	Description: XXX - Taxonomy Test Terms
-	Author: XXX - Simple Taxonomy Generator
+	Author: XXX - Simple Taxonomy Refreshed Generator
 	Author URI: http://www.example.com
 	
 	----
