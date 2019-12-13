@@ -4,7 +4,11 @@ set -e
 
 export PATH="$HOME/.composer/vendor/bin:./bin:$PATH"
 
+composer global require wp-coding-standards/wpcs
+composer global require phpcompatibility/phpcompatibility-wp
+
 SNIFF=$HOME/.composer/vendor
-phpcs --config-set installed_paths $SNIFF/wp-coding-standards/wpcs,$SNIFF/phpcompatibility/phpcompatibility-wp/,$SNIFF/phpcompatibility/php-compatibility/,$SNIFF/phpcompatibility/phpcompatibility-paragonie/
+phpcs --config-set installed_paths $SNIFF/wp-coding-standards/wpcs,$SNIFF/phpcompatibility/phpcompatibility-wp,$SNIFF/phpcompatibility/php-compatibility,$SNIFF/phpcompatibility/phpcompatibility-paragonie
+phpcs --config-show
 
 phpcs --standard=phpcs.ruleset.xml -p -s --colors *.php */**.php -v

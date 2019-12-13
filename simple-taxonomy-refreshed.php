@@ -46,7 +46,7 @@ add_action( 'plugins_loaded', 'init_staxo_refreshed' );
 function init_staxo_refreshed() {
 	// Detect if Simple Taxonomy is active. If found then bail with message.
 	if ( in_array( 'simple-taxonomy/simple-taxonomy.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ), true ) ) {
-		// plugin when activated.
+		// Plugin is activated.
 		alert_if_original_active();
 		add_action( 'wp_head', 'alert_if_original_active' );
 		return;
@@ -96,23 +96,23 @@ function init_staxo_widget() {
  */
 function alert_if_original_active() {
 	?>
-	<script type="text/javascript">
-		function alert_message() {
-			<?php
-				echo 'alert("';
-				// translators: Do not translate Simple Taxonomy.
-				esc_html_e( 'Plugin Simple Taxonomy is active.', 'simple-taxonomy-refreshed' );
-				echo '\n';
-				// translators: Do not translate Simple Taxonomy Refreshed.
-				esc_html_e( 'Although Simple Taxonomy Refreshed is also active, its use has been disabled.', 'simple-taxonomy-refreshed' );
-				echo '\n';
-				// translators: Do not translate Simple Taxonomy.
-				esc_html_e( 'Inactivate the plugin Simple Taxonomy to use.', 'simple-taxonomy-refreshed' );
-				echo '");';
-			?>
-		}
-		window.onload = alert_message;
-	</script>
+		<script type="text/javascript">
+				function alert_message() {
+						<?php
+						echo 'alert("';
+						// translators: Do not translate Simple Taxonomy.
+						esc_html_e( 'Plugin Simple Taxonomy is active.', 'simple-taxonomy-refreshed' );
+						echo '\n';
+						// translators: Do not translate Simple Taxonomy Refreshed.
+						esc_html_e( 'Although Simple Taxonomy Refreshed is also active, its use has been disabled.', 'simple-taxonomy-refreshed' );
+						echo '\n';
+						// translators: Do not translate Simple Taxonomy.
+						esc_html_e( 'Inactivate the plugin Simple Taxonomy to use.', 'simple-taxonomy-refreshed' );
+						echo '");';
+						?>
+				}
+				window.onload = alert_message;
+		</script>
 
-	<?php
+		<?php
 }
