@@ -5,6 +5,10 @@
 
 	<rule ref="WordPress"/>
 
+	<config name="testVersion" value="5.6-"/>
+
+	<rule ref="PHPCompatibilityWP"/>
+
 	<exclude-pattern>*/vendor/*</exclude-pattern>
 	<exclude-pattern>*/vendor/autoload.php</exclude-pattern>
 </ruleset>
