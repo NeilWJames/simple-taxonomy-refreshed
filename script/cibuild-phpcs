@@ -4,5 +4,7 @@ set -e
 
 export PATH="$HOME/.composer/vendor/bin:./bin:$PATH"
 
-phpcs --config-set installed_paths $HOME/.composer/vendor/wp-coding-standards/wpcs
+SNIFF=$HOME/.composer/vendor
+phpcs --config-set installed_paths $SNIFF/wp-coding-standards/wpcs,$SNIFF/phpcompatibility/phpcompatibility-wp/,$SNIFF/phpcompatibility/php-compatibility/,$SNIFF/phpcompatibility/phpcompatibility-paragonie/
+
 phpcs --standard=phpcs.ruleset.xml -p -s --colors *.php */**.php -v
