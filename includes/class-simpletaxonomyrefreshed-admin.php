@@ -1251,7 +1251,7 @@ class SimpleTaxonomyRefreshed_Admin {
 					'Version: x.y.z',
 					'Plugin URI: http://www.example.com',
 					'Description: XXX - Taxonomy %TAXO_LABEL%',
-					'Author: XXX - Simple Taxonomy Generator',
+					'Author: XXX - Simple Taxonomy Refreshed Generator',
 					'Author URI: http://www.example.com',
 					'',
 					'----',
