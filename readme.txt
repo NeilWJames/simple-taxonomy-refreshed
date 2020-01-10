@@ -1,11 +1,11 @@
 === Simple Taxonomy Refreshed ===
 
-Contributors: nwjames
-Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, hierarchical, termmeta, meta, term meta, term conversion, conversion
+Contributors: nwjames, momo360modena
+Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
 Requires at least: 4.8
-Tested up to: 5.3.1
+Tested up to: 5.3.2
 Requires PHP: 5.6
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -45,7 +45,10 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 == Changelog ==
 
-* Version 1.0 :
+* Version 1.0.1
+	* Ensure rewrite rules flushed if parameters require it. (Also affects original plugin.)
+
+* Version 1.0.0
 	* Initial version using source taken from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy) by Amaury Balmer.
 	* Passed though WP Coding Standards.
 	* Incorporates additional fixes made there but not released

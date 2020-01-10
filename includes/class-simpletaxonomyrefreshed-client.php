@@ -38,6 +38,11 @@ class SimpleTaxonomyRefreshed_Client {
 		if ( is_array( $options['taxonomies'] ) ) {
 			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
 				register_taxonomy( $taxonomy['name'], $taxonomy['objects'], self::prepare_args( $taxonomy ) );
+			};
+			// need to refresh the rewrite rules once registered.
+			if ( get_transient( 'simple_taxonomy_refreshed_rewrite' ) ) {
+				delete_transient( 'simple_taxonomy_refreshed_rewrite' );
+				flush_rewrite_rules( false );
 			}
 		}
 	}
@@ -76,8 +81,8 @@ class SimpleTaxonomyRefreshed_Client {
 		if ( true === $taxonomy['rewrite'] ) {
 			$taxonomy['rewrite'] = array(
 				'slug'         => $taxonomy['st_slug'],
-				'with_front'   => $taxonomy['st_with_front'],
-				'hierarchical' => $taxonomy['st_hierarchical'],
+				'with_front'   => (bool) $taxonomy['st_with_front'],
+				'hierarchical' => (bool) $taxonomy['st_hierarchical'],
 				'ep_mask'      => $taxonomy['st_ep_mask'],
 			);
 		}

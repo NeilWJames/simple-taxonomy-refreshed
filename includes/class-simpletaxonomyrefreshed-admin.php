@@ -455,8 +455,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		// If rewrite is true, then set st_ variables from rewrite (may have passed through a filter).
 		if ( $taxonomy['rewrite'] ) {
 			$taxonomy['st_slug']         = $taxonomy['rewrite']['slug'];
-			$taxonomy['st_with_front']   = $taxonomy['rewrite']['with_front'];
-			$taxonomy['st_hierarchical'] = $taxonomy['rewrite']['hierarchical'];
+			$taxonomy['st_with_front']   = +$taxonomy['rewrite']['with_front'];
+			$taxonomy['st_hierarchical'] = +$taxonomy['rewrite']['hierarchical'];
 			$taxonomy['st_ep_mask']      = $taxonomy['rewrite']['ep_mask'];
 		}
 
@@ -910,7 +910,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										self::option_cap(
 											$taxonomy,
 											'manage_terms',
-											esc_html__( 'Manager terms', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Manage terms', 'simple-taxonomy-refreshed' ),
 											esc_html__( "Ability to view terms in the administration. Defaults to 'manage_categories'.", 'simple-taxonomy-refreshed' )
 										);
 										self::option_cap(
@@ -1179,24 +1179,20 @@ class SimpleTaxonomyRefreshed_Admin {
 				 */
 				$taxonomy = apply_filters( 'staxo_check_merge', $taxonomy );
 
+				// N.B. add_taxonomy and update_taxonomy functions do not return, so put any terminating logic in them.
 				// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 				if ( 'add-taxonomy' === $_POST['action'] ) {
 					check_admin_referer( 'staxo-add-taxo' );
 					if ( taxonomy_exists( $taxonomy['name'] ) ) { // Default Taxo already exist ?
-						wp_die( esc_html__( 'Cheating ? You try to add a taxonomy with a name already used by an another taxonomy.', 'simple-taxonomy-refreshed' ) );
+						wp_die( esc_html__( 'Cheating ? You try to add a taxonomy with a name already used by another taxonomy.', 'simple-taxonomy-refreshed' ) );
 					}
 					self::add_taxonomy( $taxonomy );
 				} else {
 					check_admin_referer( 'staxo-edit-taxo' );
 					self::update_taxonomy( $taxonomy );
-					// Ensure taxonomy entries updated before flush.
-					unregister_taxonomy( $taxonomy['name'] );
-					register_taxonomy( $taxonomy['name'], $taxonomy['objects'], SimpleTaxonomyRefreshed_Client::prepare_args( $taxonomy ) );
 				}
 
-				// Flush rewriting rules !
-				flush_rewrite_rules( false );
-
+				// Won't actually get here.
 				return true;
 			} else {
 				add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Impossible to add your taxonomy... You must enter a taxonomy name.', 'simple-taxonomy-refreshed' ), 'error' );
@@ -1362,6 +1358,11 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		update_option( OPTION_STAXO, $current_options );
 
+		if ( $taxonomy['rewrite'] ) {
+			// Flush rewriting rules !
+			flush_rewrite_rules( false );
+		}
+
 		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::ADMIN_SLUG ) . '&message=added' );
 		exit();
 	}
@@ -1378,9 +1379,38 @@ class SimpleTaxonomyRefreshed_Admin {
 		if ( ! isset( $current_options['taxonomies'][ $taxonomy['name'] ] ) ) { // Taxo not exist ?
 			wp_die( esc_html__( 'Cheating, uh ? You try to edit a taxonomy with a name different as original. Simple Taxonomy dont allow update the name. Propose a patch ;)', 'simple-taxonomy-refreshed' ) );
 		}
+
+		// Is there a change of rewrite rules involved in this update?
+		$old_tax = $current_options['taxonomies'][ $taxonomy['name'] ];
+		if ( (bool) $old_tax['rewrite'] ) {
+			// this plugin has a specific element, old one uses query_vars.
+			$old_slug = ( array_key_exists( 'st_slug', $old_tax ) ? $old_tax['st_slug'] : $old_tax['query_vars'] );
+		} else {
+			$old_slug = '!impossible!';
+		}
+		if ( (bool) $taxonomy['rewrite'] ) {
+			$new_slug = $taxonomy['st_slug'];
+		} else {
+			$new_slug = '!impossible!';
+		}
+
 		$current_options['taxonomies'][ $taxonomy['name'] ] = $taxonomy;
 
 		update_option( OPTION_STAXO, $current_options );
+
+		if ( $new_slug !== $old_slug ) {
+			// Change in rewrite rules - Flush !
+			// Ensure taxonomy entries updated before any flush.
+			unregister_taxonomy( $taxonomy['name'] );
+			if ( '!impossible!' !== $old_slug ) {
+				// remove old slug from rewrite rules.
+				flush_rewrite_rules( false );
+			}
+			if ( '!impossible!' !== $new_slug ) {
+				// Unfortunately we cannot register the new taxonomy and refresh rules here, so create transient data.
+				set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
+			}
+		}
 
 		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::ADMIN_SLUG ) . '&message=updated' );
 		exit();
