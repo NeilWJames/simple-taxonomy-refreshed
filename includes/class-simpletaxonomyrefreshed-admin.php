@@ -455,8 +455,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		// If rewrite is true, then set st_ variables from rewrite (may have passed through a filter).
 		if ( $taxonomy['rewrite'] ) {
 			$taxonomy['st_slug']         = $taxonomy['rewrite']['slug'];
-			$taxonomy['st_with_front']   = +$taxonomy['rewrite']['with_front'];
-			$taxonomy['st_hierarchical'] = +$taxonomy['rewrite']['hierarchical'];
+			$taxonomy['st_with_front']   = (int) $taxonomy['rewrite']['with_front'];
+			$taxonomy['st_hierarchical'] = (int) $taxonomy['rewrite']['hierarchical'];
 			$taxonomy['st_ep_mask']      = $taxonomy['rewrite']['ep_mask'];
 		}
 
@@ -1358,9 +1358,9 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		update_option( OPTION_STAXO, $current_options );
 
-		if ( $taxonomy['rewrite'] ) {
-			// Flush rewriting rules !
-			flush_rewrite_rules( false );
+		if ( (bool) $taxonomy['rewrite'] ) {
+			// Unfortunately we cannot register the new taxonomy and refresh rules here, so create transient data.
+			set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
 		}
 
 		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::ADMIN_SLUG ) . '&message=added' );
