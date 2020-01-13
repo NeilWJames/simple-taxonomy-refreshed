@@ -62,7 +62,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	
 == Migration Notice ==
 
-= 1.0.0 =
+= From Simple Taxonomy =
 
 It is a drop-in replacement for [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy) - using the same options table entry.
 
