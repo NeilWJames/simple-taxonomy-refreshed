@@ -297,7 +297,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'st_meta_box_cb'           => '',
 			'st_meta_box_sanitize_cb'  => '',
 			'st_args'                  => '',
-			'metabox'                  => 'default',  // compatability.
+			'metabox'                  => 'default',  // compatibility.
 		);
 	}
 

@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/NeilWJames/simple-taxonomy-refreshed
  * Description:       WordPress provides simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code
  *                    Converted, Standardised and Extended from Simple Taxonomy by Amaury Balmer
- * Version:           1.0.1
+ * Version:           1.0.2
  * Requires at least: 4.8
  * Requires PHP:      5.6
  * Author:            Neil James
@@ -68,10 +68,12 @@ function init_staxo_refreshed() {
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin.php';
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-conversion.php';
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-import.php';
+		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-rename.php';
 
 		$staxo_a = SimpleTaxonomyRefreshed_Admin::get_instance();
 		$staxo_c = SimpleTaxonomyRefreshed_Admin_Conversion::get_instance();
 		new SimpleTaxonomyRefreshed_Admin_Import();
+		new SimpleTaxonomyRefreshed_Admin_Rename();
 	}
 
 	// Widget.

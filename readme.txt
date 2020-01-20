@@ -5,7 +5,7 @@ Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
 Requires at least: 4.8
 Tested up to: 5.3.2
 Requires PHP: 5.6
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -27,6 +27,8 @@ You can also export the Taxonomy definition to include it directly in your own c
 
 You can also create terms easily by typing them into a list; or by copying them from an existing taxonomy.
 
+A tool has been provided to support changing the taxonomy slug. Any terms and their usages will also be renamed.
+
 For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
 
 == Frequently Asked Questions ==
@@ -44,6 +46,9 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 1.0.2
+	* Add tool to rename custom taxonomy slug. Terms and usages will be updated as well.
 
 * Version 1.0.1
 	* Ensure rewrite rules flushed if parameters require it. (Also affects original plugin.)

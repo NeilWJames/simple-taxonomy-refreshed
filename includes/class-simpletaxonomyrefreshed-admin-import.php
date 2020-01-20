@@ -107,8 +107,6 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 
 			if ( 0 === $termlines ) {
 				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Done, but you have not imported any term.', 'simple-taxonomy-refreshed' ), 'error' );
-			} elseif ( 1 === $termlines ) {
-				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Done, 1 term lines processed successfully !', 'simple-taxonomy-refreshed' ), 'updated' );
 			} else {
 				// translators: %d is the count of terms that were successfully processed.
 				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html( sprintf( __( 'Done, %d term lines processed successfully !', 'simple-taxonomy-refreshed' ), $termlines ) ), 'updated' );

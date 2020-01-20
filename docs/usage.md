@@ -49,7 +49,7 @@ The data is held in JSON format and is incompatible with data stored by the plug
 
 ## Tools
 
-When the plugin is activated, two tools are available in the administration menu under *Tools*. They are *Terms migrate* and *Terms import*.
+When the plugin is activated, three tools are available in the administration menu under *Tools*. They are *Terms migrate*, *Terms import* and *Rename Taxonomy Slug*.
 
 ### Terms migrate
 
@@ -62,6 +62,8 @@ The user selects the Source and Destination taxonomies - which may be standard (
 Once selected the entire set of terms held in the Source taxonomy are extracted from the database and entered into the screen ready for loading with the [Terms Import](./TermsImp.md) function.
 
 This gives the opportunity to edit this list to choose subsets, etc.
+
+No usages of these terms are migrated.
 
 If both of these are Hierarchical, then the terms will be output in a format to be loaded as a hierarchy, otherwise a simple list will be produced.
 
@@ -86,3 +88,12 @@ As only term text is entered, the slug is generated from the term text and no de
 This data can be entered or amended in the appropriate Taxonomy maintenance screen. 
 
 See the [example page](./example.md) for a specific example of the function usage.
+
+### Rename Taxonomy Slug
+
+This tool allows the slug for a custom taxonomy to be renamed.
+
+It also gives the option to change the query_var and rewrite slug (if that function is active).
+
+As part of the update all its terms and their usages will be updated to remain in the taxonomy.
+ 
