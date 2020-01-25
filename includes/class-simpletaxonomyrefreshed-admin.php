@@ -972,7 +972,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											$taxonomy,
 											'query_var',
 											esc_html__( 'Query var', 'simple-taxonomy-refreshed' ),
-											__( '<strong>Query var</strong> is used for build URLs of taxonomy. If this value is empty, Simple Taxonomy will use a slug from label for build URL.', 'simple-taxonomy-refreshed' )
+											__( '<strong>Query var</strong> is used for build URLs of taxonomy. If this value is empty, WordPress will use the taxonomy slug for build URL.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,

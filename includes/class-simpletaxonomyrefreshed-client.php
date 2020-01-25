@@ -119,6 +119,9 @@ class SimpleTaxonomyRefreshed_Client {
 		);
 
 		// code-related fields. Can't assume null is valid.
+		if ( ! empty( $taxonomy['query_var'] ) ) {
+			$tax_out['query_var'] = $taxonomy['name'];
+		}
 		if ( ! empty( $taxonomy['st_args'] ) ) {
 			$tax_out['args'] = $taxonomy['st_args'];
 		}

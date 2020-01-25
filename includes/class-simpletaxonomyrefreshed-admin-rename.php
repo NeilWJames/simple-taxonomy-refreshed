@@ -67,7 +67,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			// deal with query_var.
 			if ( $taxonomy === $new_taxonomy['query_var'] ) {
 				// default value - query_var == name - reset old.
-				$new_taxonomy['query_vars'] = '';
+				$new_query = '';
 			}
 			if ( '' !== $new_query && $new_query === $new_slug ) {
 				// default value - query_var == name - reset new.
@@ -77,11 +77,9 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 
 			// A change in rewrite slug requires a flush of the rewrite rules.
 			if ( (bool) $taxonomy_obj['rewrite'] ) {
-				$old_rewrite_slug = $taxonomy_obj['rewrite']['slug'];
-				if ( $new_rewrite !== $old_rewrite_slug ) {
+				if ( '' !== $new_rewrite && $new_rewrite !== $new_taxonomy['st_slug'] ) {
 					// update options.
-					$new_taxonomy['rewrite']['slug'] = $new_rewrite;
-					$new_taxonomy['st_slug']         = $new_rewrite;
+					$new_taxonomy['st_slug'] = $new_rewrite;
 					// need a flush of the rewrite rules at next init.
 					set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
 				}
@@ -104,6 +102,19 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				),
 				array(
 					'taxonomy' => $taxonomy,
+				)
+			);
+
+			// Appears to be some taxonomy structure data held in the options table.
+			$post_table = "{$wpdb->prefix}options";
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$children = $wpdb->update(
+				$post_table,
+				array(
+					'option_name' => $new_slug . '_children',
+				),
+				array(
+					'option_name' => $taxonomy . '_children',
 				)
 			);
 
@@ -192,7 +203,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				<p id="curr_objects">&nbsp;</p>
 				<h3><?php esc_html_e( 'Update Taxonomy slug', 'simple-taxonomy-refreshed' ); ?></h3>
 				<p><?php esc_html_e( 'Existing value: ', 'simple-taxonomy-refreshed' ); ?><span id="curr_slug">&nbsp;</span></p>
-				<p><input type="text" name="new_slug" id="new_slug" onblur="staxo_check()"></p>
+				<p><input type="text" name="new_slug" id="new_slug" onchange="staxo_check()"></p>
 				<p><?php esc_html_e( 'Ensure that you have entered a new value for the slug to enable the Rename.', 'simple-taxonomy-refreshed' ); ?><span id="curr_slug">&nbsp;</span></p>
 				<h3><?php esc_html_e( 'Update Query_var', 'simple-taxonomy-refreshed' ); ?></h3>
 				<p><?php esc_html_e( 'Existing value: ', 'simple-taxonomy-refreshed' ); ?><span id="curr_query">&nbsp;</span></p>
