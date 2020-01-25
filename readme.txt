@@ -48,7 +48,8 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 == Changelog ==
 
 * Version 1.0.2
-	* Add tool to rename custom taxonomy slug. Terms and usages will be updated as well.
+	* Add tool to rename custom taxonomy slug. Terms and their usages will be remain linked to the taxonomy.
+	* Some labels clarified.
 
 * Version 1.0.1
 	* Ensure rewrite rules flushed if parameters require it. (Also affects original plugin.)
