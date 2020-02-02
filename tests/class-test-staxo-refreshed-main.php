@@ -24,6 +24,10 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 
 	}
 
+	public function consoleLog($text)	{
+			fwrite(STDERR, $text."\n");
+	}
+
 	/**
 	 * Output message to log.
 	 *
