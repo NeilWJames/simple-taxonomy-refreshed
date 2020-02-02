@@ -24,10 +24,16 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 
 	}
 
+	public function consoleLog($text)	{
+			fwrite(STDERR, $text."\n");
+	}
+
 	/**
 	 * Make sure plugin is activated.
 	 */
 	public function test_activated() {
+
+		$this->consoleLog( 'Test_STaxo_Refreshed_Main - Start' );
 
 		$this->assertTrue( class_exists( 'SimpleTaxonomyRefreshed_Client' ), 'SimpleTaxonomy_Client class not defined' );
 
