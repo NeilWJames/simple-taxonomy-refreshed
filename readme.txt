@@ -5,7 +5,7 @@ Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
 Requires at least: 4.8
 Tested up to: 5.3.2
 Requires PHP: 5.6
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -46,6 +46,10 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 1.0.3
+	* Inconsistency in treatment of query_var variable corrected (introduced in 1.0.2).
+	* User-defined text surrounding custom taxonomies when requested for listing in posts.
 
 * Version 1.0.2
 	* Add tool to rename custom taxonomy slug. Terms and their usages will be remain linked to the taxonomy.

@@ -1,16 +1,16 @@
 # Add/Modify a Taxonomy
 
-The main purpose of the plug-in is to set the very many parameters available to the user when defining a Taxonomy.
+The main purpose of the plug-in is to be able to set the very many parameters available to the user when defining a Taxonomy.
 
 They are all set within this section. This appears in the middle of the initial Settings screen. It also appears as the entire screen for modification.
 
-Because there are so many parameters rather than supporting a very large page, the window has been divided into a number of panels.
+Because there are so many parameters, the window has been divided into a number of panels rather than supporting a very large page.
 
-The names, in English, associated with the fields correspond to the variables that are being set. There is no point here second guessing their usage or purpose.
+The names, in English, associated with the fields correspond to the variables that are being set. There is no point here trying to restate their usage or purpose.
 
-See the [WordPress Documentation](https://developer.wordpress.org/reference/functions/register_taxonomy/) for their detail.
+See the [WordPress Documentation](https://developer.wordpress.org/reference/functions/register_taxonomy/) for details of their impact.
 
-You can move from panel to panel reviewing the parameters - but they need to be stored into the database by clicking the Add or Update Taxonomy before taking effect.
+You can move from panel to panel reviewing the parameters - but they need to be stored into the database by clicking the Add or Update Taxonomy before they will take effect.
 
 ## Main
 
@@ -18,7 +18,7 @@ You can move from panel to panel reviewing the parameters - but they need to be 
 
 The name **must** be completed in order to add the taxonomy.
 
-The last field *Display Terms with Posts* is not related to a parameter. It allows you to request that the taxonomy terms added to posts are displayed with the post content and/or excerpt.
+The last fields *Display Terms with Posts* is not related to WordPress standard functionality. It allows you to request that the taxonomy terms are added to posts are displayed with the post content and/or excerpt. When used, the list of terms can be prefixed and suffixed by the user-defined Before and After texts.
 
 ## Visibility
 
@@ -48,7 +48,7 @@ Sets the capabilities required to manage the taxonomy. These need to be existing
 
 ![REST Panel](../images/AddTaxRest.png)
 
-If non-standard processing is required for RST processing, the code routines can be declared here.
+If non-standard processing is required for REST processing, the code routines can be declared here.
 
 ## Other
 
@@ -60,6 +60,5 @@ Various other parameters are managed here.
 
 ![PWPGraphQL Panel](../images/AddTaxGrQL.png)
 
-This is an optional set of parameters and is provided as a convenience to avoid user codong if WPGraphQL is installed.
-
+This is an optional set of parameters and is provided as a convenience to avoid user coding when WPGraphQL is installed.
 

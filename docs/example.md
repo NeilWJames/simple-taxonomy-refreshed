@@ -9,7 +9,8 @@ We will add a taxonomy called test_hier with a few minimal attributes on the var
 	Name: test_hier
 	Type: Hierarchical
 	Attached to: Posts
-	Display terms on: Content
+	Display Terms with Posts: Content
+	Display Terms Before text: Test Terms :
 
 <u>Labels</u>
 
@@ -115,10 +116,13 @@ Clicking on *Export PHP* will download a file call test_hier.php to the browser 
 	) );
 	}
 	// Display Terms with Posts: content.
+	// Display Terms Before text: Test Terms :
+	// Display Terms After text: 
+
 
 This can be included in your own code - but then should be deleted as a custom taxonomy.
 
-You can also use it as a single page reference, which is why the last line comment has been added.
+You can also use it as a single page reference, which is why the last comment lines have been added.
 
 ## Adding Terms to the taxonomy
 Since show_in_menu is set to true, it is available as a sub-menu from the Posts menu.
@@ -183,4 +187,30 @@ As the data has been entered hierarchically, this is how it is loaded.
 
 ![Terms migrate screen](../images/MigScreen6.png)
 
+## Changing the Taxonomy Slug
 
+Normally you cannot change the taxonomy slug since any terms that have been defined for it will use that slug.
+
+Whilst you can create a second custom taxonomy with similar parameters and use the export/import migration capabilities, this will not move any term usages across.
+
+A tool (Rename Taxonomy Slug) has been provided for that purpose only.
+
+![Rename Taxonomy Slug](../images/RenameTaxSlug.png)
+
+You select the taxonomy to be changed and it shows you existing values. Enter the new slug name.
+
+Because the query_var and rewrite slug are closely related to the taxonomy slug, these are displayed and are optionally updatable here.
+
+Since the rewrite option was not defined with this basic example, it is not shown on this screen.
+
+![New Slug Entered](../images/RenamedSlug.png)
+
+The Rename Taxinomy button is now active and once checked the data can be clicked. The processing done is given.
+
+![Rename messages](../images/RenameMessages.png)
+
+After this is done, you might wish to use the menu to look at the new taxonomy. If clicked on, then you will get an invalid taxonomy message.
+
+This is because it still has the old slug name - which no longer exists. So before doing this refresh the page.
+
+You will be able to see the terms using the new slug - and all the terms are there - and all the posts have the same terms attached.

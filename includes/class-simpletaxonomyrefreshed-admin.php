@@ -436,6 +436,10 @@ class SimpleTaxonomyRefreshed_Admin {
 		$taxonomy = wp_parse_args( SimpleTaxonomyRefreshed_Client::prepare_args( $taxonomy ), $taxonomy );
 
 		// Migration case - Not updated yet.
+		if ( ! array_key_exists( 'st_before', $taxonomy ) ) {
+			$taxonomy['st_before'] = '';
+			$taxonomy['st_after']  = '';
+		}
 		if ( ! array_key_exists( 'st_slug', $taxonomy ) ) {
 			$taxonomy['st_slug']                  = '';
 			$taxonomy['st_with_front']            = 1;
@@ -568,7 +572,7 @@ class SimpleTaxonomyRefreshed_Admin {
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
 									<tr valign="top">
-										<th scope="row"><label for="name"><?php esc_html_e( 'Name', 'simple-taxonomy-refreshed' ); ?></label></th>
+										<th scope="row"><label for="name"><?php esc_html_e( 'Name (slug)', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<input name="name" type="text" id="name" onchange="checkNameSet(event)" value="<?php echo esc_attr( $taxonomy['name'] ); ?>" class="regular-text"
 											<?php
@@ -607,7 +611,7 @@ class SimpleTaxonomyRefreshed_Admin {
 												echo '<label class="inline"><input type="checkbox" ' . checked( true, in_array( $type->name, $objects, true ), false ) . ' name="objects[]" value="' . esc_attr( $type->name ) . '" /> ' . esc_html( $type->label ) . '</label>' . "\n";
 											}
 											?>
-											<span class="description"><?php esc_html_e( 'You can add this taxonomy to builtin or custom post types. (compatible Simple Custom Types)', 'simple-taxonomy-refreshed' ); ?></span>
+											<span class="description"><?php esc_html_e( 'You can add this taxonomy to builtin or custom post types.', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
 									<tr valign="top">
@@ -623,6 +627,20 @@ class SimpleTaxonomyRefreshed_Admin {
 											<span class="description"><?php esc_html_e( 'Option to display the terms on the Post page with associated data', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
+									<?php
+										self::option_text(
+											$taxonomy,
+											'st_before',
+											esc_html__( 'Display Terms Before text', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'This text will be used before the Post terms display list', 'simple-taxonomy-refreshed' )
+										);
+										self::option_text(
+											$taxonomy,
+											'st_after',
+											esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'This text will be used after the Post terms display list', 'simple-taxonomy-refreshed' )
+										);
+									?>
 								</table>
 							</div>
 						</div>
@@ -705,7 +723,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										self::option_label(
 											$taxonomy,
 											'name',
-											esc_html__( 'Name', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Name (label)', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'This will be used as the taxonomy label.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_label(
@@ -1285,10 +1303,18 @@ class SimpleTaxonomyRefreshed_Admin {
 			$output = str_replace( '%TAXO_CODE%', $code, $output );
 
 			// Set display as comment as not in parameters.
+			if ( ! array_key_exists( 'st_before', $taxo_data ) ) {
+				$taxo_data['st_before'] = '';
+			}
+			if ( ! array_key_exists( 'st_after', $taxo_data ) ) {
+				$taxo_data['st_after'] = '';
+			}
 			$display  = "\n" . '// ' . esc_html__( 'Display Terms with Posts', 'simple-taxonomy-refreshed' ) . ': ';
 			$display .= ( 'both' === $taxo_data['auto'] ? 'content, excerpt' : $taxo_data['auto'] );
+			$display .= "\n" . '// ' . esc_html__( 'Display Terms Before text', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_before'];
+			$display .= "\n" . '// ' . esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_after'];
 
-			$output .= $display . ".\n";
+			$output .= $display . "\n";
 
 			// Force download.
 			header( 'Content-Disposition: attachment; filename=' . $taxo_name . '.php' );
@@ -1383,13 +1409,13 @@ class SimpleTaxonomyRefreshed_Admin {
 		// Is there a change of rewrite rules involved in this update?
 		$old_tax = $current_options['taxonomies'][ $taxonomy['name'] ];
 		if ( (bool) $old_tax['rewrite'] ) {
-			// this plugin has a specific element, old one uses query_vars.
-			$old_slug = ( array_key_exists( 'st_slug', $old_tax ) ? $old_tax['st_slug'] : $old_tax['query_vars'] );
+			// this plugin has a specific element, old one uses query_var.
+			$old_slug = ( array_key_exists( 'st_slug', $old_tax ) ? $old_tax['st_slug'] : $old_tax['query_var'] );
 		} else {
 			$old_slug = '!impossible!';
 		}
 		if ( (bool) $taxonomy['rewrite'] ) {
-			$new_slug = $taxonomy['st_slug'];
+			$new_slug = ( empty( $taxonomy['st_slug'] ) ? $taxonomy['name'] : $taxonomy['st_slug'] );
 		} else {
 			$new_slug = '!impossible!';
 		}

@@ -54,17 +54,15 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @return array
 	 */
 	public static function prepare_args( $taxonomy ) {
-		// Empty query_var ? use name.
-		if ( empty( $taxonomy['query_var'] ) ) {
-			$taxonomy['query_var'] = $taxonomy['name'];
-		} else {
-			$taxonomy['query_var'] = trim( $taxonomy['query_var'] );
-		}
-
 		// Ensure complete.
 		$taxonomy                 = wp_parse_args( $taxonomy, self::get_taxonomy_default_fields() );
 		$taxonomy['labels']       = wp_parse_args( $taxonomy['labels'], self::get_taxonomy_default_labels() );
 		$taxonomy['capabilities'] = wp_parse_args( $taxonomy['capabilities'], self::get_taxonomy_default_capabilities() );
+
+		// Empty query_var ? use name.
+		if ( ! empty( $taxonomy['query_var'] ) ) {
+			$taxonomy['query_var'] = trim( $taxonomy['query_var'] );
+		}
 
 		// Empty slug ? use name.
 		if ( empty( $taxonomy['st_slug'] ) ) {
@@ -119,7 +117,7 @@ class SimpleTaxonomyRefreshed_Client {
 		);
 
 		// code-related fields. Can't assume null is valid.
-		if ( ! empty( $taxonomy['query_var'] ) ) {
+		if ( empty( $taxonomy['query_var'] ) ) {
 			$tax_out['query_var'] = $taxonomy['name'];
 		}
 		if ( ! empty( $taxonomy['st_args'] ) ) {
@@ -211,23 +209,24 @@ class SimpleTaxonomyRefreshed_Client {
 		$output = '';
 
 		$options = get_option( OPTION_STAXO );
+
 		foreach ( (array) $options['taxonomies'] as $taxonomy ) {
-
-			$filter = false;
-			if ( isset( $taxonomy['auto'] ) && 'both' === $taxonomy['auto'] ) {
-				$filter = true;
-			} elseif ( isset( $taxonomy['auto'] ) && $type === $taxonomy['auto'] ) {
-				$filter = true;
-			}
-
-			if ( true === $filter ) {
-				$terms = get_the_term_list( $post->ID, $taxonomy['name'], $taxonomy['labels']['name'] . ': ', ', ', '' );
-				if ( ! empty( $terms ) ) {
-					$output .= "\t" . '<div class="taxonomy-' . $taxonomy['name'] . '">' . $terms . "</div>\n";
-				} else {
+			// Does the post_type uses this taxonomy.
+			if ( isset( $taxonomy['auto'] ) && in_array( $post->post_type, $taxonomy['objects'], true ) ) {
+				if ( 'both' === $taxonomy['auto'] || $type === $taxonomy['auto'] ) {
+					// Migration case - Not updated yet.
+					if ( ! array_key_exists( 'st_before', $taxonomy ) ) {
+						$taxonomy['st_before'] = '';
+						$taxonomy['st_after']  = '';
+					}
+					$terms = get_the_term_list( $post->ID, $taxonomy['name'], $taxonomy['st_before'], ', ', $taxonomy['st_after'] );
+					if ( ! empty( $terms ) ) {
+						$output .= "\t" . '<div class="taxonomy-' . $taxonomy['name'] . '">' . $terms . "</div>\n";
+					} else {
 						// On migration and before update, no value in 'not_found'.
-						$notfound = ( isset( $taxonomy['labels']['not_found'] ) ? $taxonomy['labels']['not_found'] : 'No Terms found' );
-					$output      .= "\t" . '<!-- Taxonomy : ' . $taxonomy['name'] . ' : ' . $notfound . ' -->' . "\n";
+						$notfound = ( isset( $taxonomy['labels']['not_found'] ) ? $taxonomy['labels']['not_found'] : __( 'No Terms found', 'simple-taxonomy-refreshed' ) );
+						$output  .= "\t" . '<!-- Taxonomy : ' . $taxonomy['name'] . ' : ' . $notfound . ' -->' . "\n";
+					}
 				}
 			}
 		}
@@ -289,6 +288,8 @@ class SimpleTaxonomyRefreshed_Client {
 			// Specific to plugin.
 			'objects'                  => array(),
 			'auto'                     => 'none',
+			'st_before'                => '',
+			'st_after'                 => '',
 			'st_slug'                  => '',
 			'st_with_front'            => 1,
 			'st_hierarchical'          => 1,
