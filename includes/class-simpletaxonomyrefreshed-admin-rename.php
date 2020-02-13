@@ -91,21 +91,8 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			$current_options['taxonomies'][ $new_taxonomy['name'] ] = $new_taxonomy;
 			update_option( OPTION_STAXO, $current_options );
 
-			// Update the Taxonomy table.
-			global $wpdb;
-			$post_table = "{$wpdb->prefix}term_taxonomy";
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$updated = $wpdb->update(
-				$post_table,
-				array(
-					'taxonomy' => $new_slug,
-				),
-				array(
-					'taxonomy' => $taxonomy,
-				)
-			);
-
 			// Appears to be some taxonomy structure data held in the options table.
+			global $wpdb;
 			$post_table = "{$wpdb->prefix}options";
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$children = $wpdb->update(
@@ -118,6 +105,26 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				)
 			);
 
+			// clean taxonomy cache.
+			// Do not use clean_taxonomy_cache as it rebuilds the hierarchy - which we already have.
+			// However the new taxonomy does not yet exist so terms will not be found.
+			// Can delete any terms cached.
+       			wp_cache_delete( 'all_ids', $taxonomy );
+		        wp_cache_delete( 'get', $taxonomy );
+
+			// Update the Taxonomy table.
+			$post_table = "{$wpdb->prefix}term_taxonomy";
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$updated = $wpdb->update(
+				$post_table,
+				array(
+					'taxonomy' => $new_slug,
+				),
+				array(
+					'taxonomy' => $taxonomy,
+				)
+			);
+
 			add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Taxonomy slug changed.', 'simple-taxonomy-refreshed' ), 'updated' );
 			if ( 0 === $updated ) {
 				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Done, no terms were migrated.', 'simple-taxonomy-refreshed' ), 'updated' );
@@ -125,12 +132,10 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				// translators: %d is the count of terms that were successfully migrated.
 				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html( sprintf( __( 'Done, %d terms were migrated.', 'simple-taxonomy-refreshed' ), $updated ) ), 'updated' );
 			}
-
-			// clean cache if possible.
-			global $wp_version;
-			if ( version_compare( $wp_version, '4.9.0', '>=' ) ) {
-				clean_taxonomy_cache( $taxonomy );
-				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'WordPress Taxonomy cache cleaned.', 'simple-taxonomy-refreshed' ), 'updated' );
+			if ( 0 === $children ) {
+				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Done, Children record in options table not migrated.', 'simple-taxonomy-refreshed' ), 'updated' );
+			} else {
+				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Done, Children record in options table migrated.', 'simple-taxonomy-refreshed' ), 'updated' );
 			}
 		}
 	}
