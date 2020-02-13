@@ -109,8 +109,8 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			// Do not use clean_taxonomy_cache as it rebuilds the hierarchy - which we already have.
 			// However the new taxonomy does not yet exist so terms will not be found.
 			// Can delete any terms cached.
-       			wp_cache_delete( 'all_ids', $taxonomy );
-		        wp_cache_delete( 'get', $taxonomy );
+			wp_cache_delete( 'all_ids', $taxonomy );
+			wp_cache_delete( 'get', $taxonomy );
 
 			// Update the Taxonomy table.
 			$post_table = "{$wpdb->prefix}term_taxonomy";
