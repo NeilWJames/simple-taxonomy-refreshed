@@ -29,3 +29,7 @@ The following filters are available for this plug-in:
 * staxo_widget_tag_cloud_args
 
     Modifies the arguments sent to the tag cloud widget
+
+* staxo_widget_tag_list_args
+
+    Modifies the list get_terms arguments.

@@ -58,7 +58,22 @@ Various other parameters are managed here.
 
 ## WPGraphQL
 
-![PWPGraphQL Panel](../images/AddTaxGrQL.png)
+![WPGraphQL Panel](../images/AddTaxGrQL.png)
 
 This is an optional set of parameters and is provided as a convenience to avoid user coding when WPGraphQL is installed.
 
+## Admin Filter
+
+![Admin Filter Panel](../images/AddTaxAdmin.png)
+
+This is an optional set of parameters and allows the user to use the taxonomy as a dropdown filter for selected post types on the admin list screens.
+
+## Term Count
+
+![Term Count Panel](../images/AddTaxTerm1.png)
+
+This is an optional set of parameters and allows the user to modify the standard term count of published posts only and to select which post statuses should be included.
+
+Two options are supported - either to count all statuses except trash; and the other allows the statuses to be individually specified.
+
+![Term Count Panel showing statuses](../images/AddTaxTerm2.png)

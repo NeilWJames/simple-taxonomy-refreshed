@@ -3,7 +3,7 @@
  * Simple Taxonomy Widget class file.
  *
  * @package simple-taxonomy-refreshed
- * @author Amaury Balmer/Neil James
+ * @author Neil James/Amaury Balmer
  */
 
 /**
@@ -83,7 +83,8 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			echo $before_title . esc_html( $title ) . $after_title;
 		}
 
-		if ( 'cloud' === $instance['type'] ) {
+		// if we request a tag cloud, check that it has been allowed.
+		if ( 'cloud' === $instance['type'] && get_taxonomy( $current_taxonomy )->show_tagcloud ) {
 			/*
 			 *
 			 * Filters the cloud widget arguments.
@@ -104,14 +105,29 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			echo '<div>' . "\n";
 			wp_tag_cloud( $cloud_args );
 			echo '</div>' . "\n";
-
 		} else {
-
-			$terms = get_terms( $current_taxonomy, 'number=' . $instance['number'] . '&order=' . $instance['listorder'] );
+			/*
+			 *
+			 * Filters the list get_terms arguments.
+			 *
+			 * @param array {
+			 *     array  taxonomy taxonomy data structure (from register_taxonomy).
+			 *     int    number   Number of items to display in the list.
+			 *     string order    Ordering of the items.
+			 */
+			$list_args = apply_filters(
+				'staxo_widget_tag_list_args',
+				array(
+					'taxonomy' => $current_taxonomy, 
+					'number'   => $instance['number'],
+					'order'    => ( 'RAND' == $instance['listorder'] ? 'ASC' : $instance['listorder'] ),
+				)
+			);
+			$terms = get_terms( $list_args );
 			if ( false === $terms ) {
-				echo '<p>' . esc_html_e( 'No terms actually for this taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>';
+				echo '<p>' . esc_html_e( 'No terms available for this taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>';
 			} else {
-				echo '<ul class="simpletaxonomy-list">' . "\n";
+				echo '<ul class="staxo-terms-list">' . "\n";
 				foreach ( (array) $terms as $term ) {
 					echo '<li><a href="' . esc_url( get_term_link( $term, $current_taxonomy ) ) . '">' . esc_html( $term->name ) . '</a>' . "\n";
 					if ( $instance['showcount'] ) {
@@ -178,7 +194,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 				<?php
 				foreach ( get_taxonomies() as $taxonomy ) {
 					$tax = get_taxonomy( $taxonomy );
-					if ( ! $tax->show_tagcloud || empty( $tax->labels->name ) ) {
+					if ( empty( $tax->labels->name ) ) {
 						continue;
 					}
 
