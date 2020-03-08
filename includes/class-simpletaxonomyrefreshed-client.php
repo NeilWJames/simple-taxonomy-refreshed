@@ -26,6 +26,9 @@ class SimpleTaxonomyRefreshed_Client {
 
 		add_action( 'template_redirect', array( __CLASS__, 'template_redirect' ) );
 		add_filter( 'wp_title', array( __CLASS__, 'wp_title' ), 10, 2 );
+
+		add_action( 'restrict_manage_posts', array( __CLASS__, 'manage_filters' ) );
+
 	}
 
 	/**
@@ -37,7 +40,24 @@ class SimpleTaxonomyRefreshed_Client {
 		$options = get_option( OPTION_STAXO );
 		if ( is_array( $options['taxonomies'] ) ) {
 			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
-				register_taxonomy( $taxonomy['name'], $taxonomy['objects'], self::prepare_args( $taxonomy ) );
+				$args = self::prepare_args( $taxonomy );
+
+				// Update callback if term count callback wanted.
+				if ( '' === $args['update_count_callback'] ) {
+					switch ( $taxonomy['st_cb_type'] ) {
+						case '1':
+							$args['update_count_callback'] = array( __CLASS__, 'term_count_cb_all' );
+							break;
+						case '2':
+							$args['update_count_callback'] = array( __CLASS__, 'term_count_cb_sel' );
+							// create/update the cache.
+							$filter = self::term_count_sel_cache( $taxonomy['name'] );
+							break;
+						default:
+							null;
+					}
+				}
+				register_taxonomy( $taxonomy['name'], $taxonomy['objects'], $args );
 			};
 			// need to refresh the rewrite rules once registered.
 			if ( get_transient( 'simple_taxonomy_refreshed_rewrite' ) ) {
@@ -50,7 +70,7 @@ class SimpleTaxonomyRefreshed_Client {
 	/**
 	 * Prepare ARGS from DB to function API.
 	 *
-	 * @param array $taxonomy  taxonomy structure.
+	 * @param array $taxonomy  taxonomy saved parameters.
 	 * @return array
 	 */
 	public static function prepare_args( $taxonomy ) {
@@ -110,6 +130,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'capabilities'          => $taxonomy['capabilities'],
 			'rewrite'               => $taxonomy['rewrite'],
 			'query_var'             => $taxonomy['query_var'],
+			'update_count_callback' => $taxonomy['update_count_callback'],
 			'show_in_rest'          => (bool) $taxonomy['show_in_rest'],
 			'rest_base'             => $taxonomy['rest_base'],
 			'rest_controller_class' => $taxonomy['rest_controller_class'],
@@ -146,7 +167,9 @@ class SimpleTaxonomyRefreshed_Client {
 		 * @param  array  $taxonomy taxonomy parameters from screen or DB.
 		 * @return array  output set of register_taxonomy fields (plus name).
 		 */
-		return apply_filters( 'staxo_prepare_args', $tax_out, $taxonomy );
+		$tax_out = apply_filters( 'staxo_prepare_args', $tax_out, $taxonomy );
+
+		return $tax_out;
 	}
 
 	/**
@@ -219,7 +242,17 @@ class SimpleTaxonomyRefreshed_Client {
 						$taxonomy['st_before'] = '';
 						$taxonomy['st_after']  = '';
 					}
-					$terms = get_the_term_list( $post->ID, $taxonomy['name'], $taxonomy['st_before'], ', ', $taxonomy['st_after'] );
+					if ( ! empty( $taxonomy['st_before'] ) && ' ' !== substr( $taxonomy['st_before'], -1 ) ) {
+						$prefix = $taxonomy['st_before'] . ' ';
+					} else {
+						$prefix = $taxonomy['st_before'];
+					}
+					if ( ! empty( $taxonomy['st_after'] ) && ' ' !== substr( $taxonomy['st_after'], 1 ) ) {
+						$suffix = ' ' . $taxonomy['st_after'];
+					} else {
+						$suffix = $taxonomy['st_after'];
+					}
+					$terms = get_the_term_list( $post->ID, $taxonomy['name'], $prefix, ', ', $suffix );
 					if ( ! empty( $terms ) ) {
 						$output .= "\t" . '<div class="taxonomy-' . $taxonomy['name'] . '">' . $terms . "</div>\n";
 					} else {
@@ -256,6 +289,157 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static function the_excerpt( $content = '' ) {
 		return self::taxonomy_filter( $content, 'excerpt' );
+	}
+
+	/**
+	 * Prepare the dropdown filter args.
+	 *
+	 * @param array $taxonomy The current taxonomy structure.
+	 */
+	public static function prepare_filter_args( &$taxonomy ) {
+		$query_var = ( empty( $taxonomy['query_var'] ) ? $taxonomy['name'] : $taxonomy['query_var'] );
+		$args      = array(
+			'taxonomy'        => $taxonomy['name'],
+			'show_option_all' => $taxonomy['labels']['all_items'],
+			'orderby'         => 'name',
+			'order'           => 'ASC',
+			'show_count'      => (bool) $taxonomy['st_adm_count'],
+			'hide_empty'      => (bool) $taxonomy['st_adm_h_e'],
+			'hide_if_empty'   => (bool) $taxonomy['st_adm_h_i_e'],
+			'selected'        => filter_input( INPUT_GET, $query_var, FILTER_SANITIZE_STRING ),
+			'hierarchical'    => (bool) $taxonomy['st_adm_hier'],
+			'name'            => $taxonomy['query_var'],
+			'value_field'     => 'slug',
+		);
+		return $args;
+	}
+
+	/**
+	 * Manage the dropdown filters.
+	 *
+	 * @param string $post_type The current post type.
+	 */
+	public static function manage_filters( $post_type ) {
+		$options = get_option( OPTION_STAXO );
+
+		foreach ( (array) $options['taxonomies'] as $taxonomy ) {
+			// Have we upgraded the taxonomy?
+			if ( ! array_key_exists( 'st_adm_types', $taxonomy ) ) {
+				continue;
+			}
+			// Does the post_type use this taxonomy and we want it.
+			if ( ! in_array( $post_type, (array) $taxonomy['st_adm_types'], true ) ) {
+				continue;
+			}
+			// Add the filter.
+			wp_dropdown_categories( self::prepare_filter_args( $taxonomy ) );
+		}
+	}
+
+	/**
+	 * Term Count Callback that applies custom filter
+	 * Allows taxonomy term counts to include non-published posts.
+	 *
+	 * @since 1.1
+	 * @param Array  $terms    the terms to filter.
+	 * @param Object $taxonomy the taxonomy object.
+	 */
+	public static function term_count_cb_all( $terms, $taxonomy ) {
+		add_filter( 'query', array( __CLASS__, 'term_count_query_filter_all' ) );
+		_update_post_term_count( $terms, $taxonomy );
+		remove_filter( 'query', array( __CLASS__, 'term_count_query_filter_all' ) );
+	}
+
+	/**
+	 * Alters term count query to include all non-trashed posts.
+	 * See generally, #
+	 *
+	 * @since 1.1
+	 * @param Object $query the query object.
+	 * @return String the modified query
+	 */
+	public static function term_count_query_filter_all( $query ) {
+		return str_replace( "= 'publish'", "!= 'trash'", $query );
+	}
+
+	/**
+	 * Create custom filter for taxonomy and put in cache.
+	 *
+	 * @since 1.1
+	 * @param Object $taxonomy the taxonomy object.
+	 * @return String the query modification
+	 */
+	public static function term_count_sel_cache( $taxonomy ) {
+		$replacement = wp_cache_get( 'staxo_sel_' . $taxonomy );
+
+		if ( false === $replacement ) {
+			$options = get_option( OPTION_STAXO );
+			$taxo    = $options['taxonomies'][ $taxonomy ];
+
+			// create the string.
+			$types = array();
+			if ( (bool) $taxo['st_cb_pub'] ) {
+				$types[] = "'public'";
+			}
+			if ( (bool) $taxo['st_cb_fut'] ) {
+				$types[] = "'future'";
+			}
+			if ( (bool) $taxo['st_cb_dft'] ) {
+				$types[] = "'draft'";
+			}
+			if ( (bool) $taxo['st_cb_pnd'] ) {
+				$types[] = "'pending'";
+			}
+			if ( (bool) $taxo['st_cb_prv'] ) {
+				$types[] = "'private'";
+			}
+			if ( (bool) $taxo['st_cb_tsh'] ) {
+				$types[] = "'trash'";
+			}
+			$replacement = 'IN (' . implode( ', ', $types ) . ') ';
+
+			wp_cache_set( 'staxo_sel_' . $taxonomy, $replacement, '', ( WP_DEBUG ? 10 : 120 ) );
+		}
+
+		return $replacement;
+	}
+
+	/**
+	 * Term Count Callback that applies custom filter
+	 * Allows taxonomy term counts to include user-specified post statuses.
+	 *
+	 * @since 1.1
+	 * @param Array  $terms    the terms to filter.
+	 * @param Object $taxonomy the taxonomy slug.
+	 */
+	public static function term_count_cb_sel( $terms, $taxonomy ) {
+		$filter = self::term_count_sel_cache( $taxonomy->name );
+		add_filter( 'query', array( __CLASS__, 'term_count_query_filter_sel' ) );
+		_update_post_term_count( $terms, $taxonomy );
+		remove_filter( 'query', array( __CLASS__, 'term_count_query_filter_sel' ) );
+	}
+
+	/**
+	 * Alters term count query to include selected list of posts.
+	 * See generally, #17548
+	 *
+	 * @since 1.1
+	 * @param Object $query the query object.
+	 * @return String the modified query
+	 */
+	public static function term_count_query_filter_sel( $query ) {
+		if ( 'SELECT COUNT(*)' !== substr( $query, 0, 15 ) ) {
+			return $query;
+		}
+		global $wpdb;
+
+		// Target string. Find taxonomy via taxonomy term.
+		$term_tax_id = (int) substr( $query, strpos( $query, 'term_taxonomy_id = ' ) + 19 );
+		// phpcs:ignore
+		$taxonomy = $wpdb->get_var( $wpdb->prepare( "SELECT taxonomy FROM $wpdb->term_taxonomy WHERE term_taxonomy_id = %d", $term_tax_id ) );
+		$filter   = self::term_count_sel_cache( $taxonomy );
+
+		return str_replace( "= 'publish'", $filter, $query );
 	}
 
 	/**
@@ -301,6 +485,19 @@ class SimpleTaxonomyRefreshed_Client {
 			'st_meta_box_cb'           => '',
 			'st_meta_box_sanitize_cb'  => '',
 			'st_args'                  => '',
+			'st_adm_types'             => array(),
+			'st_adm_hier'              => 0,
+			'st_adm_depth'             => 0,
+			'st_adm_count'             => 0,
+			'st_adm_h_e'               => 0,
+			'st_adm_h_i_e'             => 0,
+			'st_cb_type'               => 0,
+			'st_cb_pub'                => 0,
+			'st_cb_fut'                => 0,
+			'st_cb_dft'                => 0,
+			'st_cb_pnd'                => 0,
+			'st_cb_prv'                => 0,
+			'st_cb_tsh'                => 0,
 			'metabox'                  => 'default',  // compatibility.
 		);
 	}
@@ -310,7 +507,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 *
 	 * @return array
 	 */
-	private static function get_taxonomy_default_labels() {
+	public static function get_taxonomy_default_labels() {
 		return array(
 			'name'                       => _x( 'Post Terms', 'taxonomy general name', 'simple-taxonomy-refreshed' ),
 			'menu_name'                  => '',
@@ -343,7 +540,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 *
 	 * @return array
 	 */
-	private static function get_taxonomy_default_capabilities() {
+	public static function get_taxonomy_default_capabilities() {
 		return array(
 			'manage_terms' => 'manage_categories',
 			'edit_terms'   => 'manage_categories',

@@ -118,12 +118,12 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			$list_args = apply_filters(
 				'staxo_widget_tag_list_args',
 				array(
-					'taxonomy' => $current_taxonomy, 
+					'taxonomy' => $current_taxonomy,
 					'number'   => $instance['number'],
-					'order'    => ( 'RAND' == $instance['listorder'] ? 'ASC' : $instance['listorder'] ),
+					'order'    => ( 'RAND' === $instance['listorder'] ? 'ASC' : $instance['listorder'] ),
 				)
 			);
-			$terms = get_terms( $list_args );
+			$terms     = get_terms( $list_args );
 			if ( false === $terms ) {
 				echo '<p>' . esc_html_e( 'No terms available for this taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>';
 			} else {
