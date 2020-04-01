@@ -3,7 +3,7 @@
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
 Requires at least: 4.8
-Tested up to: 5.3.2
+Tested up to: 5.4.0
 Requires PHP: 5.6
 Stable tag: 1.1.0
 License: GPLv3 or later
@@ -15,19 +15,21 @@ WordPress provides a simple custom taxonomy, this plugin makes it even simpler, 
 
 WordPress provides a simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code.
 
-Add support for taxonomies both hierarchical or simple tags.
+Supports adding one or more taxonomies (either hierarchical or tag) to any objects registered on your installation.
 
-Supports adding taxonomy to any objects registered on your installation.
+This plugin is a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1/2/3/4 and PHP 7.2/4.
 
-This plugin is a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1/2/3 and PHP 7.2.
+This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 
-This plugin allows you to add taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you, takes care of the URL rewrites, provides a widget you can use to display a "taxonomy cloud" or a list of all the stuff in there, and it allows you to show the taxonomy contents at the end of posts and excerpts as well.
+It provides a widget that you can use to display a "taxonomy cloud" or a list of all the terms; it allows you to show the taxonomy contents at the end of posts and excerpts as well.
 
 You can also export the Taxonomy definition to include it directly in your own code.
 
 You can also create terms easily by typing them into a list; or by copying them from an existing taxonomy.
 
 A tool has been provided to support changing the taxonomy slug. Any terms and their usages will also be renamed.
+
+Options are provided to add a selection dropdown in the admin list and to define term counts using posts of selected statuses (and not just "published").
 
 For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
 
@@ -36,6 +38,14 @@ For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilW
 = Does this plugin handles custom fields? =
 
 No, it is focused only on registering Taxonomies.
+
+= There is a very large number of options - are they all needed? =
+
+The standard WordPress functionality provides many options and labels - and in the spirit of no-coding, this provides them all.
+
+Very few are required. 
+
+Enter just the Name (slug) whether Hierarchical or not and the Post Types used on the Main Options tab and Name (label) on the Labels tab will get you going.
 
 == Installation ==
 
