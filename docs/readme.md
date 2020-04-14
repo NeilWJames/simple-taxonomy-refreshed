@@ -5,7 +5,7 @@ WordPress provides a simple custom taxonomy, this plugin makes it even simpler, 
 * Contributors: nwjames, momo360modena
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
 * Requires at least: 4.8
-* Stable tag: 1.1.0
+* Stable tag: 1.1.1
 * Tested up to: 5.4.0
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -72,7 +72,10 @@ See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 ## Changelog
 
-* Version 1.1
+* Version 1.1.1
+	* FIX: Taxonomies saved with versions prior to 1.1.0 would create a PHP warning message.
+
+* Version 1.1.0
 	* NEW: Added capability to add dropdown filter for taxonomy in the admin list screens.
 	* NEW: Enable term counts to be based on user-selected post statuses.
 

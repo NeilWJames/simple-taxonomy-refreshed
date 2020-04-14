@@ -5,7 +5,7 @@ Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
 Requires at least: 4.8
 Tested up to: 5.4.0
 Requires PHP: 5.6
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -57,7 +57,10 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 == Changelog ==
 
-* Version 1.1
+* Version 1.1.1
+	* FIX: Taxonomies saved with versions prior to 1.1.0 would create a PHP warning message.
+
+* Version 1.1.0
 	* NEW: Added capability to add dropdown filter for taxonomy in the admin list screens.
 	* NEW: Enable term counts to be based on user-selected post statuses.
 

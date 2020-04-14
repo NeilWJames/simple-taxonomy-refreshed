@@ -43,7 +43,7 @@ class SimpleTaxonomyRefreshed_Client {
 				$args = self::prepare_args( $taxonomy );
 
 				// Update callback if term count callback wanted.
-				if ( '' === $args['update_count_callback'] ) {
+				if ( '' === $args['update_count_callback'] && isset( $taxonomy['st_cb_type'] ) ) {
 					switch ( $taxonomy['st_cb_type'] ) {
 						case '1':
 							$args['update_count_callback'] = array( __CLASS__, 'term_count_cb_all' );
