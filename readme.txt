@@ -3,7 +3,7 @@
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
 Requires at least: 4.8
-Tested up to: 5.4.0
+Tested up to: 5.4.1
 Requires PHP: 5.6
 Stable tag: 1.1.1
 License: GPLv3 or later
