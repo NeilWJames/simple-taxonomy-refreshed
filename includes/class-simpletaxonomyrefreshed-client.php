@@ -38,7 +38,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static function init() {
 		$options = get_option( OPTION_STAXO );
-		if ( is_array( $options['taxonomies'] ) ) {
+		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
 			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
 				$args = self::prepare_args( $taxonomy );
 
