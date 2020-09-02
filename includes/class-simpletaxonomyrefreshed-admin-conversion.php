@@ -47,7 +47,13 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 	 * Add settings menu page.
 	 **/
 	public static function add_menu() {
-		add_management_page( __( 'Terms migration', 'simple-taxonomy-refreshed' ), __( 'Terms migrate', 'simple-taxonomy-refreshed' ), 'manage_options', self::CONVERT_SLUG, array( __CLASS__, 'page_conversion' ) );
+		$options = get_option( OPTION_STAXO );
+		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+			add_management_page( __( 'Terms migration', 'simple-taxonomy-refreshed' ), __( 'Terms migrate', 'simple-taxonomy-refreshed' ), 'manage_options', self::CONVERT_SLUG, array( __CLASS__, 'page_conversion' ) );
+
+			// help text.
+			add_action( 'load-tools_page_staxo-convert', array( __CLASS__, 'add_help_tab' ) );
+		}
 	}
 
 	/**
@@ -151,10 +157,8 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 				<p><?php esc_html_e( "A term won't be recreated if it already exista but it can be used to add items into the hierarchy.", 'simple-taxonomy-refreshed' ); ?></p>
 			</form>
 			<?php
-			$result = ob_get_contents();
-			ob_end_clean();
 			// phpcs:ignore WordPress.Security.EscapeOutput
-			echo $result;
+			echo ob_get_clean();
 		}
 		wp_die(); // this is required to terminate immediately and return a proper response.
 	}
@@ -201,9 +205,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 	private static function list_hier_taxo_terms( $taxonomy ) {
 		ob_start();
 		self::list_taxonomy_children( $taxonomy, 0, 0 );
-		$result = ob_get_contents();
-		ob_end_clean();
-		return $result;
+		return ob_get_clean();
 	}
 
 	/**
@@ -246,7 +248,8 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 		<div class="wrap">
 			<h2 class="title"><?php esc_html_e( 'Taxonomy Values Migrator', 'simple-taxonomy-refreshed' ); ?></h2>
 			<form id="copyto" action="" method="post">
-				<p><?php esc_html_e( 'Select one "Copy From" taxonomy source and one "To" taxonomy destination', 'simple-taxonomy-refreshed' ); ?></p>
+				<p><?php esc_html_e( 'Select one "Copy From" taxonomy source and one "To" taxonomy destination and then click on the Copy Terms button.', 'simple-taxonomy-refreshed' ); ?></p>
+				<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 				<div id="col-container">
 					<table class="widefat" cellspacing="0">
 						<thead>
@@ -389,4 +392,38 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 		return $types;
 	}
 
+	/**
+	 * Adds help tabs to help tab API.
+	 *
+	 * @since 1.2
+	 * @return void
+	 */
+	public static function add_help_tab() {
+		$screen = get_current_screen();
+
+		// parent key is the id of the current screen
+		// child key is the title of the tab
+		// value is the help text (as HTML).
+		$help = array(
+			__( 'Overview', 'simple-taxonomy-refreshed' ) =>
+				'<p>' . __( 'This tool allows you to copy terms from one taxonomy to another one. It does not affect existing terms or their links to posts.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'By default, you are presented with a list of all publicly available taxonomies, not just those defined by this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'It works in two phases. This screen operates the first phase only and prepares the data for you to operate the second phase - the creation of the term data.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'You identify the source taxonomy and the destination one and click on Copy Terms. This does not copy the terms, but prepares the data for the next phase - the Terms import tool.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'If either taxonomy is non-hierarchical, it will extract all terms as a simple alphabetical list, otherwise it will prepare a hierarchical list.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'It is done in two stages to allow you the maximum flexibility to choose which terms you want to be copied (or not).', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'Once you have all the terms of the souurce taxonomy available in your browser you can copy/paste them elsewhere for local manipulation before the actual import process is carried out.', 'simple-taxonomy-refreshed' ) . '</p>',
+		);
+
+		// loop through each tab in the help array and add.
+		foreach ( $help as $title => $content ) {
+			$screen->add_help_tab(
+				array(
+					'title'   => $title,
+					'id'      => str_replace( ' ', '_', $title ),
+					'content' => $content,
+				)
+			);
+		}
+	}
 }

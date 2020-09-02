@@ -33,7 +33,13 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 	 * Add settings menu page.
 	 **/
 	public static function add_menu() {
-		add_management_page( __( 'Terms import', 'simple-taxonomy-refreshed' ), __( 'Terms import', 'simple-taxonomy-refreshed' ), 'manage_options', self::IMPORT_SLUG, array( __CLASS__, 'page_importation' ) );
+		$options = get_option( OPTION_STAXO );
+		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+			add_management_page( __( 'Terms import', 'simple-taxonomy-refreshed' ), __( 'Terms import', 'simple-taxonomy-refreshed' ), 'manage_options', self::IMPORT_SLUG, array( __CLASS__, 'page_importation' ) );
+
+			// help text.
+			add_action( 'load-tools_page_staxo-import', array( __CLASS__, 'add_help_tab' ) );
+		}
 	}
 
 	/**
@@ -63,6 +69,11 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 			$terms = explode( "\n", str_replace( array( "\r\n", "\n\r", "\r" ), "\n", $_POST['import_content'] ) );
 			// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
 			$hierarchy = ( isset( $_POST['hierarchy'] ) ? sanitize_text_field( wp_unslash( $_POST['hierarchy'] ) ) : 'no' );
+			if ( 'no' !== $hierarchy && ! $taxonomy_obj->hierarchical ) {
+				// can't load hierarchical data into a flat taxonomy.
+				add_settings_error( 'simple-taxonomy-refreshed', 'hierarchical', esc_html__( 'The taxonomy is non-hierarchical. You cannot load hierarchical data into it.', 'simple-taxonomy-refreshed' ), 'error' );
+				return;
+			}
 			$termlines = 0;
 			$added     = 0;
 			foreach ( $terms as $term_line ) {
@@ -173,10 +184,11 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 		?>
 		<div class="wrap">
 			<h2><?php esc_html_e( 'Terms import', 'simple-taxonomy-refreshed' ); ?></h2>
-			<p><?php esc_html_e( 'Import a list of words as terms of a taxonomy using this page.', 'simple-taxonomy-refreshed' ); ?></p>
+			<p><?php esc_html_e( 'Import a list of words as terms of a taxonomy using this tool.', 'simple-taxonomy-refreshed' ); ?></p>
 			<ul style="margin-left:1em; list-style-type:disc"><li><?php esc_html_e( 'Enter one term per line.', 'simple-taxonomy-refreshed' ); ?></li>
 			<li><?php esc_html_e( 'Existing terms can be entered using either the Term Name or its Slug.', 'simple-taxonomy-refreshed' ); ?></li>
 			<li><?php esc_html_e( 'Use leading spaces or tabs to denote the level of the Term in the hierarchy relative to its parent.', 'simple-taxonomy-refreshed' ); ?></li></ul>
+			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 			<form action="<?php echo esc_url( admin_url( 'tools.php?page=' . self::IMPORT_SLUG ) ); ?>" method="post">
 				<p>
 					<label for="taxonomy"><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></label>
@@ -269,5 +281,42 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 			}
 		</script>
 		<?php
+	}
+
+	/**
+	 * Adds help tabs to help tab API.
+	 *
+	 * @since 1.2
+	 * @return void
+	 */
+	public static function add_help_tab() {
+		$screen = get_current_screen();
+
+		// parent key is the id of the current screen
+		// child key is the title of the tab
+		// value is the help text (as HTML).
+		$help = array(
+			__( 'Overview', 'simple-taxonomy-refreshed' ) =>
+				'<p>' . __( 'This tool allows you to import terms into an existing taxonomy.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'By default, you are presented with a list of all publicly available taxonomies, not just those defined by this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'The simplest option is to enter a list of terms where each one is its name. Its slug will be generated automatically.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'This is entered as a list with no hierarchy. It is appropriate for either non-hierarchical taxonomies or a few entries of a hierarchical one.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'You can also enter entries hierarchically into a hierarchical taxonomy. For this, you need to indent the entries to identify the hierarchy of terms wanted.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'In particular, you may want to add terms into an existing hierarchy. So to identify where the entries are to go, you need to enter the existing term (either name or slug) in the list with no indent - and then to follow it by the sub-tree of terms wanted.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'An implication of this is that it tries to identify if the term entered already exists and does not try to enter it again.', 'simple-taxonomy-refreshed' ) . '</p>',
+			__( 'Terms migrate', 'simple-taxonomy-refreshed' ) =>
+				'<p>' . __( 'The migrate tool allows you to copy existing terms of a taxonomy to pre-populate this screen for populating a taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>',
+		);
+
+		// loop through each tab in the help array and add.
+		foreach ( $help as $title => $content ) {
+			$screen->add_help_tab(
+				array(
+					'title'   => $title,
+					'id'      => str_replace( ' ', '_', $title ),
+					'content' => $content,
+				)
+			);
+		}
 	}
 }

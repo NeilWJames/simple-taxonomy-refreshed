@@ -3,9 +3,9 @@
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
 Requires at least: 4.8
-Tested up to: 5.4.1
+Tested up to: 5.5.1
 Requires PHP: 5.6
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -17,7 +17,7 @@ WordPress provides a simple custom taxonomy, this plugin makes it even simpler, 
 
 Supports adding one or more taxonomies (either hierarchical or tag) to any objects registered on your installation.
 
-This plugin is a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1/2/3/4 and PHP 7.2/4.
+This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1/2/3/4 and PHP 7.2/4.
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 
@@ -29,7 +29,7 @@ You can also create terms easily by typing them into a list; or by copying them 
 
 A tool has been provided to support changing the taxonomy slug. Any terms and their usages will also be renamed.
 
-Options are provided to add a selection dropdown in the admin list and to define term counts using posts of selected statuses (and not just "published").
+Options are provided to add a selection dropdown in the admin list and to define minimum and maximum required term counts using posts of selected statuses (and not only "published").
 
 For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
 
@@ -56,6 +56,13 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 1.2.0
+	* NEW: Add parameter "default_term" to register_taxonomy (introduced in WP 5.5).
+	* NEW: Add facility to control minimum and maximum number of terms for a taxonomy to a post.
+	* NEW: Add filter 'staxo_term_count_statuses' to extend user-selected post statuses for term counts.
+	* NEW: Add contexual help.
+	* FIX: PHP Taxonomy dump of term counts corrected.
 
 * Version 1.1.1
 	* FIX: Taxonomies saved with versions prior to 1.1.0 would create a PHP warning message.

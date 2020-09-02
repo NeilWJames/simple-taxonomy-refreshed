@@ -33,7 +33,13 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 	 * Add settings menu page.
 	 **/
 	public static function add_menu() {
-		add_management_page( __( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ), __( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ), 'manage_options', self::RENAME_SLUG, array( __CLASS__, 'page_rename' ) );
+		$options = get_option( OPTION_STAXO );
+		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+			add_management_page( __( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ), __( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ), 'manage_options', self::RENAME_SLUG, array( __CLASS__, 'page_rename' ) );
+
+			// help text.
+			add_action( 'load-tools_page_staxo-rename', array( __CLASS__, 'add_help_tab' ) );
+		}
 	}
 
 	/**
@@ -54,7 +60,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			$new_slug     = ( isset( $_POST['new_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['new_slug'] ) ) : '' );
 			$new_query    = ( isset( $_POST['new_query'] ) ? sanitize_text_field( wp_unslash( $_POST['new_query'] ) ) : '' );
 			$new_rewrite  = ( isset( $_POST['new_rewrite'] ) ? sanitize_text_field( wp_unslash( $_POST['new_rewrite'] ) ) : '' );
-			$taxonomy_obj = (array) get_taxonomy( $taxonomy );
+			$taxonomy_obj = get_taxonomy( $taxonomy );
 			if ( ! ( current_user_can( 'manage_options' ) || current_user_can( $taxonomy_obj->cap->manage_terms ) ) ) {
 				wp_die( esc_html__( 'Cheating ? You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ) );
 			}
@@ -125,6 +131,19 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				)
 			);
 
+			// Update the Taxonomy default term (if it exists).
+			$opt_table = "{$wpdb->prefix}optioons";
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$updated = $wpdb->update(
+				$opt_table,
+				array(
+					'option_name' => 'default_taxonomy_' . $new_slug,
+				),
+				array(
+					'option_name' => 'default_taxonomy_' . $taxonomy,
+				)
+			);
+
 			add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Taxonomy slug changed.', 'simple-taxonomy-refreshed' ), 'updated' );
 			if ( 0 === $updated ) {
 				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Done, no terms were migrated.', 'simple-taxonomy-refreshed' ), 'updated' );
@@ -151,7 +170,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 		$options = get_option( OPTION_STAXO );
 		$taxos   = array();
 		$i       = 1;
-		if ( is_array( $options['taxonomies'] ) ) {
+		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
 			$options = $options['taxonomies'];
 			ksort( $options );
 			foreach ( (array) $options as $taxonomy ) {
@@ -184,6 +203,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			<h2><?php esc_html_e( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ); ?></h2>
 			<p><?php esc_html_e( 'Rename a Taxonomy slug and its terms.', 'simple-taxonomy-refreshed' ); ?></p>
 			<p><?php esc_html_e( 'All usages of these terms will be updated as well.', 'simple-taxonomy-refreshed' ); ?></p>
+			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 			<form action="<?php echo esc_url( admin_url( 'tools.php?page=' . self::RENAME_SLUG ) ); ?>" method="post">
 				<p>
 					<label for="taxonomy"><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></label>
@@ -257,4 +277,38 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 		</script>
 		<?php
 	}
+
+	/**
+	 * Adds help tabs to help tab API.
+	 *
+	 * @since 1.2
+	 * @return void
+	 */
+	public static function add_help_tab() {
+		$screen = get_current_screen();
+
+		// parent key is the id of the current screen
+		// child key is the title of the tab
+		// value is the help text (as HTML).
+		$help = array(
+			__( 'Overview', 'simple-taxonomy-refreshed' ) =>
+				'<p>' . __( 'This tool allows you to change the slug associated with a taxonomy managed by the plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'When the taxonomy slug is changed, it will also update the usages of the taxonomy and their links to posts.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'Note that WordPress caches term data and whilst there is some plugin code to flush the term cache (and possibly flush the permalinks), it may be necessary to wait a while for caches on your site to age out before seeing that all changes have been effective.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'Since the rewrite and query_var parameters use the slug name for their default values these are shown on this screen and can be modified at the same time.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'Because you need to explicitly switch on use of rewrite, this will only be shown if it is switched on.', 'simple-taxonomy-refreshed' ) . '</p>',
+		);
+
+		// loop through each tab in the help array and add.
+		foreach ( $help as $title => $content ) {
+			$screen->add_help_tab(
+				array(
+					'title'   => $title,
+					'id'      => str_replace( ' ', '_', $title ),
+					'content' => $content,
+				)
+			);
+		}
+	}
+
 }
