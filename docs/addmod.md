@@ -70,13 +70,13 @@ This is an optional set of parameters and allows the user to use the taxonomy as
 
 ## Term Count
 
-![Term Count Panel](../images/AddTaxTerm1.png)
+![Term Count Panel](../images/AddTaxTerms1.png)
 
 This is an optional set of parameters and allows the user to modify the standard term count of published posts only and to select which post statuses should be included.
 
 Two options are supported - either to count all statuses except trash; and the other allows the statuses to be individually specified.
 
-![Term Count Panel showing statuses](../images/AddTaxTerm2.png)
+![Term Count Panel showing statuses](../images/AddTaxTerms2.png)
 
 ## Term Control
 
