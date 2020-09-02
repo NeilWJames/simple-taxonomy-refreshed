@@ -6,7 +6,7 @@ WordPress provides a simple custom taxonomy, this plugin makes it even simpler, 
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
 * Requires at least: 4.8
 * Stable tag: 1.1.1
-* Tested up to: 5.4.1
+* Tested up to: 5.5.1
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,13 @@ You should review the parameters to ensure that your needs are correctly set.
 See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 ## Changelog
+
+* Version 1.2.0
+	* NEW: Add parameter "default_term" to register_taxonomy (introduced in WP 5.5).
+	* NEW: Add facility to control minimum and maximum number of terms for a taxonomy to a post.
+	* NEW: Add filter 'staxo_term_count_statuses' to extend user-selected post statuses for term counts.
+	* NEW: Add contexual help.
+	* FIX: PHP Taxonomy dump of term counts corrected.
 
 * Version 1.1.1
 	* FIX: Taxonomies saved with versions prior to 1.1.0 would create a PHP warning message.

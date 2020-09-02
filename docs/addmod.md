@@ -14,7 +14,7 @@ You can move from panel to panel reviewing the parameters - but they need to be 
 
 ## Main
 
-![Main Panel](../images/AddTaxMain.png)
+![Main Panel](../images/AddTaxAdmin.png)
 
 The name **must** be completed in order to add the taxonomy.
 
@@ -77,3 +77,16 @@ This is an optional set of parameters and allows the user to modify the standard
 Two options are supported - either to count all statuses except trash; and the other allows the statuses to be individually specified.
 
 ![Term Count Panel showing statuses](../images/AddTaxTerm2.png)
+
+## Term Control
+
+![Term Control Panel](../images/AddTaxControl.png)
+
+This is an optional set of parameters that allows the user to require a minimum and/or maximum number of terms in the taxonomy to be attached to the post and to select the post statuses when the test is to be applied.
+
+Since a user may be able tro edit the post, but not add or delete terms, this can be notified to the user that the number is outsied the required bounds, but the edit is allowed.
+
+The option "When post is saved" means that the test is done during save post processing - and updates will be rejected if outside the bounds.
+
+The option "As terms are changed and when post is changed" means the bounds are checked during editing as well. This functionality is a "work in progress", that is, not complete. In particular, posts edited with the Block Editor are not currently controlled except when saving the post.
+

@@ -39,7 +39,7 @@ Clicking on *Export PHP* will download a file call test_hier.php to the browser 
 	
 	----
 	
-	Copyright 2019 - XXX-Author
+	Copyright 2020 - XXX-Author
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

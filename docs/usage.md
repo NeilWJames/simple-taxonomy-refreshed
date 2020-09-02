@@ -49,7 +49,7 @@ The data is held in JSON format and is incompatible with data stored by the plug
 
 ## Tools
 
-When the plugin is activated, three tools are available in the administration menu under *Tools*. They are *Terms migrate*, *Terms import* and *Rename Taxonomy Slug*.
+When the plugin is activated and a taxonomy has been registered, three tools are available in the administration menu under *Tools*. They are *Terms migrate*, *Terms import* and *Rename Taxonomy Slug*.
 
 ### Terms migrate
 
