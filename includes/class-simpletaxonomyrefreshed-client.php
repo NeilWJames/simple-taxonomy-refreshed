@@ -658,8 +658,8 @@ class SimpleTaxonomyRefreshed_Client {
 				};
 				?>
 				</p>
-				<p><?php esc_html_e( 'Your update has been cancelled and back-end data is in its original state.', 'wp-document-revisions' ); ?></p>
-				<p><?php esc_html_e( 'Your browser may hold an updated version, but it is invalid.', 'wp-document-revisions' ); ?></p>
+				<p><?php esc_html_e( 'Your update has been cancelled and stored data remains unchanged.', 'wp-document-revisions' ); ?></p>
+				<p><?php esc_html_e( 'Your browser may hold an updated version, but it is currently invalid.', 'wp-document-revisions' ); ?></p>
 			</div>
 			<?php
 		}

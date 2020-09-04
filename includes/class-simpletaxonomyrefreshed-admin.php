@@ -325,9 +325,6 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		// Get current options.
 		$current_options = get_option( OPTION_STAXO );
-		if ( ( ! isset( $current_options['taxonomies'] ) ) || ! is_array( $current_options['taxonomies'] ) ) {
-			return;
-		}
 		// Check get for message.
 		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 		if ( isset( $_GET['message'] ) ) {
@@ -1207,7 +1204,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
-									<p><?php esc_html_e( 'Taxonomy needs to be Publicly Queryable.', 'simple-taxonomy-refreshed' ); ?></p>
+									<p><?php esc_html_e( 'Taxonomy needs to be allocated to Post Types and Publicly Queryable.', 'simple-taxonomy-refreshed' ); ?></p>
 									<p><?php esc_html_e( 'Advisable to have a column on the admin list screen.', 'simple-taxonomy-refreshed' ); ?></p>
 									<p><?php esc_html_e( '(See Visibility tab for these parameters.)', 'simple-taxonomy-refreshed' ); ?></p>
 									<tr valign="top">
