@@ -43,13 +43,13 @@ class SimpleTaxonomyRefreshed_Client {
 			// get WP version.
 			global $wp_version;
 
-			// check whether to invoke old or new method.
-			if ( version_compare( $wp_version, '5.5.0' ) >= 0 ) {
-				// core method introduced with version 5.5.0.
-				$count_method = 'new';
-			} else {
+			// check whether to invoke old or new method (Change will need #51517).
+			// if ( version_compare( $wp_version, '??' ) >= 0 ) {
+				// core method introduced with version ??.
+			// $count_method = 'new';
+			// } else {  .
 				$count_method = 'old';
-			}
+			// }
 			// is terms count implemented anywhere with new rules.
 			$terms_count = false;
 			// is terms control implemented anywhere.
@@ -630,7 +630,8 @@ class SimpleTaxonomyRefreshed_Client {
 				unset( $_GET['message'] );
 			}
 
-			$taxonomy = sanitize_text_field( wp_unslash( $_GET['staxo_tax'] ) )
+			$taxonomy = sanitize_text_field( wp_unslash( $_GET['staxo_tax'] ) );
+			$label    = get_taxonomy( $taxonomy )->labels->name;
 
 			?>
 			<div><p>&nbsp;</p></div>
@@ -639,19 +640,19 @@ class SimpleTaxonomyRefreshed_Client {
 				<?php
 				switch ( $_GET['staxo_error'] ) {
 					case 'min':
-						// translators: %s is the taxonomy.
-						echo esc_html( sprintf( __( 'Your post needs to have more terms for the taxonomy - %s entered.', 'wp-document-revisions' ), $taxonomy ) );
+						// translators: %s is the taxonomy name.
+						echo esc_html( sprintf( __( 'Your post needs to have more terms for the taxonomy - %s entered.', 'wp-document-revisions' ), $label ) );
 						break;
 					case 'max':
-						// translators: %s is the taxonomy.
-						echo esc_html( sprintf( __( 'Your post needs to have less terms for taxonomy - %s.', 'wp-document-revisions' ), $taxonomy ) );
+						// translators: %s is the taxonomy name.
+						echo esc_html( sprintf( __( 'Your post needs to have less terms for taxonomy - %s.', 'wp-document-revisions' ), $label ) );
 						break;
 					case 'minmax':
-						// translators: %s is the taxonomy.
-						echo esc_html( sprintf( __( 'Your post needs to have more terms for the taxonomy - %s entered.', 'wp-document-revisions' ), $taxonomy ) );
+						// translators: %s is the taxonomy name.
+						echo esc_html( sprintf( __( 'Your post needs to have more terms for the taxonomy - %s entered.', 'wp-document-revisions' ), $label ) );
 						echo '</p><p>';
-						// translators: %s is the taxonomy.
-						echo esc_html( sprintf( __( 'Your post needs to have less terms for taxonomy - %s.', 'wp-document-revisions' ), $taxonomy ) );
+						// translators: %s is the taxonomy name.
+						echo esc_html( sprintf( __( 'Your post needs to have less terms for taxonomy - %s.', 'wp-document-revisions' ), $label ) );
 						break;
 					default:
 						null;

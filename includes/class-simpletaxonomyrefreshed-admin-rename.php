@@ -57,9 +57,15 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				wp_die( esc_html__( 'Cheating ? You are trying to rename the slug on a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
 			}
 
-			$new_slug     = ( isset( $_POST['new_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['new_slug'] ) ) : '' );
-			$new_query    = ( isset( $_POST['new_query'] ) ? sanitize_text_field( wp_unslash( $_POST['new_query'] ) ) : '' );
-			$new_rewrite  = ( isset( $_POST['new_rewrite'] ) ? sanitize_text_field( wp_unslash( $_POST['new_rewrite'] ) ) : '' );
+			$new_slug    = ( isset( $_POST['new_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['new_slug'] ) ) : '' );
+			$new_query   = ( isset( $_POST['new_query'] ) ? sanitize_text_field( wp_unslash( $_POST['new_query'] ) ) : '' );
+			$new_rewrite = ( isset( $_POST['new_rewrite'] ) ? sanitize_text_field( wp_unslash( $_POST['new_rewrite'] ) ) : '' );
+			// test that new slug does not exist.
+			$taxonomy_obj = get_taxonomy( $new_slug );
+			if ( is_object( $taxonomy_obj ) ) {
+				wp_die( esc_html__( 'The desired taxonomy slug already exists.', 'simple-taxonomy-refreshed' ) );
+			}
+
 			$taxonomy_obj = get_taxonomy( $taxonomy );
 			if ( ! ( current_user_can( 'manage_options' ) || current_user_can( $taxonomy_obj->cap->manage_terms ) ) ) {
 				wp_die( esc_html__( 'Cheating ? You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ) );
@@ -82,7 +88,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			$new_taxonomy['query_var'] = $new_query;
 
 			// A change in rewrite slug requires a flush of the rewrite rules.
-			if ( (bool) $taxonomy_obj['rewrite'] ) {
+			if ( (bool) $taxonomy_obj->rewrite ) {
 				if ( '' !== $new_rewrite && $new_rewrite !== $new_taxonomy['st_slug'] ) {
 					// update options.
 					$new_taxonomy['st_slug'] = $new_rewrite;
@@ -132,7 +138,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			);
 
 			// Update the Taxonomy default term (if it exists).
-			$opt_table = "{$wpdb->prefix}optioons";
+			$opt_table = "{$wpdb->prefix}options";
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$updated = $wpdb->update(
 				$opt_table,

@@ -43,6 +43,13 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Use of block editor.
+	 *
+	 * @var bool $use_block_editor.
+	 */
+	public static $use_block_editor = false;
+
+	/**
 	 * Protected Constructor
 	 *
 	 * @return void
@@ -54,6 +61,9 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		// check existing posts outside limits.
 		add_action( 'admin_notices', array( __CLASS__, 'check_posts_outside_limits' ) );
+
+		// called if block editor to render screen.
+		add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'block_editor_active' ) );
 
 		// help text.
 		add_action( 'load-settings_page_simple-taxonomy-settings', array( __CLASS__, 'add_help_tab' ) );
@@ -2008,6 +2018,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 				// get the terms and count them.
 				$tax   = $taxonomy['name'];
+				$label = $taxonomy['labels']['name'];
 				$terms = get_the_terms( $post->ID, $tax );
 				if ( false === $terms ) {
 					$num_terms = 0;
@@ -2026,11 +2037,9 @@ class SimpleTaxonomyRefreshed_Admin {
 					<div><p>&nbsp;</p></div>
 					<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-min"><p>
 					<?php
-					// translators: %1$s is the taxonomy name; %2$d is the required minimum number of terms.
-					echo esc_html( sprintf( __( 'The number of terms for taxonomy %1$s is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax, $min ) );
-					?>
-					</p><p>
-					<?php
+					// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
+					echo esc_html( sprintf( __( 'The number of terms for taxonomy "%1$"s is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $min ) );
+					echo '</p><p>';
 					if ( $user_change ) {
 						esc_html_e( 'Please review and add additional terms.', 'simple-taxonomy-refreshed' );
 					} else {
@@ -2052,18 +2061,18 @@ class SimpleTaxonomyRefreshed_Admin {
 					?>
 					<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-max"><p>
 					<?php
-					// translators: %1$s is the taxonomy name; %2$d is the required maximum number of terms.
-					echo esc_html( sprintf( __( 'The number of terms for taxonomy %1$s is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax, $max ) );
-					?>
-					</p><p>
-					if ( $user_change ) { 
+					// translators: %1$s is the taxonomy label; %2$d is the required maximum number of terms.
+					echo esc_html( sprintf( __( 'The number of terms for taxonomy "%1$s" is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $max ) );
+					echo '</p><p>';
+					if ( $user_change ) {
 						esc_html_e( 'Please review and remove terms.', 'simple-taxonomy-refreshed' );
 					} else {
 						esc_html_e( 'For information as you cannot remove them.', 'simple-taxonomy-refreshed' );
 						if ( $taxonomy['st_cc_hard'] > 0 ) {
-							echo '</p><p>' . esc_html( 'N.B. You will not be able to save any changes!', 'simple-taxonomy-refreshed' );
+							echo '</p><p>' . esc_html__( 'N.B. You will not be able to save any changes!', 'simple-taxonomy-refreshed' );
 						}
 					}
+					?>
 					</p></div>
 					<?php
 				}
@@ -2071,19 +2080,20 @@ class SimpleTaxonomyRefreshed_Admin {
 				// should we change checkbox to a radio button.
 				// (Not over limit, hierarchical, min and max limits exist and set to 1).
 				if ( $chg && (bool) $taxonomy['hierarchical'] && $vmn && 1 === $min && $vmx && 1 === $max ) {
-					if ( ! $user_manage ) {
-						// cannot add terms, so can change to radio.
-						self::script_radio( $tax );
-						// if we converted to radio and there is already one term, then code stops going outside limits.
-						if ( 1 === $num_terms ) {
-							continue;
-						}
+					self::script_radio( $tax );
+					// if we converted to radio and there is already one term, then code stops going outside limits.
+					if ( 1 === $num_terms ) {
+						continue;
 					}
 				}
 
 				// should hard limits apply.
 				if ( 2 === (int) $taxonomy['st_cc_hard'] && $user_change ) {
-					self::hard_term_limits( $tax, $cntl, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
+					if ( (bool) $taxonomy['hierarchical'] ) {
+						self::hard_term_limits_hier( $tax, $label, $cntl, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
+					} else {
+						self::hard_term_limits_tag( $tax, $label, $cntl, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
+					}
 				}
 			}
 		}
@@ -2103,121 +2113,138 @@ class SimpleTaxonomyRefreshed_Admin {
 		// List of all will be changed to radio. Popular will be converted (but for compatability).
 		// If any item in either list is clicked, then the corresponding entry in other list is set.
 		// Every other value is unset.
+		$taxn = esc_html( $tax_name );
+		// All output has passed through esc_html so switch off checking.
+		// phpcs:disable  WordPress.Security.EscapeOutput
 		?>
 		<script type="text/javascript">
-		function pop_<?php echo esc_html( $tax_name ); ?>(event) {
-			var val = event.target.value;
-			var inp = document.getElementsByName("tax_input[<?php echo esc_html( $tax_name ); ?>][]");
-			var i, attr, id;
-			for ( i in inp ) {
-				inp[i].checked = false;
-				if ( inp[i].value === val ) {
-					inp[i].checked = true;
-				}
-			}
-			var pan = document.getElementById("<?php echo esc_html( $tax_name ); ?>-pop");
-			inp = pan.getElementsByTagName("input");
-			for ( i in inp ) {
-				inp[i].checked = false;
-				if ( inp[i].value === val ) {
-					inp[i].checked = true;
-				}
-			}
-		}
-
-		function all_<?php echo esc_html( $tax_name ); ?>(event) {
-			var val = event.target.value;
-			var pan = document.getElementById("<?php echo esc_html( $tax_name ); ?>-pop");
-			inp = pan.getElementsByTagName("input");
+		function radio_<?php echo $taxn; ?>() {
+			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
 			inp.forEach(item => {
-				item.checked = false;
-				if ( item.value === val ) {
-					item.checked = true;
+				// avoid updating hidden one.
+				if ( item.value > 0 && item.type !== "radio" ) {
+					item.type = "radio";
+					item.addEventListener('click', event => {
+						adj_<?php echo $taxn; ?>(item.value);
+					})
 				}
 			})
 		}
 
-		jQuery(document).ready( function() {
-			var inp = document.getElementsByName("tax_input[<?php echo esc_html( $tax_name ); ?>][]");
+		function adj_<?php echo $taxn; ?>(val) {
+			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
 			var i, attr, id;
-			inp.forEach(item => {
+			for ( i in inp ) {
+				inp[i].checked = false;
+				if ( inp[i].value === val ) {
+					inp[i].checked = true;
+				}
+			}
+			var pan = document.getElementById("<?php echo $taxn; ?>-pop");
+			inp = pan.getElementsByTagName("input");
+			for ( i in inp ) {
+				inp[i].checked = false;
+				if ( inp[i].value === val ) {
+					inp[i].checked = true;
+				}
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', function() {
+			var i, attr, tag, stag, val;
+			radio_<?php echo $taxn; ?>();
+
+			var pop = document.getElementById("<?php echo $taxn; ?>-pop");
+			inp = pop.getElementsByTagName("input");
+			for (const item of inp) {
 				// avoid updating hidden one.
 				if ( item.value > 0 ) {
 					item.type = "radio";
+					tag  = item.id;
+					stag = tag.replace("popular-", "");
+					attr = document.getElementById(stag);
+					item.checked = attr.checked;
 					item.addEventListener('click', event => {
-						all_department();
+						adj_<?php echo $taxn; ?>(item.value);
 					})
-					// should not be needed.
-					attr         = item.checked;
-					item.checked = false;
-					item.checked = attr;
-				}
-			})
-
-			var pop = document.getElementById("<?php echo esc_html( $tax_name ); ?>-pop").getElementsByTagName("input");
-			// forEach doesn't work for some reason, use for loop.
-			for ( i in pop ) {
-				if ( pop[i].value > 0 ) {
-					pop[i].type = "radio";
-					id = "in-department-" + pop[i].value;
-					pop[i].checked = document.getElementById(id).checked;
-					pop[i].addEventListener("click", pop_<?php echo esc_html( $tax_name ); ?>, false);
 				}
 			}
-		});
+
+			var sub = document.getElementById("<?php echo $taxn; ?>-add-submit");
+			sub.addEventListener('click', event => {
+					adj_<?php echo $taxn; ?>(-1);
+			});
+
+			// Select the node that will be observed for mutations
+			const targetNode = document.getElementById("<?php echo $taxn; ?>-all");
+
+			// Options for the observer (which mutations to observe)
+			const config = { childList: true, subtree: true };
+
+			// Callback function to execute when mutations are observed
+			const callback = function(mutationsList, observer) {
+				// Use traditional 'for loops' for IE 11
+				for (const mutation of mutationsList) {
+					if (mutation.type === 'childList') {
+						radio_<?php echo $taxn; ?>();
+					}
+				}
+			};
+
+			// Create an observer instance linked to the callback function
+			const observer = new MutationObserver(callback);
+
+			// Start observing the target node for configured mutations
+			observer.observe(targetNode, config);
+
+		}, false);
 		</script>
 		<?php
+		// phpcs:enable  WordPress.Security.EscapeOutput
 	}
 
 	/**
-	 * Output the scripting to check the taxonomy limits as they are being entered.
+	 * Output the scripting to check the taxonomy limits for hierarchical taxonomies as they are being entered.
 	 *
 	 * @since 1.2.0
 	 *
-	 * @param string $tax_name  taxonomy name.
-	 * @param string $cntl      control type.
-	 * @param int    $min_bound minimum number of terms (null if no minimum).
-	 * @param int    $max_bound maximum number of terms (null if no maximum).
+	 * @param string $tax_name     taxonomy name.
+	 * @param string $tax_label    taxonomy label name.
+	 * @param string $cntl         control type.
+	 * @param int    $min_bound    minimum number of terms (null if no minimum).
+	 * @param int    $max_bound    maximum number of terms (null if no maximum).
 	 */
-	public static function hard_term_limits( $tax_name, $cntl, $min_bound, $max_bound ) {
-		write_log( 'hard_term_limits' );
-		write_log( 'tax_name : ' . $tax_name . '/' . $cntl . '/' . $min_bound . '/' . $max_bound );
+	public static function hard_term_limits_hier( $tax_name, $tax_label, $cntl, $min_bound, $max_bound ) {
 		if ( ! is_null( $min_bound ) ) {
-			// translators: %1$s is the taxonomy name; %2$d is the required minimum number of terms.
-			$less = esc_html( sprintf( __( 'The number of terms for taxonomy %1$s is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_name, $min_bound ) );
+			$mib = esc_html( $min_bound );
+			// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
+			$less = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $min_bound ) );
 		}
 		if ( ! is_null( $max_bound ) ) {
-			// translators: %1$s is the taxonomy name; %2$d is the required maximum number of terms.
-			$more = esc_html( sprintf( __( 'The number of terms for taxonomy %1$s is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_name, $max_bound ) );
+			$mab = esc_html( $max_bound );
+			// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
+			$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
 		}
+		$taxn = esc_html( $tax_name );
+		// All output has passed through esc_html so switch off checking.
+		// phpcs:disable  WordPress.Security.EscapeOutput
 		?>
 		<script type="text/javascript">
-		function count_<?php echo esc_html( $tax_name ); ?>() {
-			var inp = document.getElementsByName("tax_input[<?php echo esc_html( $tax_name ); ?>][]");
+		function count_<?php echo $taxn; ?>() {
+			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
 			var i, v, arr = [];
 			for ( i in inp ) {
-				v = inp[i].value;
-				if ( v > 0 && ! arr.includes( v )) {
-					arr.splice(0, 0, v);
+				if ( inp[i].checked ) {
+					v = inp[i].value;
+					if ( v > 0 && ! arr.includes( v )) {
+						arr.splice(0, 0, v);
+					}
 				}
 			}
 			return arr.length;
 		}
 
-		function test_<?php echo esc_html( $tax_name ); ?>() {
-			var cnt = count_<?php echo esc_html( $tax_name ); ?>();
-
-			<?php
-			if ( ! is_null( $min_bound ) ) {
-				echo 'if ( cnt < ' . esc_html( $min_bound ) . ' ) { alert( "' . esc_html( $less ) . '" ); }' . "\n";
-			}
-
-			if ( ! is_null( $max_bound ) ) {
-				echo 'if ( cnt > ' . esc_html( $max_bound ) . ' ) { alert( "' . esc_html( $more ) . '" ); }' . "\n";
-			}
-			?>
-		}
-		function check_<?php echo esc_html( $tax_name ); ?>() {
+		function check_<?php echo $taxn; ?>(bail = false) {
 			// check post_status.
 			var stat = document.getElementById("post_status").value;
 			if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
@@ -2228,25 +2255,156 @@ class SimpleTaxonomyRefreshed_Admin {
 				// check status.
 				echo 'if ( "publish" !== stat && "future" !== stat ) { return; }' . "\n";
 			}
-			echo esc_html( 'test_' . $tax_name ) . '();';
 			?>
+			var cnt = count_<?php echo $taxn; ?>();
+
+			<?php
+			if ( ! is_null( $min_bound ) ) {
+				echo 'if ( cnt < ' . $mib . ' ) { alert( "' . $less . '" ); }' . "\n";
+			}
+
+			if ( ! is_null( $max_bound ) ) {
+				echo 'if ( cnt > ' . $mab . ' ) { alert( "' . $more . '" ); }' . "\n";
+			}
+			?>
+			if (bail) {
+				event.preventDefault();
+			}
 		}
 
-		jQuery(document).ready( function() {
-			var inp = document.getElementsByName("tax_input[<?php echo esc_html( $tax_name ); ?>][]");
+		document.addEventListener('DOMContentLoaded', function() {
+			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
 			inp.forEach(item => {
 				item.addEventListener('click', event => {
-					check_<?php echo esc_html( $tax_name ); ?>();
+					check_<?php echo $taxn; ?>();
 				})
 			})
-			//if( rtict_object.gutenberg =="yes" )
-			//	jQuery(".edit-post-header__settings .editor-post-publish-button,  .edit-post-header__settings .editor-post-publish-panel__toggle").on("click",   rtict_checkFunction);
-			//else
-			jQuery('#publish, #save-post').click(check_<?php echo esc_html( $tax_name ); ?>() );
-			//}
-		});
+			document.getElementById("publish").addEventListener('click', event => {
+					check_<?php echo $taxn; ?>(true);
+			});
+			document.getElementById("save-post").addEventListener('click', event => {
+					check_<?php echo $taxn; ?>(true);
+			});
+		}, false);
 		</script>
 		<?php
+		// phpcs:enable  WordPress.Security.EscapeOutput
+	}
+
+	/**
+	 * Output the scripting to check the taxonomy limits for tag taxonomies as they are being entered.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string $tax_name     taxonomy name.
+	 * @param string $tax_label    taxonomy label name.
+	 * @param string $cntl         control type.
+	 * @param int    $min_bound    minimum number of terms (null if no minimum).
+	 * @param int    $max_bound    maximum number of terms (null if no maximum).
+	 */
+	public static function hard_term_limits_tag( $tax_name, $tax_label, $cntl, $min_bound, $max_bound ) {
+		if ( ! is_null( $min_bound ) ) {
+			$mib = esc_html( $min_bound );
+			// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
+			$less = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $min_bound ) );
+		}
+		if ( ! is_null( $max_bound ) ) {
+			$mab = esc_html( $max_bound );
+			// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
+			$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
+		}
+		$taxn = esc_html( $tax_name );
+		// All output has passed through esc_html so switch off checking.
+		// phpcs:disable  WordPress.Security.EscapeOutput
+		?>
+		<script type="text/javascript">
+		var cnt1st = true;
+		function count_<?php echo $taxn; ?>() {
+			if (cnt1st) {
+				var inp = document.getElementById("tax-input-<?php echo $taxn; ?>");				
+				return inp.rows;
+			}
+			// tags rendered.
+			var i = 0;
+			while ( true ) {
+				inp = document.getElementById("<?php echo $taxn; ?>-check-num-"+i);
+				if (inp) {
+					i++;
+				} else {
+					return i;
+				}
+			}
+		}
+
+		function check_<?php echo $taxn; ?>(bail = false) {
+			// Ensure tage add readonly attribute remove, unless explicitly wanted.
+			document.getElementById("new-tag-<?php echo $taxn; ?>").removeAttribute("readonly");
+			document.getElementById("link-<?php echo $taxn; ?>").removeAttribute("disabled");
+			// check post_status.
+			var stat = document.getElementById("post_status").value;
+			if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
+				return;
+			}
+			<?php
+			if ( 1 === $cntl ) {
+				// check status.
+				echo 'if ( "publish" !== stat && "future" !== stat ) { return; }' . "\n";
+			}
+			?>
+
+			var cnt = count_<?php echo $taxn; ?>();
+			<?php
+			if ( ! is_null( $min_bound ) ) {
+				echo 'if ( cnt < ' . $mib . ' ) { alert( "' . $less . '" ); }' . "\n";
+			}
+
+			if ( ! is_null( $max_bound ) ) {
+				?>
+				if ( cnt > <?php echo $mab; ?> ) { 
+					alert( "<?php echo $more; ?>" );
+				}
+				if ( cnt >= <?php echo $mab; ?> ) { 
+					document.getElementById("new-tag-<?php echo $taxn; ?>").setAttribute("readonly", true);
+					document.getElementById("link-<?php echo $taxn; ?>").setAttribute("disabled", true);
+				}
+				<?php
+			}
+			?>
+			if (bail) {
+				event.preventDefault();
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', function() {
+			check_<?php echo $taxn; ?>();
+			cnt1st = false;
+			var tag = document.getElementById("<?php echo $taxn; ?>");
+			var taglist = tag.getElementsByTagName('ul');
+			taglist[0].addEventListener('click', event => {
+					check_<?php echo $taxn; ?>();
+			});
+			document.getElementById("new-tag-<?php echo $taxn; ?>").addEventListener('click', event => {
+					check_<?php echo $taxn; ?>();
+			});
+			document.getElementById("publish").addEventListener('click', event => {
+					check_<?php echo $taxn; ?>(true);
+			});
+			document.getElementById("save-post").addEventListener('click', event => {
+					check_<?php echo $taxn; ?>(true);
+			});
+		}, false);
+		</script>
+		<?php
+		// phpcs:enable  WordPress.Security.EscapeOutput
+	}
+
+	/**
+	 * Function to determine whether the page is being rendered by Block editor.
+	 *
+	 * @return void
+	 */
+	public static function block_editor_active() {
+		self::$use_block_editor = true;
 	}
 
 	/**
