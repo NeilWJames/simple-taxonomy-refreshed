@@ -57,6 +57,8 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 == Changelog ==
 
+	* FIX: Initial value used for non-hierarchical tags wrong.
+
 * Version 1.2.1
 	* FIX: PHP Error on using rename corrected.
 

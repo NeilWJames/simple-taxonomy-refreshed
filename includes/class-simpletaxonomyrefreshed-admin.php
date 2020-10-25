@@ -2090,9 +2090,9 @@ class SimpleTaxonomyRefreshed_Admin {
 				// should hard limits apply.
 				if ( 2 === (int) $taxonomy['st_cc_hard'] && $user_change ) {
 					if ( (bool) $taxonomy['hierarchical'] ) {
-						self::hard_term_limits_hier( $tax, $label, $cntl, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
+						self::hard_term_limits_hier( $tax, $label, $num_terms, $cntl, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
 					} else {
-						self::hard_term_limits_tag( $tax, $label, $cntl, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
+						self::hard_term_limits_tag( $tax, $label, $num_terms, $cntl, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
 					}
 				}
 			}
@@ -2211,10 +2211,11 @@ class SimpleTaxonomyRefreshed_Admin {
 	 * @param string $tax_name     taxonomy name.
 	 * @param string $tax_label    taxonomy label name.
 	 * @param string $cntl         control type.
+	 * @param int    $num_terms    current number of terms on post..
 	 * @param int    $min_bound    minimum number of terms (null if no minimum).
 	 * @param int    $max_bound    maximum number of terms (null if no maximum).
 	 */
-	public static function hard_term_limits_hier( $tax_name, $tax_label, $cntl, $min_bound, $max_bound ) {
+	public static function hard_term_limits_hier( $tax_name, $tax_label, $num_terms, $cntl, $min_bound, $max_bound ) {
 		if ( ! is_null( $min_bound ) ) {
 			$mib = esc_html( $min_bound );
 			// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
@@ -2299,10 +2300,11 @@ class SimpleTaxonomyRefreshed_Admin {
 	 * @param string $tax_name     taxonomy name.
 	 * @param string $tax_label    taxonomy label name.
 	 * @param string $cntl         control type.
+	 * @param int    $num_terms    current number of terms on post..
 	 * @param int    $min_bound    minimum number of terms (null if no minimum).
 	 * @param int    $max_bound    maximum number of terms (null if no maximum).
 	 */
-	public static function hard_term_limits_tag( $tax_name, $tax_label, $cntl, $min_bound, $max_bound ) {
+	public static function hard_term_limits_tag( $tax_name, $tax_label, $num_terms, $cntl, $min_bound, $max_bound ) {
 		if ( ! is_null( $min_bound ) ) {
 			$mib = esc_html( $min_bound );
 			// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
@@ -2313,7 +2315,8 @@ class SimpleTaxonomyRefreshed_Admin {
 			// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
 			$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
 		}
-		$taxn = esc_html( $tax_name );
+		$taxn  = esc_html( $tax_name );
+		$terms = esc_html( $num_terms );
 		// All output has passed through esc_html so switch off checking.
 		// phpcs:disable  WordPress.Security.EscapeOutput
 		?>
@@ -2321,8 +2324,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		var cnt1st = true;
 		function count_<?php echo $taxn; ?>() {
 			if (cnt1st) {
-				var inp = document.getElementById("tax-input-<?php echo $taxn; ?>");				
-				return inp.rows;
+				return <?php echo $terms; ?>;
 			}
 			// tags rendered.
 			var i = 0;
