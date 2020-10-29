@@ -2,12 +2,7 @@
 
 set -e
 
-export PATH="$HOME/.composer/vendor/bin:./bin:$PATH"
-
-composer global require wp-coding-standards/wpcs
-composer global require phpcompatibility/phpcompatibility-wp
-
-pear install pear/PHP_CodeSniffer
+export PATH="$HOME/.composer/vendor/squizlabs/php_codesniffer/bin:$PATH"
 
 SNIFF=$HOME/.composer/vendor
 phpcs --config-set installed_paths $SNIFF/wp-coding-standards/wpcs,$SNIFF/phpcompatibility/phpcompatibility-wp,$SNIFF/phpcompatibility/php-compatibility,$SNIFF/phpcompatibility/phpcompatibility-paragonie

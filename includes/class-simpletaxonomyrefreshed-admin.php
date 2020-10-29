@@ -2210,8 +2210,8 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @param string $tax_name     taxonomy name.
 	 * @param string $tax_label    taxonomy label name.
+	 * @param int    $num_terms    current number of terms on post.
 	 * @param string $cntl         control type.
-	 * @param int    $num_terms    current number of terms on post..
 	 * @param int    $min_bound    minimum number of terms (null if no minimum).
 	 * @param int    $max_bound    maximum number of terms (null if no maximum).
 	 */
@@ -2299,8 +2299,8 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @param string $tax_name     taxonomy name.
 	 * @param string $tax_label    taxonomy label name.
+	 * @param int    $num_terms    current number of terms on post.
 	 * @param string $cntl         control type.
-	 * @param int    $num_terms    current number of terms on post..
 	 * @param int    $min_bound    minimum number of terms (null if no minimum).
 	 * @param int    $max_bound    maximum number of terms (null if no maximum).
 	 */
