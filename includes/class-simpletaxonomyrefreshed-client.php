@@ -592,6 +592,7 @@ class SimpleTaxonomyRefreshed_Client {
 
 				// commen error path.
 				if ( '' !== $error_type ) {
+					$referer = ( array_key_exists( '_wp_http_referer', $postarr ) ? $postarr['_wp_http_referer'] : esc_attr( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
 					$url = add_query_arg(
 						array(
 							'post'        => $postarr['ID'],
@@ -600,7 +601,7 @@ class SimpleTaxonomyRefreshed_Client {
 							'staxo_error' => $error_type,
 							'staxo_terms' => wp_create_nonce( 'terms' ),
 						),
-						get_home_url( null, $postarr['_wp_http_referer'] )
+						get_home_url( null, $referer )
 					);
 
 					if ( wp_safe_redirect( $url ) ) {
