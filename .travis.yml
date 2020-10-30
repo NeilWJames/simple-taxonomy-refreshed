@@ -31,32 +31,32 @@ before_script:
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
   - script/setup
   - |
-		if [[ ! -z "$WP_VERSION" ]] ; then
-			if [[ ${TRAVIS_PHP_VERSION:0:2} == "5." ]]; then
-				composer global require "phpunit/phpunit=5.7.*"
-				echo "set phpunit 5.7"
-			fi
-			if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.0" ]]; then
-				composer global require "phpunit/phpunit=6.4.*"
-				echo "set phpunit 6.4"
-			fi
-			if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.1" ]]; then
-				if [[ ${WP_VERSION:0:3} == "4.9" ]]; then
-					composer global require "phpunit/phpunit=5.7.*"
-					echo "set phpunit 5.7"
-				fi
-			fi
-			if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then
-				# composer global require "phpunit/phpunit=8.2.*" except WP barfs - #46149 to fix
-				composer global require "phpunit/phpunit=7.5.*"
-				echo "set phpunit 7.5"
-			fi
-			if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.3" ]]; then
-				# composer global require "phpunit/phpunit=8.2.*" except WP barfs - #46149 to fix
-				composer global require "phpunit/phpunit=7.5.*"
-				echo "set phpunit 7.5"
-			fi
-		fi
+    if [[ ! -z "$WP_VERSION" ]] ; then
+      if [[ ${TRAVIS_PHP_VERSION:0:2} == "5." ]]; then
+        composer global require "phpunit/phpunit=5.7.*"
+        echo "set phpunit 5.7"
+      fi
+      if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.0" ]]; then
+        composer global require "phpunit/phpunit=6.4.*"
+        echo "set phpunit 6.4"
+      fi
+      if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.1" ]]; then
+        if [[ ${WP_VERSION:0:3} == "4.9" ]]; then
+          composer global require "phpunit/phpunit=5.7.*"
+          echo "set phpunit 5.7"
+        fi
+      fi
+      if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.2" ]]; then
+        # composer global require "phpunit/phpunit=8.2.*" except WP barfs - #46149 to fix
+        composer global require "phpunit/phpunit=7.5.*"
+        echo "set phpunit 7.5"
+      fi
+      if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.3" ]]; then
+        # composer global require "phpunit/phpunit=8.2.*" except WP barfs - #46149 to fix
+        composer global require "phpunit/phpunit=7.5.*"
+        echo "set phpunit 7.5"
+      fi
+    fi
 
 script:
   - |
