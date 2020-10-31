@@ -7,7 +7,7 @@
 	convertWarningsToExceptions="true"
 	>
 	<testsuites>
-		<testsuite name="ST2 Tests">
+		<testsuite name="STR Tests">
 			<directory prefix="class-test-" suffix=".php">./tests/</directory>
 		</testsuite>
 	</testsuites>
@@ -17,7 +17,7 @@
 	<filter>
 	  <whitelist addUncoveredFilesFromWhitelist="true" processUncoveredFilesFromWhitelist="false">
 	    <directory suffix=".php">./includes</directory>
-	    <file>./class_test_staxo_2.php</file>
+	    <file>./class-test-staxo-refreshed-main.php</file>
 	  </whitelist>
 	</filter>
 </phpunit>
