@@ -6,11 +6,11 @@ export PATH="$TRAVIS_BUILD_DIR/vendor/bin:$HOME/.composer/vendor/squizlabs/php_c
 
 SNIFF=$TRAVIS_BUILD_DIR/vendor
 
-echo $TRAVIS_BUILD_DIR/vendor/bin
-ls -lt $TRAVIS_BUILD_DIR/vendor/bin
+echo $TRAVIS_BUILD_DIR/vendor
+ls -lt $TRAVIS_BUILD_DIR/vendor
 
-echo $HOME
-ls -lt $HOME
+echo $HOME/bin
+ls -lt $HOME/bin
 
 phpcs --config-set installed_paths $SNIFF/wp-coding-standards/wpcs,$SNIFF/phpcompatibility/phpcompatibility-wp,$SNIFF/phpcompatibility/php-compatibility,$SNIFF/phpcompatibility/phpcompatibility-paragonie
 phpcs --config-show
