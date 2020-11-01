@@ -25,10 +25,19 @@ matrix:
     - php: 7.3
       env: WP_VERSION=latest
 
+before_install:
+  - export PATH="$HOME/.composer/vendor/bin:$PATH"
+ 
+  # Unless we need XDebug, disable it for improved performance.
+  - phpenv config-rm xdebug.ini || return 0
+ 
+install:
+  # Install our Composer dependencies
+  - composer install --prefer-dist --no-interaction
+ 
 before_script:
   - mkdir -p build/logs
   - chmod +x script/*
-  - export PATH="$HOME/.composer/vendor/bin:$PATH"
   - script/setup
 
 script:
