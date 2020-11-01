@@ -1,5 +1,3 @@
-sudo: true
-
 language: php
 
 cache:
@@ -53,6 +51,7 @@ before_script:
 
 script:
   - |
+    export HOME="$HOME"
     if [[ ! -z "$WP_VERSION" ]] ; then
       script/cibuild-phpunit
     fi
