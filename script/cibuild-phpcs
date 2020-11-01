@@ -4,14 +4,17 @@ set -e
 
 export PATH="$HOME/.composer/vendor/bin:$HOME/.composer/vendor/squizlabs/php_codesniffer/bin:$PATH"
 
-
-ls -lt $HOME/.composer/vendor
-
-ls -lt $HOME/.composer/vendor/squizlabs/php_codesniffer/bin
-
 SNIFF=$HOME/.composer/vendor
 
 phpcs --config-set installed_paths $SNIFF/wp-coding-standards/wpcs,$SNIFF/phpcompatibility/phpcompatibility-wp,$SNIFF/phpcompatibility/php-compatibility,$SNIFF/phpcompatibility/phpcompatibility-paragonie
 phpcs --config-show
 
 phpcs --standard=phpcs.ruleset.xml -p -s --colors *.php */**.php -v
+
+echo $TRAVIS_BUILD_DIR
+
+ls -lt $HOME
+
+ls -lt $HOME/.composer/vendor
+
+ls -lt $HOME/.composer/vendor/squizlabs/php_codesniffer/bin
