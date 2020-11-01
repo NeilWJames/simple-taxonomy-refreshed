@@ -4,9 +4,10 @@ set -e
 
 export PATH="$HOME/.composer/vendor/bin:$HOME/.composer/vendor/squizlabs/php_codesniffer/bin:$PATH"
 
+
 ls -lt $HOME/.composer/vendor/bin
 
-ls -lt $HOME/.composer/vendor/squizlabs/php_codesniffer/bin:
+ls -lt $HOME/.composer/vendor/squizlabs/php_codesniffer/bin
 
 SNIFF=$HOME/.composer/vendor
 
