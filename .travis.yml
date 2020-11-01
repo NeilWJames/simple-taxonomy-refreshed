@@ -35,11 +35,7 @@ install:
 
   # Install an older version of PHPUnit if we're running old versions of WP.
   - |
-    if [[ "$TRAVIS_PHP_VERSION" == "7.0" ]]; then
-      wget -O ./vendor/bin/phpunit https://phar.phpunit.de/phpunit-6.phar
-      chmod +x ./vendor/bin/phpunit
-    fi
-    if [[ "$TRAVIS_PHP_VERSION" == "7.1" ]]; then
+    if [[ "$TRAVIS_PHP_VERSION" == "7.0" ]] || [[ "$TRAVIS_PHP_VERSION" == "7.1" ]]; then
       wget -O ./vendor/bin/phpunit https://phar.phpunit.de/phpunit-5.phar
       chmod +x ./vendor/bin/phpunit
     fi
