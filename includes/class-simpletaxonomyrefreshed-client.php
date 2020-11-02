@@ -593,9 +593,8 @@ class SimpleTaxonomyRefreshed_Client {
 				// commen error path.
 				if ( '' !== $error_type ) {
 					$referer = ( isset( $postarr['_wp_http_referer'] ) ? $postarr['_wp_http_referer'] : '' );
-					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					if ( empty( $referer ) && isset( $_SERVER['REQUEST_URI'] ) ) {
-						$referer = esc_attr( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+						$referer = esc_attr( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
 					}
 					$url = add_query_arg(
 						array(
