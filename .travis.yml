@@ -36,8 +36,7 @@ install:
   # Install an older version of PHPUnit if we're running old versions of WP.
   - |
     if [[ "$TRAVIS_PHP_VERSION" == "7.0" ]] || [[ "$TRAVIS_PHP_VERSION" == "7.1" ]]; then
-      wget -O $TRAVIS_BUILD_DIR/vendor/phpunit/bin https://phar.phpunit.de/phpunit-5.phar
-      chmod +x $TRAVIS_BUILD_DIR/vendor/phpunit/bin
+      composer global require "phpunit/phpunit=5.7.*"
     fi
 
 before_script:
