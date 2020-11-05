@@ -58,7 +58,7 @@ class SimpleTaxonomyRefreshed_Client {
 				$args = self::prepare_args( $taxonomy );
 
 				// Update callback if term count callback wanted.
-				if ( '' === $args['update_count_callback'] && isset( $taxonomy['st_cb_type'] ) ) {
+				if ( '' === $args['update_count_callback'] && isset( $taxonomy['st_cb_type'] ) && $taxonomy['st_cb_type'] > 0 ) {
 					if ( 'new' === $count_method ) {
 						$terms_count = true;
 					} else {
@@ -411,8 +411,8 @@ class SimpleTaxonomyRefreshed_Client {
 				null; // Drop through.
 			} else {
 				return array(
-					'types'     => array(),
-					'in_string' => 'IN ("publish")',
+					'types'     => array( 'publish' ),
+					'in_string' => '= "publish"',
 				);
 			}
 
@@ -429,7 +429,7 @@ class SimpleTaxonomyRefreshed_Client {
 						break;
 					case '2':
 						if ( (bool) $taxo['st_cb_pub'] ) {
-							$types[] = 'public';
+							$types[] = 'publish';
 						}
 						if ( (bool) $taxo['st_cb_fut'] ) {
 							$types[] = 'future';
@@ -448,7 +448,7 @@ class SimpleTaxonomyRefreshed_Client {
 						}
 						break;
 					default:
-						null;
+						$types[] = 'publish';
 				}
 
 				/**
