@@ -18,7 +18,7 @@
       "dealerdirect/phpcodesniffer-composer-installer": "^0.7",
       "squizlabs/php_codesniffer": "~3.5",
       "phpcompatibility/phpcompatibility-wp": "*",
-      "php-coveralls/php-coveralls": "*",
+      "php-coveralls/php-coveralls": "*"
     },
     "config": {
      "bin-dir": "bin",
