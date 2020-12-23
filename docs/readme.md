@@ -6,7 +6,7 @@ WordPress provides a simple custom taxonomy, this plugin makes it even simpler, 
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
 * Requires at least: 4.8
 * Stable tag: 1.2.2
-* Tested up to: 5.5.1
+* Tested up to: 5.6.0
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
