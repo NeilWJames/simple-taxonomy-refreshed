@@ -2018,9 +2018,11 @@ class SimpleTaxonomyRefreshed_Admin {
 		}
 
 		if ( is_null( self::$use_block_editor ) ) {
+			// phpcs:disable WordPress.WhiteSpace.PrecisionAlignment.Found
 			self::$use_block_editor = method_exists( $current_screen, 'is_block_editor' ) && $current_screen->is_block_editor()
 			 || function_exists( 'is_gutenberg_page' ) && is_gutenberg_page()
 			 || false;
+			// phpcs:enable  WordPress.WhiteSpace.PrecisionAlignment.Found
 		}
 
 		// get the post type.
