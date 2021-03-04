@@ -60,7 +60,8 @@ function init_staxo_refreshed() {
 	require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-widget.php';
 
 	// Client.
-	new SimpleTaxonomyRefreshed_Client();
+	global $strc;
+	$strc = new SimpleTaxonomyRefreshed_Client();
 
 	// Admin (Load when needed).
 	if ( is_admin() ) {

@@ -47,7 +47,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @var bool $use_block_editor.
 	 */
-	public static $use_block_editor = false;
+	public static $use_block_editor = null;
 
 	/**
 	 * Protected Constructor
@@ -370,7 +370,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				<p>
 				<?php
 				// phpcs:ignore  WordPress.Security.EscapeOutput
-				wp_kses( _e( '<strong>Warning :</strong> Delete & Flush a taxonomy will also delete all terms of these taxonomy and all object relations.', 'simple-taxonomy-refreshed' ), array( 'strong' ) );
+				wp_kses( _e( '<strong>Warning :</strong> Flush & Delete a taxonomy will also delete all terms of the taxonomy and all object relations.', 'simple-taxonomy-refreshed' ), array( 'strong' ) );
 				?>
 				</p>
 			</div>
@@ -720,7 +720,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										<th scope="row"><label><?php esc_html_e( 'Post types', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<?php
-											if ( true === $edit ) {
+											if ( true === $edit && is_array( $taxonomy['objects'] ) ) {
 												$objects = $taxonomy['objects'];
 											} else {
 												$objects = array();
@@ -977,6 +977,12 @@ class SimpleTaxonomyRefreshed_Admin {
 											'back_to_items',
 											esc_html__( 'Label displayed after a term has been updated', 'simple-taxonomy-refreshed' ),
 											''
+										);
+										self::option_label(
+											$taxonomy,
+											'filter_by_item',
+											esc_html__( 'Related filter', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'The related filter is displayed at the top of list tables, but only for hierarchical taxonomies', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -1460,6 +1466,13 @@ class SimpleTaxonomyRefreshed_Admin {
 			}
 			evt.stopPropagation();
 		}
+		function switchMinMax(evt) {
+			var umin = (document.getElementById("st_cc_umin").value == 0);
+			var umax = (document.getElementById("st_cc_umax").value == 0);
+			document.getElementById("st_cc_min").disabled = umin;
+			document.getElementById("st_cc_max").disabled = umax;
+			evt.stopPropagation();
+		}
 		function checkMinMax(evt) {
 			var minv = document.getElementById("st_cc_min").value;
 			var maxv = document.getElementById("st_cc_max").value;
@@ -1471,6 +1484,15 @@ class SimpleTaxonomyRefreshed_Admin {
 			}
 			evt.stopPropagation();
 		}
+		document.addEventListener('DOMContentLoaded', function(evt) {
+			switchMinMax(evt);
+			document.getElementById("st_cc_umin").addEventListener('change', event => {
+				switchMinMax(evt);
+			});
+			document.getElementById("st_cc_umax").addEventListener('change', event => {
+				switchMinMax(evt);
+			});
+		});
 		</script>
 		<?php
 	}
@@ -1520,8 +1542,17 @@ class SimpleTaxonomyRefreshed_Admin {
 					if ( ! is_array( $config_file ) ) {
 						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
 					} else {
+						// clear cache (need to do first as values could be different).
+						$options = get_option( OPTION_STAXO );
+						if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+							foreach ( (array) $options['taxonomies'] as $taxonomy => $tax_data ) {
+								wp_cache_delete( 'staxo_sel_' . $taxonomy );
+							}
+						}
 						update_option( OPTION_STAXO, $config_file );
 						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'OK. Configuration is restored.', 'simple-taxonomy-refreshed' ), 'updated' );
+						// Change of file may provoke a change of rewrite rules, so trigger it via transient data.
+						set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
 					}
 				}
 			}
@@ -1986,17 +2017,23 @@ class SimpleTaxonomyRefreshed_Admin {
 			return;
 		}
 
+		if ( is_null( self::$use_block_editor ) ) {
+			self::$use_block_editor = method_exists( $current_screen, 'is_block_editor' ) && $current_screen->is_block_editor()
+			 || function_exists( 'is_gutenberg_page' ) && is_gutenberg_page()
+			 || false;
+		}
+
 		// get the post type.
 		$post_type = $post->post_type;
 
 		// dont control some statuses or with not title.
-		$stat = in_array( $post->post_status, array( 'new', 'auto-draft', 'trash' ), true ) || empty( $post->post_title ) && post_type_supports( $post_type, 'title' );
+		$no_cntl = in_array( $post->post_status, array( 'new', 'auto-draft', 'trash' ), true ) || empty( $post->post_title ) && post_type_supports( $post_type, 'title' );
 
 		$options = get_option( OPTION_STAXO );
 		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
 			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
 				// is this taxonomy implicated.
-				if ( ! in_array( $post_type, $taxonomy['objects'], true ) ) {
+				if ( empty( $taxonomy['objects'] ) || ! in_array( $post_type, $taxonomy['objects'], true ) ) {
 					continue;
 				}
 
@@ -2008,7 +2045,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				// control required. check the status.
 				$test = false;
 				$cntl = (int) $taxonomy['st_cc_type'];
-				if ( ( 1 === $cntl && in_array( $post->post_status, array( 'publish', 'future' ), true ) ) || ( 2 === $cntl && ! $stat ) ) {
+				if ( ( 1 === $cntl && in_array( $post->post_status, array( 'publish', 'future' ), true ) ) || ( 2 === $cntl && ! $no_cntl ) ) {
 					$test = true;
 				}
 
@@ -2038,7 +2075,7 @@ class SimpleTaxonomyRefreshed_Admin {
 					<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-min"><p>
 					<?php
 					// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-					echo esc_html( sprintf( __( 'The number of terms for taxonomy "%1$"s is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $min ) );
+					echo esc_html( sprintf( __( 'The number of terms for taxonomy "%1$s" is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $min ) );
 					echo '</p><p>';
 					if ( $user_change ) {
 						esc_html_e( 'Please review and add additional terms.', 'simple-taxonomy-refreshed' );
@@ -2081,7 +2118,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				// (Not over limit, hierarchical, min and max limits exist and set to 1).
 				if ( $chg && (bool) $taxonomy['hierarchical'] && $vmn && 1 === $min && $vmx && 1 === $max ) {
 					self::script_radio( $tax );
-					// if we converted to radio and there is already one term, then code stops going outside limits.
+					// if we converted to radio and there is already one term, then it always is in limits.
 					if ( 1 === $num_terms ) {
 						continue;
 					}
@@ -2114,93 +2151,109 @@ class SimpleTaxonomyRefreshed_Admin {
 		// If any item in either list is clicked, then the corresponding entry in other list is set.
 		// Every other value is unset.
 		$taxn = esc_html( $tax_name );
-		// All output has passed through esc_html so switch off checking.
-		// phpcs:disable  WordPress.Security.EscapeOutput
-		?>
-		<script type="text/javascript">
-		function radio_<?php echo $taxn; ?>() {
-			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
-			inp.forEach(item => {
-				// avoid updating hidden one.
-				if ( item.value > 0 && item.type !== "radio" ) {
-					item.type = "radio";
-					item.addEventListener('click', event => {
-						adj_<?php echo $taxn; ?>(item.value);
-					})
-				}
-			})
-		}
+		$taxf = esc_html( str_replace( '-', '_', $tax_name ) );
 
-		function adj_<?php echo $taxn; ?>(val) {
-			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
-			var i, attr, id;
-			for ( i in inp ) {
-				inp[i].checked = false;
-				if ( inp[i].value === val ) {
-					inp[i].checked = true;
-				}
-			}
-			var pan = document.getElementById("<?php echo $taxn; ?>-pop");
-			inp = pan.getElementsByTagName("input");
-			for ( i in inp ) {
-				inp[i].checked = false;
-				if ( inp[i].value === val ) {
-					inp[i].checked = true;
-				}
-			}
-		}
-
-		document.addEventListener('DOMContentLoaded', function() {
-			var i, attr, tag, stag, val;
-			radio_<?php echo $taxn; ?>();
-
-			var pop = document.getElementById("<?php echo $taxn; ?>-pop");
-			inp = pop.getElementsByTagName("input");
-			for (const item of inp) {
-				// avoid updating hidden one.
-				if ( item.value > 0 ) {
-					item.type = "radio";
-					tag  = item.id;
-					stag = tag.replace("popular-", "");
-					attr = document.getElementById(stag);
-					item.checked = attr.checked;
-					item.addEventListener('click', event => {
-						adj_<?php echo $taxn; ?>(item.value);
-					})
-				}
+		if ( self::$use_block_editor ) {
+			write_log( 'block editor script_radio' );
+		} else {
+			write_log( 'classic editor script_radio' );
+			// All output has passed through esc_html so switch off checking.
+			// phpcs:disable  WordPress.Security.EscapeOutput
+			?>
+			<script type="text/javascript">
+			function radio_<?php echo $taxf; ?>() {
+				var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
+				inp.forEach(item => {
+					// avoid updating hidden one.
+					if ( item.value > 0 && item.type !== "radio" ) {
+						item.type = "radio";
+						item.addEventListener('click', event => {
+							adj_<?php echo $taxf; ?>(item.value);
+						});
+						item.addEventListener('keypress', event => {
+							adj_<?php echo $taxf; ?>(item.value);
+						});
+					}
+				});
 			}
 
-			var sub = document.getElementById("<?php echo $taxn; ?>-add-submit");
-			sub.addEventListener('click', event => {
-					adj_<?php echo $taxn; ?>(-1);
-			});
-
-			// Select the node that will be observed for mutations
-			const targetNode = document.getElementById("<?php echo $taxn; ?>-all");
-
-			// Options for the observer (which mutations to observe)
-			const config = { childList: true, subtree: true };
-
-			// Callback function to execute when mutations are observed
-			const callback = function(mutationsList, observer) {
-				// Use traditional 'for loops' for IE 11
-				for (const mutation of mutationsList) {
-					if (mutation.type === 'childList') {
-						radio_<?php echo $taxn; ?>();
+			function adj_<?php echo $taxf; ?>(val) {
+				var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
+				var i, attr, id;
+				for ( i in inp ) {
+					inp[i].checked = false;
+					if ( inp[i].value === val ) {
+						inp[i].checked = true;
 					}
 				}
-			};
+				var pan = document.getElementById("<?php echo $taxn; ?>-pop");
+				inp = pan.getElementsByTagName("input");
+				for ( i in inp ) {
+					inp[i].checked = false;
+					if ( inp[i].value === val ) {
+						inp[i].checked = true;
+					}
+				}
+			}
 
-			// Create an observer instance linked to the callback function
-			const observer = new MutationObserver(callback);
+			document.addEventListener('DOMContentLoaded', function() {
+				var i, attr, tag, stag, val;
+				radio_<?php echo $taxf; ?>();
 
-			// Start observing the target node for configured mutations
-			observer.observe(targetNode, config);
+				var pop = document.getElementById("<?php echo $taxn; ?>-pop");
+				inp = pop.getElementsByTagName("input");
+				for (const item of inp) {
+					// avoid updating hidden one.
+					if ( item.value > 0 ) {
+						item.type = "radio";
+						tag  = item.id;
+						stag = tag.replace("popular-", "");
+						attr = document.getElementById(stag);
+						item.checked = attr.checked;
+						item.addEventListener('click', event => {
+							adj_<?php echo $taxf; ?>(item.value);
+						});
+						item.addEventListener('keypress', event => {
+							adj_<?php echo $taxf; ?>(item.value);
+						});
+					}
+				}
 
-		}, false);
-		</script>
-		<?php
-		// phpcs:enable  WordPress.Security.EscapeOutput
+				var sub = document.getElementById("<?php echo $taxn; ?>-add-submit");
+				sub.addEventListener('click', event => {
+						adj_<?php echo $taxf; ?>(-1);
+				});
+				sub.addEventListener('keypress', event => {
+					adj_<?php echo $taxf; ?>(-1);
+				});
+
+				// Select the node that will be observed for mutations
+				const targetNode = document.getElementById("<?php echo $taxn; ?>-all");
+
+				// Options for the observer (which mutations to observe)
+				const config = { childList: true, subtree: true };
+
+				// Callback function to execute when mutations are observed
+				const callback = function(mutationsList, observer) {
+					// Use traditional 'for loops' for IE 11
+					for (const mutation of mutationsList) {
+						if (mutation.type === 'childList') {
+							radio_<?php echo $taxf; ?>();
+						}
+					}
+				};
+
+				// Create an observer instance linked to the callback function
+				const observer = new MutationObserver(callback);
+
+				// Start observing the target node for configured mutations
+				observer.observe(targetNode, config);
+
+			}, false);
+			</script>
+			<?php
+			// phpcs:enable  WordPress.Security.EscapeOutput
+		}
 	}
 
 	/**
@@ -2227,69 +2280,89 @@ class SimpleTaxonomyRefreshed_Admin {
 			$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
 		}
 		$taxn = esc_html( $tax_name );
-		// All output has passed through esc_html so switch off checking.
-		// phpcs:disable  WordPress.Security.EscapeOutput
-		?>
-		<script type="text/javascript">
-		function count_<?php echo $taxn; ?>() {
-			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
-			var i, v, arr = [];
-			for ( i in inp ) {
-				if ( inp[i].checked ) {
-					v = inp[i].value;
-					if ( v > 0 && ! arr.includes( v )) {
-						arr.splice(0, 0, v);
+		$taxf = esc_html( str_replace( '-', '_', $tax_name ) );
+		if ( self::$use_block_editor ) {
+			write_log( 'block editor hard_term_limits_hier' );
+		} else {
+			write_log( 'classic editor hard_term_limits_hier' );
+			// All output has passed through esc_html so switch off checking.
+			// phpcs:disable  WordPress.Security.EscapeOutput
+			?>
+			<script type="text/javascript">
+			function count_<?php echo $taxf; ?>() {
+				var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
+				var i, v, arr = [];
+				for ( i in inp ) {
+					if ( inp[i].checked ) {
+						v = inp[i].value;
+						if ( v > 0 && ! arr.includes( v )) {
+							arr.splice(0, 0, v);
+						}
 					}
 				}
-			}
-			return arr.length;
-		}
-
-		function check_<?php echo $taxn; ?>(bail = false) {
-			// check post_status.
-			var stat = document.getElementById("post_status").value;
-			if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
-				return;
-			}
-			<?php
-			if ( 1 === $cntl ) {
-				// check status.
-				echo 'if ( "publish" !== stat && "future" !== stat ) { return; }' . "\n";
-			}
-			?>
-			var cnt = count_<?php echo $taxn; ?>();
-
-			<?php
-			if ( ! is_null( $min_bound ) ) {
-				echo 'if ( cnt < ' . $mib . ' ) { alert( "' . $less . '" ); }' . "\n";
+				return arr.length;
 			}
 
-			if ( ! is_null( $max_bound ) ) {
-				echo 'if ( cnt > ' . $mab . ' ) { alert( "' . $more . '" ); }' . "\n";
-			}
-			?>
-			if (bail) {
-				event.preventDefault();
-			}
-		}
+			function check_<?php echo $taxf; ?>(bail = false) {
+				// check post_status.
+				var stat = document.getElementById("post_status").value;
+				if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
+					return;
+				}
+				<?php
+				if ( 1 === $cntl ) {
+					// check status.
+					echo 'if ( "publish" !== stat && "future" !== stat ) { return; }' . "\n";
+				}
+				?>
+				var cnt = count_<?php echo $taxf; ?>();
+				var err = false;
 
-		document.addEventListener('DOMContentLoaded', function() {
-			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
-			inp.forEach(item => {
-				item.addEventListener('click', event => {
-					check_<?php echo $taxn; ?>();
+				<?php
+				if ( ! is_null( $min_bound ) ) {
+					echo 'if ( cnt < ' . $mib . ' ) { alert( "' . $less . '" ); err = true; }' . "\n";
+				}
+
+				if ( ! is_null( $max_bound ) ) {
+					echo 'if ( cnt > ' . $mab . ' ) { alert( "' . $more . '" ); err = true; }' . "\n";
+				}
+				?>
+				if (err && bail) {
+					event.stopPropagation();
+					event.preventDefault();
+				}
+			}
+
+			document.addEventListener('DOMContentLoaded', function() {
+				var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
+				inp.forEach(item => {
+					item.addEventListener('click', event => {
+						check_<?php echo $taxf; ?>();
+					});
+					item.addEventListener('keypress', event => {
+						check_<?php echo $taxf; ?>();
+					});
 				})
-			})
-			document.getElementById("publish").addEventListener('click', event => {
-					check_<?php echo $taxn; ?>(true);
-			});
-			document.getElementById("save-post").addEventListener('click', event => {
-					check_<?php echo $taxn; ?>(true);
-			});
-		}, false);
-		</script>
-		<?php
-		// phpcs:enable  WordPress.Security.EscapeOutput
+				document.getElementById("publish").addEventListener('click', event => {
+					check_<?php echo $taxf; ?>(true);
+				});
+				document.getElementById("publish").addEventListener('keypress', event => {
+					check_<?php echo $taxf; ?>(true);
+				});
+				var sp = document.getElementById("save-post");
+				if (sp) {
+					sp.addEventListener('click', event => {
+						check_<?php echo $taxf; ?>(true);
+					});
+					sp.addEventListener('keypress', event => {
+						check_<?php echo $taxf; ?>(true);
+					});
+				}
+			}, false);
+			</script>
+			<?php
+			// phpcs:enable  WordPress.Security.EscapeOutput
+		}
 	}
 
 	/**
@@ -2316,88 +2389,106 @@ class SimpleTaxonomyRefreshed_Admin {
 			$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
 		}
 		$taxn  = esc_html( $tax_name );
+		$taxf  = esc_html( str_replace( '-', '_', $tax_name ) );
 		$terms = esc_html( $num_terms );
-		// All output has passed through esc_html so switch off checking.
-		// phpcs:disable  WordPress.Security.EscapeOutput
-		?>
-		<script type="text/javascript">
-		var cnt1st = true;
-		function count_<?php echo $taxn; ?>() {
-			if (cnt1st) {
-				return <?php echo $terms; ?>;
-			}
-			// tags rendered.
-			var i = 0;
-			while ( true ) {
-				inp = document.getElementById("<?php echo $taxn; ?>-check-num-"+i);
-				if (inp) {
-					i++;
-				} else {
-					return i;
-				}
-			}
-		}
-
-		function check_<?php echo $taxn; ?>(bail = false) {
-			// Ensure tage add readonly attribute remove, unless explicitly wanted.
-			document.getElementById("new-tag-<?php echo $taxn; ?>").removeAttribute("readonly");
-			document.getElementById("link-<?php echo $taxn; ?>").removeAttribute("disabled");
-			// check post_status.
-			var stat = document.getElementById("post_status").value;
-			if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
-				return;
-			}
-			<?php
-			if ( 1 === $cntl ) {
-				// check status.
-				echo 'if ( "publish" !== stat && "future" !== stat ) { return; }' . "\n";
-			}
+		if ( self::$use_block_editor ) {
+			write_log( 'block editor hard_term_limits_tag' );
+		} else {
+			write_log( 'classic editor hard_term_limits_tag' );
+			// All output has passed through esc_html so switch off checking.
+			// phpcs:disable  WordPress.Security.EscapeOutput
 			?>
-
-			var cnt = count_<?php echo $taxn; ?>();
-			<?php
-			if ( ! is_null( $min_bound ) ) {
-				echo 'if ( cnt < ' . $mib . ' ) { alert( "' . $less . '" ); }' . "\n";
+			<script type="text/javascript">
+			var cnt1st = true;
+			function count_<?php echo $taxf; ?>() {
+				if (cnt1st) {
+					return <?php echo $terms; ?>;
+				}
+				// tags rendered.
+				var i = 0;
+				while ( true ) {
+					inp = document.getElementById("<?php echo $taxn; ?>-check-num-"+i);
+					if (inp) {
+						i++;
+					} else {
+						return i;
+					}
+				}
 			}
 
-			if ( ! is_null( $max_bound ) ) {
-				?>
-				if ( cnt > <?php echo $mab; ?> ) { 
-					alert( "<?php echo $more; ?>" );
-				}
-				if ( cnt >= <?php echo $mab; ?> ) { 
-					document.getElementById("new-tag-<?php echo $taxn; ?>").setAttribute("readonly", true);
-					document.getElementById("link-<?php echo $taxn; ?>").setAttribute("disabled", true);
+			function check_<?php echo $taxf; ?>(bail = false) {
+				// Ensure tage add readonly attribute remove, unless explicitly wanted.
+				document.getElementById("new-tag-<?php echo $taxn; ?>").removeAttribute("readonly");
+				document.getElementById("link-<?php echo $taxn; ?>").removeAttribute("disabled");
+				// check post_status.
+				var stat = document.getElementById("post_status").value;
+				if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
+					return;
 				}
 				<?php
-			}
-			?>
-			if (bail) {
-				event.preventDefault();
-			}
-		}
+				if ( 1 === $cntl ) {
+					// check status.
+					echo 'if ( "publish" !== stat && "future" !== stat ) { return; }' . "\n";
+				}
+				?>
 
-		document.addEventListener('DOMContentLoaded', function() {
-			check_<?php echo $taxn; ?>();
-			cnt1st = false;
-			var tag = document.getElementById("<?php echo $taxn; ?>");
-			var taglist = tag.getElementsByTagName('ul');
-			taglist[0].addEventListener('click', event => {
-					check_<?php echo $taxn; ?>();
-			});
-			document.getElementById("new-tag-<?php echo $taxn; ?>").addEventListener('click', event => {
-					check_<?php echo $taxn; ?>();
-			});
-			document.getElementById("publish").addEventListener('click', event => {
-					check_<?php echo $taxn; ?>(true);
-			});
-			document.getElementById("save-post").addEventListener('click', event => {
-					check_<?php echo $taxn; ?>(true);
-			});
-		}, false);
-		</script>
-		<?php
-		// phpcs:enable  WordPress.Security.EscapeOutput
+				var cnt = count_<?php echo $taxf; ?>();
+				var err = false;
+				<?php
+				if ( ! is_null( $min_bound ) ) {
+					echo 'if ( cnt < ' . $mib . ' ) { alert( "' . $less . '" ); err = true; }' . "\n";
+				}
+
+				if ( ! is_null( $max_bound ) ) {
+					?>
+					if ( cnt > <?php echo $mab; ?> ) { 
+						alert( "<?php echo $more; ?>" );
+						err = true;
+					}
+					if ( cnt >= <?php echo $mab; ?> ) { 
+						document.getElementById("new-tag-<?php echo $taxn; ?>").setAttribute("readonly", true);
+						document.getElementById("link-<?php echo $taxn; ?>").setAttribute("disabled", true);
+					}
+					<?php
+				}
+				?>
+				if (err && bail) {
+					event.stopPropagation();
+					event.preventDefault();
+				}
+			}
+
+			document.addEventListener('DOMContentLoaded', function() {
+				check_<?php echo $taxf; ?>();
+				cnt1st = false;
+				var tag = document.getElementById("<?php echo $taxn; ?>");
+				var taglist = tag.getElementsByTagName('ul');
+				taglist[0].addEventListener('click', event => {
+					check_<?php echo $taxf; ?>();
+				});
+				document.getElementById("new-tag-<?php echo $taxn; ?>").addEventListener('click', event => {
+					check_<?php echo $taxf; ?>();
+				});
+				document.getElementById("new-tag-<?php echo $taxn; ?>").addEventListener('keypress', event => {
+					check_<?php echo $taxf; ?>();
+				});
+				document.getElementById("publish").addEventListener('click', event => {
+					check_<?php echo $taxf; ?>(true);
+				});
+				document.getElementById("publish").addEventListener('keypress', event => {
+					check_<?php echo $taxf; ?>(true);
+				});
+				document.getElementById("save-post").addEventListener('click', event => {
+					check_<?php echo $taxf; ?>(true);
+				});
+				document.getElementById("save-post").addEventListener('keypress', event => {
+					check_<?php echo $taxf; ?>(true);
+				});
+			}, false);
+			</script>
+			<?php
+			// phpcs:enable  WordPress.Security.EscapeOutput
+		}
 	}
 
 	/**

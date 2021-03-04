@@ -3,9 +3,9 @@
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
 Requires at least: 4.8
-Tested up to: 5.5.1
+Tested up to: 5.7
 Requires PHP: 5.6
-Stable tag: 1.2.2
+Stable tag: 1.3.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -17,7 +17,7 @@ WordPress provides a simple custom taxonomy, this plugin makes it even simpler, 
 
 Supports adding one or more taxonomies (either hierarchical or tag) to any objects registered on your installation.
 
-This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1/2/3/4 and PHP 7.2/4.
+This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-5.7 with PHP 7.2-7.4.
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 
@@ -29,7 +29,7 @@ You can also create terms easily by typing them into a list; or by copying them 
 
 A tool has been provided to support changing the taxonomy slug. Any terms and their usages will also be renamed.
 
-Options are provided to add a selection dropdown in the admin list and to define minimum and maximum required term counts using posts of selected statuses (and not only "published").
+Options are provided to add a selection dropdown in the admin list and to define minimum and maximum required term counts using posts of selected statuses (and not only "published"). [Term counts with WP 5.7+ requires version 1.3+ of this plugin.]
 
 For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
 
@@ -56,6 +56,13 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 1.3.0
+	* NEW: Term counts now implemented by WP 5.7 functionality.
+	* NEW: Label filter_by_item supported (introduced in WP 5.7).
+	* NEW: Term controls test applied when saving via Rest.
+	* FIX: Don't test Term controls during Autosave.
+	* FIX: Review Term controls Front End processing.
 
 * Version 1.2.2
 	* FIX: Term counts wrong (props @cgzaal)
