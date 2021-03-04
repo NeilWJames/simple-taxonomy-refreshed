@@ -74,9 +74,11 @@ See [Usage details](./usage.md) for more information on the usage of the plugin.
 ## Changelog
 
 * Version 1.3.0
-	* NEW: Term counts implemented by WP 5.7 functionality
+	* NEW: Term counts now implemented by WP 5.7 functionality.
 	* NEW: Label filter_by_item supported (introduced in WP 5.7).
+	* NEW: Term controls test applied when saving via Rest.
 	* FIX: Don't test Term controls during Autosave.
+	* FIX: Review Term controls Front End processing.
 
 * Version 1.2.2
 	* FIX: Term counts wrong (props @cgzaal)
