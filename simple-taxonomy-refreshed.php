@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/NeilWJames/simple-taxonomy-refreshed
  * Description:       WordPress provides simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code
  *                    Converted, Standardised and Extended from Simple Taxonomy by Amaury Balmer
- * Version:           1.2.2
+ * Version:           1.3.0
  * Requires at least: 4.8
  * Requires PHP:      5.6
  * Author:            Neil James
@@ -16,7 +16,7 @@
  */
 
 /*
-Copyright This Version 2019-20 Neil James (neil@familyjames.com)
+Copyright This Version 2019-21 Neil James (neil@familyjames.com)
 Copyright Original Version 2010-2013 Amaury Balmer (amaury@beapi.fr)
 
 This program is free software; you can redistribute it and/or modify

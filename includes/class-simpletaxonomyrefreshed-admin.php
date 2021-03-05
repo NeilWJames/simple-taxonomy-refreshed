@@ -1318,9 +1318,6 @@ class SimpleTaxonomyRefreshed_Admin {
 											<span class="description"><?php esc_html_e( 'Choose the set of Statuses to be included in Term counts.', 'simple-taxonomy-refreshed' ); ?></span>
 											</div>
 											</td>
-									<?php
-									null;
-									?>
 									</tr>
 								</table>
 							</div>
@@ -2156,9 +2153,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		$taxf = esc_html( str_replace( '-', '_', $tax_name ) );
 
 		if ( self::$use_block_editor ) {
-			write_log( 'block editor script_radio' );
+			// not yet supported.
 		} else {
-			write_log( 'classic editor script_radio' );
 			// All output has passed through esc_html so switch off checking.
 			// phpcs:disable  WordPress.Security.EscapeOutput
 			?>
@@ -2284,9 +2280,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		$taxn = esc_html( $tax_name );
 		$taxf = esc_html( str_replace( '-', '_', $tax_name ) );
 		if ( self::$use_block_editor ) {
-			write_log( 'block editor hard_term_limits_hier' );
+			// not yet supported.
 		} else {
-			write_log( 'classic editor hard_term_limits_hier' );
 			// All output has passed through esc_html so switch off checking.
 			// phpcs:disable  WordPress.Security.EscapeOutput
 			?>
@@ -2394,9 +2389,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		$taxf  = esc_html( str_replace( '-', '_', $tax_name ) );
 		$terms = esc_html( $num_terms );
 		if ( self::$use_block_editor ) {
-			write_log( 'block editor hard_term_limits_tag' );
+			// not yet supported.
 		} else {
-			write_log( 'classic editor hard_term_limits_tag' );
 			// All output has passed through esc_html so switch off checking.
 			// phpcs:disable  WordPress.Security.EscapeOutput
 			?>
