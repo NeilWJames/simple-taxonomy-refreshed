@@ -43,7 +43,7 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 
 		$env = (bool) getenv( 'WP_MULTISITE' );
 
-		$this->assertTrue( ( $env === is_multisite() ), 'Multisite not as expected' );
+		$this->assertTrue( ( is_multisite() === $env ), 'Multisite not as expected' );
 
 	}
 
