@@ -35,11 +35,24 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Make sure multisite is as expected.
+	 */
+	public function test_log_multisite() {
+
+		$this->consoleLog( 'Test_STaxo_Refreshed_Main - Start' );
+
+		$env = (bool) getenv( 'WP_MULTISITE' );
+
+		$this->assertTrue( ( $env === is_multisite() ), 'Multisite not as expected' );
+
+	}
+
+	/**
 	 * Make sure plugin is activated.
 	 */
 	public function test_activated() {
 
-		$this->consoleLog( 'Test_STaxo_Refreshed_Main - Start' );
+		$this->consoleLog( 'Test_STaxo_Refreshed_Main - Activated' );
 
 		$this->assertTrue( class_exists( 'SimpleTaxonomyRefreshed_Client' ), 'SimpleTaxonomy_Client class not defined' );
 
