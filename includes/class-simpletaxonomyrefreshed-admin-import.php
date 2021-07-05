@@ -12,34 +12,45 @@
  * @package simple-taxonomy-refreshed
  */
 class SimpleTaxonomyRefreshed_Admin_Import {
-	const IMPORT_SLUG = 'staxo-import';
+	const IMPORT_SLUG = 'staxo_import';
 
 	/**
-	 * Constructor
+	 * Instance variable to ensure singleton.
+	 *
+	 * @var int
 	 */
-	public function __construct() {
-		add_action( 'admin_init', array( __CLASS__, 'check_admin_post' ) );
-		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ) );
+	private static $instance = null;
+
+	/**
+	 * Call to construct the singleton instance.
+	 *
+	 * @return object
+	 */
+	final public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new SimpleTaxonomyRefreshed_Admin_Import();
+		}
+		return self::$instance;
 	}
 
 	/**
-	 * Meta function for load all check functions.
+	 * Protected Constructor
+	 *
+	 * @return void
 	 */
-	public static function check_admin_post() {
-		self::check_importation();
+	final protected function __construct() {
+		add_action( 'admin_init', array( __CLASS__, 'check_importation' ) );
+		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ), 20 );
 	}
 
 	/**
 	 * Add settings menu page.
 	 **/
 	public static function add_menu() {
-		$options = get_option( OPTION_STAXO );
-		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-			add_management_page( __( 'Terms import', 'simple-taxonomy-refreshed' ), __( 'Terms import', 'simple-taxonomy-refreshed' ), 'manage_options', self::IMPORT_SLUG, array( __CLASS__, 'page_importation' ) );
+		add_submenu_page( SimpleTaxonomyRefreshed_Admin::ADMIN_SLUG, __( 'Terms Import', 'simple-taxonomy-refreshed' ), __( 'Terms Import', 'simple-taxonomy-refreshed' ), 'manage_options', self::IMPORT_SLUG, array( __CLASS__, 'page_importation' ) );
 
-			// help text.
-			add_action( 'load-tools_page_staxo-import', array( __CLASS__, 'add_help_tab' ) );
-		}
+		// help text.
+		add_action( 'load-taxonomies_page_' . self::IMPORT_SLUG, array( __CLASS__, 'add_help_tab' ) );
 	}
 
 	/**
@@ -47,20 +58,20 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 	 *
 	 * @return void
 	 */
-	private static function check_importation() {
-		if ( isset( $_POST['staxo-import'] ) && isset( $_POST['import_content'] ) && ! empty( $_POST['import_content'] ) ) {
+	public static function check_importation() {
+		if ( isset( $_POST[ self::IMPORT_SLUG ] ) && isset( $_POST['import_content'] ) && ! empty( $_POST['import_content'] ) ) {
 			// check nonce for form submit.
-			check_admin_referer( 'staxo-import' );
+			check_admin_referer( self::IMPORT_SLUG );
 
 			// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
 			$taxonomy = sanitize_text_field( wp_unslash( $_POST['taxonomy'] ) );
 			if ( ! taxonomy_exists( $taxonomy ) ) {
-				wp_die( esc_html__( 'Cheating ? You are trying to import terms on a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
+				wp_die( esc_html__( 'You cannot import terms into a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
 			}
 
 			$taxonomy_obj = get_taxonomy( $taxonomy );
 			if ( ! ( current_user_can( 'manage_options' ) || current_user_can( $taxonomy_obj->cap->manage_terms ) ) ) {
-				wp_die( esc_html__( 'Cheating ? You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ) );
+				wp_die( esc_html__( 'You do not have the necessary permissions to import terms.', 'simple-taxonomy-refreshed' ) );
 			}
 
 			$prev_ids = array();
@@ -183,13 +194,13 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 		settings_errors( 'simple-taxonomy-refreshed' );
 		?>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Terms import', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h2><?php esc_html_e( 'Terms Import', 'simple-taxonomy-refreshed' ); ?></h2>
 			<p><?php esc_html_e( 'Import a list of words as terms of a taxonomy using this tool.', 'simple-taxonomy-refreshed' ); ?></p>
 			<ul style="margin-left:1em; list-style-type:disc"><li><?php esc_html_e( 'Enter one term per line.', 'simple-taxonomy-refreshed' ); ?></li>
 			<li><?php esc_html_e( 'Existing terms can be entered using either the Term Name or its Slug.', 'simple-taxonomy-refreshed' ); ?></li>
 			<li><?php esc_html_e( 'Use leading spaces or tabs to denote the level of the Term in the hierarchy relative to its parent.', 'simple-taxonomy-refreshed' ); ?></li></ul>
 			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
-			<form action="<?php echo esc_url( admin_url( 'tools.php?page=' . self::IMPORT_SLUG ) ); ?>" method="post">
+			<form action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::IMPORT_SLUG ) ); ?>" method="post">
 				<p>
 					<label for="taxonomy"><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></label>
 					<br />
@@ -245,8 +256,8 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 				</p>
 
 				<p class="submit">
-					<?php wp_nonce_field( 'staxo-import' ); ?>
-					<input type="submit" name="staxo-import" value="<?php esc_html_e( 'Import these words as terms', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" />
+					<?php wp_nonce_field( self::IMPORT_SLUG ); ?>
+					<input type="submit" name="<?php echo esc_html( self::IMPORT_SLUG ); ?>" value="<?php esc_html_e( 'Import these words as terms', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" />
 				</p>
 			</form>
 		</div>
@@ -298,7 +309,10 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 		$help = array(
 			__( 'Overview', 'simple-taxonomy-refreshed' ) =>
 				'<p>' . __( 'This tool allows you to import terms into an existing taxonomy.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'By default, you are presented with a list of all publicly available taxonomies, not just those defined by this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'The terms entered are not linked to any posts by this process.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'As only the term name is entered, its slug is be derived from that and no description is created. These can be edited using standard WordPress functionality if required', 'simple-taxonomy-refreshed' ) . '</p>',
+			__( 'Usage', 'simple-taxonomy-refreshed' )    =>
+				'<p>' . __( 'By default, you are presented with a list of all publicly available taxonomies, not just those defined by this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'The simplest option is to enter a list of terms where each one is its name. Its slug will be generated automatically.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'This is entered as a list with no hierarchy. It is appropriate for either non-hierarchical taxonomies or a few entries of a hierarchical one.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'You can also enter entries hierarchically into a hierarchical taxonomy. For this, you need to indent the entries to identify the hierarchy of terms wanted.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
@@ -318,5 +332,8 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 				)
 			);
 		}
+
+		// add help sidebar.
+		SimpleTaxonomyRefreshed_Admin::add_help_sidebar();
 	}
 }

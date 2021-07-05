@@ -1,25 +1,66 @@
 # Use of the Plugin
 
-## Custom Taxonomies Definition
+## Taxonomies Menu
 
-When the plugin is activated, the configuration is available in the administration screen under *Settings* -> *Custom Taxonomies*
+When the plugin is activated, the functionality is available under a menu item *Taxonomies*
 
-The screen has three sections :
-* Taxonomy List
+![Taxonomy Listing](../images/TaxOptions.png)
 
-This gives a list of the previous entered Custom Taxonomies which is empty when first used.
+There are number of menu items within this group :
 
-![Empty Taxonomy List](../images/CustTaxEmpty.png)
+* All Taxonomies - Gives a list of all taxomonies managed (actually or potentially) by the plugin.
 
-The taxonomy label name will be used to identify the taxonomy used in the plugin screens.
+* Add Taxonomy - Allows a new taxonomy to be defined
+
+* Terms Migrate - Allows terms defined in one taxonomy to be extracted and made available for importing into another.
+
+* Terms Import - Enables terms to be bulk loaded onto another.
+
+* Terms Merge - Enables several terms within a taxonomy to be merged together with their usages.
+
+* Taxonomy List Order - If a post type can have several taxonomies, these are displayed in the order that they were defined.
+
+This tool allows the order to be defined by the user.
+
+* Configuration Export/Import - Allows the entire set of configuration data to be exported or imported.
+
+Once a taxonomy has been defined using this plugin an additional option will be displayed.
+
+* Rename Taxonomy Slug - Allows the Taxonomy slug and all associated terms to be changed.
+
+## All Taxonomies
+
+The *All Taxonomies* screen has two sections :
+ 
+* Custom Taxonomies
+
+This gives a list of previously entered Custom Taxonomies which is empty when first used.
+
+Click on the *Add New* button or *Add Taxonomy* menu item to add a Taxonomy.
+
+![Empty Custom Taxonomy List](../images/CustTaxEmpty.png)
+
+The taxonomy label name will be used to identify the taxonomy used in the plugin screens except for the List order screen where the slug name is used.
 
 A number of significant properties of each taxonomy is shown in this list.
 
 Once there are some taxonomies, the list will be populated.
 
+* External Taxonomies
+
+This gives a list of taxonomies available to the installation that has not been created by this plugin.
+
+![External Taxonomy List](../images/ExtTaxEmpty.png)
+
+It is possible to add the additional functions provided by the plugin to these taxonomies.
+
+Again a number of significant properties of each taxonomy is shown in this list.
+
+## Custom Taxonomies Functions
+
 ![Taxonomy Listing](../images/AddTaxList.png)
 
-Some functional options will appear in the space under each taxonomy label when the pointer is over the area.
+Once a custom taxonomy has been defined some functional options will appear in the space under each taxonomy label when the pointer is over the area.
 
 
 | Option | Processing |
@@ -31,27 +72,13 @@ Some functional options will appear in the space under each taxonomy label when 
 
 See the [example page](./example.md) for an example download file.
 
-* Add a new taxonomy
-
-This part of the form is available to add a new Custom Taxonomy at any time. It contains default values for the taxonomies.
-
-When modifying an existing taxonomy a panel with only this section is displayed with the existing data held.
-
 See [Add/Modify Taxonomy](./addmod.md) for further information of the process.
-
-* Export/Import
-
-This section allows the entire Custom Taxonomy definitions to be exported and/or imported to the browser.
-
-The data is held in JSON format and is incompatible with data stored by the plugin [Simple Taxonomy](https://github.com/herewithme/simple-taxonomy/)
-
-![Export/Import](../images/ExportImport.png)
 
 ## Tools
 
 When the plugin is activated and a taxonomy has been registered, three tools are available in the administration menu under *Tools*. They are *Terms migrate*, *Terms import* and *Rename Taxonomy Slug*.
 
-### Terms migrate
+### Terms Migrate
 
 This tool enables the existing terms held against a taxonomy to be copied to another within the database.
 
@@ -71,7 +98,7 @@ See [example page](./example.md) to see a worked example of its usage.
 
 Whilst it is called migrate, only copy has been implemented at this time. The standard terms deletion functionality WordPress can be used if required.
 
-### Terms import
+### Terms Import
 
 This tool allows terms to be entered in bulk into a selected taxonomy.
 
@@ -89,6 +116,30 @@ This data can be entered or amended in the appropriate Taxonomy maintenance scre
 
 See the [example page](./example.md) for a specific example of the function usage.
 
+### Terms Merge
+
+This tool allows terms to be entered in bulk into a selected taxonomy.
+
+### Taxonomy List Order
+
+As delivered, Posts support both Categories and Tags (with slugs `categories` and `post-tags` respectively.
+
+Since `categories` were defined before post-tags`, the Posts Admin List (*All Posts*) has them in this order:
+
+![Posts Default](../images/PostAdminDefault.png)
+
+Using this tool will display
+
+![Initial Order](../images/PostOrderScreen1.png)
+ 
+Dragging the first field below the second will give:
+
+![Changed Order](../images/PostOrderScreen2.png)
+
+Once saved, the *All Posts* screen will display the ordering:
+
+![Posts Changed](../images/PostAdminChanged.png)
+
 ### Rename Taxonomy Slug
 
 This tool allows the slug for a custom taxonomy to be renamed.
@@ -96,4 +147,19 @@ This tool allows the slug for a custom taxonomy to be renamed.
 It also gives the option to change the query_var and rewrite slug (if that function is active).
 
 As part of the update all its terms and their usages will be updated to remain in the taxonomy.
- 
+
+See the [example page](./example.md) for a specific example of the function usage.
+
+### Configuration Export/Import
+
+This tool allows the entire Custom Taxonomy definitions to be exported and/or imported to the browser.
+The data is held in JSON format and is incompatible with data stored by the original plugin [Simple Taxonomy](https://github.com/herewithme/simple-taxonomy/)
+
+When the plugin is first loaded, there is no configuration to export. But it is possible to load a configuration from another installation.
+
+![Initial Export/Import](../images/ExportImport0.png)
+
+Once some configuration data has been created, both export and import options becme available. 
+
+![Export/Import](../images/ExportImport.png)
+

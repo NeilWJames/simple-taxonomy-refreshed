@@ -12,7 +12,7 @@
  * @package simple-taxonomy-refreshed
  */
 class SimpleTaxonomyRefreshed_Admin_Conversion {
-	const CONVERT_SLUG = 'staxo-convert';
+	const CONVERT_SLUG = 'staxo_convert';
 
 	/**
 	 * Instance variable to ensure singleton.
@@ -39,7 +39,8 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 	 * @return void
 	 */
 	final protected function __construct() {
-		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ) );
+		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ), 20 );
+		// add ajax action.
 		add_action( 'wp_ajax_staxo_convert', array( __CLASS__, 'staxo_convert' ) );
 	}
 
@@ -47,13 +48,10 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 	 * Add settings menu page.
 	 **/
 	public static function add_menu() {
-		$options = get_option( OPTION_STAXO );
-		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-			add_management_page( __( 'Terms migration', 'simple-taxonomy-refreshed' ), __( 'Terms migrate', 'simple-taxonomy-refreshed' ), 'manage_options', self::CONVERT_SLUG, array( __CLASS__, 'page_conversion' ) );
+		add_submenu_page( SimpleTaxonomyRefreshed_Admin::ADMIN_SLUG, __( 'Terms Migration', 'simple-taxonomy-refreshed' ), __( 'Terms Migrate', 'simple-taxonomy-refreshed' ), 'manage_options', self::CONVERT_SLUG, array( __CLASS__, 'page_conversion' ) );
 
-			// help text.
-			add_action( 'load-tools_page_staxo-convert', array( __CLASS__, 'add_help_tab' ) );
-		}
+		// help text.
+		add_action( 'load-taxonomies_page_' . self::CONVERT_SLUG, array( __CLASS__, 'add_help_tab' ) );
 	}
 
 	/**
@@ -62,8 +60,9 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 	 * @return void
 	 */
 	public static function staxo_convert() {
-		if ( isset( $_POST['action'] ) && 'staxo_convert' === $_POST['action'] ) {
-			check_admin_referer( 'staxo-convert' );
+		// phpcs:ignore  WordPress.Security.NonceVerification
+		if ( isset( $_POST['action'] ) && self::CONVERT_SLUG === $_POST['action'] ) {
+			check_admin_referer( self::CONVERT_SLUG );
 
 			// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
 			$names = wp_unslash( $_POST['name'] );
@@ -113,7 +112,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 			?>
 			<h2><?php esc_html_e( 'Terms import', 'simple-taxonomy-refreshed' ); ?></h2>
 			<p><?php esc_html_e( 'Import a list of words as terms of a taxonomy using this page.', 'simple-taxonomy-refreshed' ); ?></p>
-			<form action="<?php echo esc_url( admin_url( 'tools.php?page=' . SimpleTaxonomyRefreshed_Admin_Import::IMPORT_SLUG ) ); ?>" method="post">
+			<form action="<?php echo esc_url( admin_url( 'admin.php?page=' . SimpleTaxonomyRefreshed_Admin_Import::IMPORT_SLUG ) ); ?>" method="post">
 				<p>
 					<label for="taxonomy"><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></label>
 					<br />
@@ -143,8 +142,8 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 				</p>
 
 				<p class="submit">
-					<?php wp_nonce_field( 'staxo-import' ); ?>
-					<input type="submit" name="staxo-import" value="<?php esc_html_e( 'Import these words as terms', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" />
+					<?php wp_nonce_field( SimpleTaxonomyRefreshed_Admin_Import::IMPORT_SLUG ); ?>
+					<input type="submit" name="<?php echo esc_html( SimpleTaxonomyRefreshed_Admin_Import::IMPORT_SLUG ); ?>" value="<?php esc_html_e( 'Import these words as terms', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" />
 				</p>
 
 				<p>
@@ -154,7 +153,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 					esc_html_e( 'Use the Taxonomy Term form after import if changes are needed.', 'simple-taxonomy-refreshed' );
 				?>
 				</p>
-				<p><?php esc_html_e( "A term won't be recreated if it already exista but it can be used to add items into the hierarchy.", 'simple-taxonomy-refreshed' ); ?></p>
+				<p><?php esc_html_e( "A term won't be recreated if it already exists but it can be used to add items into the hierarchy.", 'simple-taxonomy-refreshed' ); ?></p>
 			</form>
 			<?php
 			// phpcs:ignore WordPress.Security.EscapeOutput
@@ -249,6 +248,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 			<h2 class="title"><?php esc_html_e( 'Taxonomy Values Migrator', 'simple-taxonomy-refreshed' ); ?></h2>
 			<form id="copyto" action="" method="post">
 				<p><?php esc_html_e( 'Select one "Copy From" taxonomy source and one "To" taxonomy destination and then click on the Copy Terms button.', 'simple-taxonomy-refreshed' ); ?></p>
+				<p><?php esc_html_e( 'It will simply prepare a list of terms for you to select for import.', 'simple-taxonomy-refreshed' ); ?></p>
 				<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 				<div id="col-container">
 					<table class="widefat" cellspacing="0">
@@ -256,7 +256,8 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 							<tr>
 								<th scope="col" id="label" class="manage-column column-name"><?php esc_html_e( 'Copy From', 'simple-taxonomy-refreshed' ); ?></th>
 								<th scope="col" id="label" class="manage-column column-name"><?php esc_html_e( 'To', 'simple-taxonomy-refreshed' ); ?></th>
-								<th scope="col" id="name"  class="manage-column column-slug"><?php esc_html_e( 'Label', 'simple-taxonomy-refreshed' ); ?></th>
+								<th scope="col" id="name"  class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-refreshed' ); ?></th>
+								<th scope="col" id="slug"  class="manage-column column-slug"><?php esc_html_e( 'Slug', 'simple-taxonomy-refreshed' ); ?></th>
 								<th scope="col" id="label" class="manage-column column-name"><?php esc_html_e( 'Hierarchical', 'simple-taxonomy-refreshed' ); ?></th>
 							</tr>
 						</thead>
@@ -295,7 +296,8 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 									}
 									?>
 									</td>
-									<td class="name column-name"><?php echo esc_html( $taxonomy->label . ' [' . $taxonomy->name . ']' ); ?>
+									<td class="name column-name"><?php echo esc_html( $taxonomy->label ); ?>
+									<td class="name column-name"><?php echo esc_html( $taxonomy->name ); ?>
 									<input type="hidden" id="name[<?php echo esc_attr( $i ); ?>]" name="name[<?php echo esc_attr( $i ); ?>]" value="<?php echo esc_html( $taxonomy->name ); ?>" /></td>
 									<td><?php echo esc_html( self::get_true_false( $taxonomy->hierarchical ) ); ?></td>
 								</tr>
@@ -308,9 +310,9 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 				</div>
 
 				<p class="submit">
-					<input type="hidden" name="action" value="staxo_convert" />
-					<?php wp_nonce_field( 'staxo-convert' ); ?>
-					<input type="submit" id="staxo-convert" name="staxo-convert" value="<?php esc_html_e( 'Copy Terms', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" disabled />
+					<input type="hidden" name="action" value="<?php echo esc_html( self::CONVERT_SLUG ); ?>" />
+					<?php wp_nonce_field( self::CONVERT_SLUG ); ?>
+					<input type="submit" id="<?php echo esc_html( self::CONVERT_SLUG ); ?>" name="<?php echo esc_html( self::CONVERT_SLUG ); ?>" value="<?php esc_html_e( 'Copy Terms', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" disabled />
 				</p>
 			</form>
 		</div>
@@ -335,13 +337,13 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 					document.getElementById(event.srcElement.id).disabled = false;
 					p.getElementsByClassName(othgrp)[0].disabled = true;
 					if ( is_checked(othgrp) ) {
-						document.getElementById("staxo-convert").disabled = false;
+						document.getElementById("<?php echo esc_html( self::CONVERT_SLUG ); ?>").disabled = false;
 					}
 				} else {
 					if ( ! is_checked(othgrp) ) {
 						p.getElementsByClassName(othgrp)[0].disabled = false;
 					}
-					document.getElementById("staxo-convert").disabled = true;
+					document.getElementById("<?php echo esc_html( self::CONVERT_SLUG ); ?>").disabled = true;
 				}
 			}
 			function copy() {
@@ -350,11 +352,11 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 			function oput() {
 				copyop( "oput", "copy" );
 			}
-			( function( $ ) {
-				$( document ).ready( function() {
-				$( '#staxo-convert' ).click( function( event ) {
+			document.addEventListener('DOMContentLoaded', function() {
+				var $=jQuery.noConflict();
+				document.getElementById('<?php echo esc_html( self::CONVERT_SLUG ); ?>').addEventListener('click', event => {
 					// no double click
-					$( '#staxo-convert' ).disabled = true;
+					document.getElementById('<?php echo esc_html( self::CONVERT_SLUG ); ?>').disabled = true;
 					var data = $("#copyto").serializeArray();
 
 					// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
@@ -362,12 +364,10 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 						// Replace form with load version
 						$('.wrap').html(response);
 					});
-
 					// Don't submit form
 					return false;
 				});
 			});
-			} )( jQuery );
 		</script>
 		<?php
 	}
@@ -405,14 +405,19 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 		// child key is the title of the tab
 		// value is the help text (as HTML).
 		$help = array(
-			__( 'Overview', 'simple-taxonomy-refreshed' ) =>
+			__( 'Overview', 'simple-taxonomy-refreshed' )  =>
 				'<p>' . __( 'This tool allows you to copy terms from one taxonomy to another one. It does not affect existing terms or their links to posts.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'By default, you are presented with a list of all publicly available taxonomies, not just those defined by this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'It works in two phases. This screen operates the first phase only and prepares the data for you to operate the second phase - the creation of the term data.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'It works in two phases. This screen operates the first phase only and prepares the data for you to operate the second phase - the creation of the term data.', 'simple-taxonomy-refreshed' ) . '</p>',
+			__( 'Phase One', 'simple-taxonomy-refreshed' ) =>
+				'<p>' . __( 'By default, you are presented with a list of all publicly available taxonomies, not just those defined by this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'You identify the source taxonomy and the destination one and click on Copy Terms. This does not copy the terms, but prepares the data for the next phase - the Terms import tool.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'If either taxonomy is non-hierarchical, it will extract all terms as a simple alphabetical list, otherwise it will prepare a hierarchical list.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'It is done in two stages to allow you the maximum flexibility to choose which terms you want to be copied (or not).', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'Once you have all the terms of the souurce taxonomy available in your browser you can copy/paste them elsewhere for local manipulation before the actual import process is carried out.', 'simple-taxonomy-refreshed' ) . '</p>',
+				__( 'The data extracted are then presented back to you in the form of a pre-filled input form.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'It is done in two stages to allow you the maximum flexibility to choose which terms you want to be imported (or not).', 'simple-taxonomy-refreshed' ) . '</p>',
+			__( 'Phase Two', 'simple-taxonomy-refreshed' ) =>
+				'<p>' . __( 'This is actually the Terms Import tool pre-filled with all the terms of the source taxonomy.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'Once you have all the terms of the souurce taxonomy available in your browser you can edit this data into the set of terms to be imported.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'As it is a set of text lines, you can also copy/paste them into an editor for local manipulation before the actual import process is carried out.', 'simple-taxonomy-refreshed' ) . '</p>',
 		);
 
 		// loop through each tab in the help array and add.
@@ -425,5 +430,8 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 				)
 			);
 		}
+
+		// add help sidebar.
+		SimpleTaxonomyRefreshed_Admin::add_help_sidebar();
 	}
 }

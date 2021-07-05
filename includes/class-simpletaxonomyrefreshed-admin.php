@@ -14,7 +14,8 @@
  * @author Neil James
  */
 class SimpleTaxonomyRefreshed_Admin {
-	const ADMIN_SLUG = 'simple-taxonomy-settings';
+	const ADMIN_SLUG = 'staxo_settings';
+	const ADD_SLUG   = 'staxo_settings&action=add';
 
 	/**
 	 * Admin URL variable.
@@ -50,6 +51,31 @@ class SimpleTaxonomyRefreshed_Admin {
 	public static $use_block_editor = null;
 
 	/**
+	 * Variable to indicate if placeholder enqueued..
+	 *
+	 * @var boolean
+	 */
+	private static $placeholder = false;
+
+	/**
+	 * Call to enqueue the placeholder.
+	 *
+	 * @return void
+	 */
+	public function enqueue_placeholder() {
+		if ( false === self::$placeholder ) {
+			wp_enqueue_script(
+				'staxo_placeholder',
+				plugins_url( '/js/placeholder.js', __DIR__ ),
+				array( 'wp-data' ),
+				'1.4',
+				true
+			);
+			self::$placeholder = true;
+		}
+	}
+
+	/**
 	 * Protected Constructor
 	 *
 	 * @return void
@@ -57,7 +83,11 @@ class SimpleTaxonomyRefreshed_Admin {
 	final protected function __construct() {
 		// Register hooks.
 		add_action( 'activity_box_end', array( __CLASS__, 'activity_box_end' ) );
+		add_action( 'admin_init', array( __CLASS__, 'admin_init' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ) );
+
+		// Queue up JS.
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_placeholder' ) );
 
 		// check existing posts outside limits.
 		add_action( 'admin_notices', array( __CLASS__, 'check_posts_outside_limits' ) );
@@ -66,13 +96,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'block_editor_active' ) );
 
 		// help text.
-		add_action( 'load-settings_page_simple-taxonomy-settings', array( __CLASS__, 'add_help_tab' ) );
-
-		// called at admin_init, load all check functions.
-		self::check_merge_taxonomy();
-		self::check_delete_taxonomy();
-		self::check_export_taxonomy();
-		self::check_importexport();
+		add_action( 'load-toplevel_page_' . self::ADMIN_SLUG, array( __CLASS__, 'add_help_tab' ) );
 	}
 
 	/**
@@ -112,12 +136,48 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Add settings init page
+	 *
+	 * @since 1.4.0
+	 *
+	 * @return void
+	 */
+	public static function admin_init() {
+		self::check_merge_taxonomy();
+		self::check_delete_taxonomy();
+		self::check_export_taxonomy();
+
+		register_setting( 'simple-taxonomy-refreshed', 'settings_updated' );
+
+		$cntl_post_types = self::refresh_term_cntl_cache( false );
+		// if terms control wanted, invoke the code.
+		if ( isset( $cntl_post_types ) && ! empty( $cntl_post_types ) ) {
+			// filters the post to implement the taxonomy controls.
+			add_filter( 'wp_insert_post_empty_content', array( __CLASS__, 'check_taxonomy_value_set' ), 10, 2 );
+
+			// make sure that there is no taxonomy error to report.
+			add_action( 'admin_notices', array( __CLASS__, 'admin_error_check' ), 1 );
+
+			// register rest filters for any post types.
+			global $strc;
+			foreach ( $cntl_post_types as $post_type => $tax ) {
+				add_filter( "rest_pre_insert_{$post_type}", array( $strc, 'check_taxonomy_value_rest' ), 10, 2 );
+			}
+		}
+
+	}
+
+	/**
 	 * Add settings menu page
+	 *
+	 * @since 1.2.0
 	 *
 	 * @return void
 	 */
 	public static function admin_menu() {
-		add_options_page( __( 'Simple Taxonomy : Custom Taxonomies', 'simple-taxonomy-refreshed' ), __( 'Custom Taxonomies', 'simple-taxonomy-refreshed' ), 'manage_options', self::ADMIN_SLUG, array( __CLASS__, 'page_manage' ) );
+		add_menu_page( __( 'Custom Taxonomies', 'simple-taxonomy-refreshed' ), __( 'Taxonomies', 'simple-taxonomy-refreshed' ), 'manage_options', self::ADMIN_SLUG, array( __CLASS__, 'page_manage' ), 'dashicons-category', 40 );
+		add_submenu_page( self::ADMIN_SLUG, __( 'All Taxonomies', 'simple-taxonomy-refreshed' ), __( 'All Taxonomies', 'simple-taxonomy-refreshed' ), 'manage_options', self::ADMIN_SLUG, array( __CLASS__, 'page_manage' ) );
+		add_submenu_page( self::ADMIN_SLUG, __( 'Add Taxonomy', 'simple-taxonomy-refreshed' ), __( 'Add Taxonomy', 'simple-taxonomy-refreshed' ), 'manage_options', self::ADD_SLUG, array( __CLASS__, 'page_form' ) );
 	}
 
 	/**
@@ -131,7 +191,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		$screen = get_current_screen();
 
 		// On settings page.
-		if ( 'settings_page_simple-taxonomy-settings' !== $screen->id ) {
+		if ( 'toplevel_page_' . self::ADMIN_SLUG !== $screen->id ) {
 			return;
 		}
 
@@ -140,33 +200,37 @@ class SimpleTaxonomyRefreshed_Admin {
 		// value is the help text (as HTML).
 		$help = array(
 			__( 'Taxonomy List', 'simple-taxonomy-refreshed' ) =>
-				'<p>' . __( 'This displays all the Taxonomies managed by this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'It shows some major properties of the taxonomy - and allows you to extract the code that defines the taxonomy enties.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'You can add a new taxonomy in the screen here. Modifying an existing taxonomy will open a new window - with the same fields available.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'You can also export all the parameters for all taxonomies or reload them.', 'simple-taxonomy-refreshed' ) . '</p>',
+				'<p>' . __( 'This displays all the Taxonomies that are managed by this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'It shows two blocks: Custom and External.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'Custom Taxonomies are the taxonomies that are defined and created using this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'It shows all properties of the taxonomy - and allows you to extract the code that defines the taxonomy entities.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'You can add a new taxonomy or modify an existing an existing taxonomy with a new window.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'External Taxonomies are taxonomies that have been created by standard WordPress itself or other plugins that you have installed.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'Whilst you are unable to change their definition with this plugin, you can add the additional functionality with this plugin to these external taxonomies.', 'simple-taxonomy-refreshed' ) . '</p>',
 			__( 'Taxonomy Definition', 'simple-taxonomy-refreshed' ) =>
-				'<p>' . __( 'There are very many parameters to control the operation of the Taxonomy and the first seven tabs have been provided to enter them all. Since a major objective of the plugin is to avoid the user having to write code, all these parameters have been made available.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				'<p>' . __( 'This applies only to Custom Taxonomies.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'There are very many parameters to control the operation of the Taxonomy and seven tabs have been provided to enter them all. Since a major objective of the plugin is to avoid the user having to write code, all these parameters have been made available.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'As these parameters are for underlying WordPress functionality, you should read the WordPress documentation to understand their purpose and action.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'You need to enter the Name (slug) and whether it is Hierarchical or not and the post type(s) it will be linked to on the Main Options tab and the Name (label) on the Labels tab. Most of the others can be left as their default value - expect possibly the labels.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'You need to enter the Name (slug), whether it is Hierarchical or not and the post type(s) it will be linked to on the Main Options tab and the Name (label) on the Labels tab. Most of the others can be left as their default value - expect possibly the labels.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'WP 5.5 brings the possibility to add a default term for all objects defined from the taxonomy. This may be entered on the Other tab. The slug and description can also be entered here and used to create the term.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'By default the terms do not appear with the post. The options at the bottom of the Main Options screen allow you to output the attached terms with the post content and/or excerpt information.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'When done, simply click <code>Add Taxonomy</code> or <code>Update Taxonomy</code> to save your changes', 'simple-taxonomy-refreshed' ) . '</p>',
+				__( 'When done, simply click <code>Add Taxonomy</code> or <code>Update Taxonomy</code> at the bottom to save your changes', 'simple-taxonomy-refreshed' ) . '</p>',
 			__( 'WPGraphQL', 'simple-taxonomy-refreshed' ) =>
-				'<p>' . __( 'Added taxonomy-related functionality.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				'<p>' . __( 'Extra taxonomy-related functionality.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'These parameters are for sites that have implemented WPGraphQL; and are not relevant if the plugin is not installed.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'They are provided in the spirit of supporting no-coding. There is no requirement for this plugin.', 'simple-taxonomy-refreshed' ) . '</p>',
 			__( 'Admin List Filter', 'simple-taxonomy-refreshed' ) =>
-				'<p>' . __( 'Added taxonomy-related functionality.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'The admin screen for post types allows provide an option for these posts to be filtered by various fields. This tab allows these screens to have a filter on this taxonomy simply by ticking a box.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'Some taxonomy parameters should be set appropriately for this to be useful. They are noted on the tab.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'This invokes the standard WordPress functionality.', 'simple-taxonomy-refreshed' ) . '</p>',
+				'<p>' . __( 'Extra taxonomy-related functionality.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'The admin screen for post types can optionally have a dropdown filter to select posts using the taxonomy.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'This tab allows the taxonomy parameters to be entered appropriately for your use.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'This provides appropriate subset of parmeters the standard WordPress functionality (wp_dropdown_categories).', 'simple-taxonomy-refreshed' ) . '</p>',
 			__( 'Term Count', 'simple-taxonomy-refreshed' ) =>
-				'<p>' . __( 'Added taxonomy-related functionality.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				'<p>' . __( 'Extra taxonomy-related functionality.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'Standard WordPress functionality provides a count of the posts using a term on the Taxonomy Terms page - and this count is for only Published posts.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'You may want this count to include posts with other statuses. You can set this  behaviour on this tab.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'You may want this count to include posts with other statuses. You can set this behaviour on this tab.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'If you have additional non-standard post_statuses that you wish to be included, this can be done, but it will require coding and use of the filter \'staxo_term_count_statuses\'.', 'simple-taxonomy-refreshed' ) . '</p>',
 			__( 'Term Control', 'simple-taxonomy-refreshed' ) =>
-				'<p>' . __( 'Added taxonomy-related functionality.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				'<p>' . __( 'Extra taxonomy-related functionality.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'Standard WordPress functionality provides no limits on the number of terms that can be attached to a post.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'This functionality provides this control. Using this tab, upper and lower bounds may be set for either Published posts or all posts.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'The tests will be applied at save post time (soft);  or also when the terms are added or removed (hard).', 'simple-taxonomy-refreshed' ) . '</p><p>' .
@@ -184,6 +248,20 @@ class SimpleTaxonomyRefreshed_Admin {
 			);
 		}
 
+		// add sidebar.
+		self::add_help_sidebar();
+	}
+
+	/**
+	 * Adds help sidebar to help tab API.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return void
+	 */
+	public static function add_help_sidebar() {
+		$screen = get_current_screen();
+
 		$screen->set_help_sidebar(
 			'<p><strong>' . __( 'For more information:' ) . '</strong></p>' .
 			'<p><a href="https://github.com/NeilWJames/simple-taxonomy-refreshed/" target="_blank">' . __( 'Github Project page', 'simple-taxonomy-refreshed' ) . '</a></p>' .
@@ -192,23 +270,87 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Output any error when checking that taxonomy term bounds missed..
+	 *
+	 * Invoked in response to a requery process (so no need to check how created here).
+	 */
+	public static function admin_error_check() {
+		if ( ( ! isset( $_GET['staxo_terms'] ) ) || false === wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['staxo_terms'] ) ), 'terms' ) ) {
+			// not valid.
+			return;
+		}
+
+		if ( array_key_exists( 'staxo_error', $_GET ) && array_key_exists( 'staxo_tax', $_GET ) ) {
+			if ( isset( $_GET['message'] ) ) {
+				// This will over-ride any message.
+				unset( $_GET['message'] );
+			}
+
+			$taxonomy = sanitize_text_field( wp_unslash( $_GET['staxo_tax'] ) );
+			$label    = get_taxonomy( $taxonomy )->labels->name;
+
+			?>
+			<div><p>&nbsp;</p></div>
+			<div class="error">
+				<p>
+				<?php
+				switch ( $_GET['staxo_error'] ) {
+					case 'min':
+						// translators: %s is the taxonomy label name.
+						echo esc_html( sprintf( __( 'Your post needs to have more terms for the taxonomy - %s entered.', 'simple-taxonomy-refreshed' ), $label ) );
+						break;
+					case 'max':
+						// translators: %s is the taxonomy label name.
+						echo esc_html( sprintf( __( 'Your post needs to have less terms for taxonomy - %s.', 'simple-taxonomy-refreshed' ), $label ) );
+						break;
+					case 'minmax':
+						// translators: %s is the taxonomy label name.
+						echo esc_html( sprintf( __( 'Your post needs to have more terms for the taxonomy - %s entered.', 'simple-taxonomy-refreshed' ), $label ) );
+						echo '</p><p>';
+						// translators: %s is the taxonomy label name.
+						echo esc_html( sprintf( __( 'Your post needs to have less terms for taxonomy - %s.', 'simple-taxonomy-refreshed' ), $label ) );
+						break;
+					default:
+						null;
+				};
+				?>
+				</p>
+				<p><?php esc_html_e( 'Your update has been cancelled and stored data remains unchanged.', 'simple-taxonomy-refreshed' ); ?></p>
+				<p><?php esc_html_e( 'Your browser may hold an updated version, but it is currently invalid.', 'simple-taxonomy-refreshed' ); ?></p>
+			</div>
+			<?php
+		}
+	}
+
+	/**
 	 * Allow to display only form.
 	 *
-	 * @param array $taxonomy  taxonomy name.
+	 * @param array   $taxonomy  taxonomy name.
+	 * @param boolean $custom    taxonomy is custom.
 	 * @return void
 	 */
-	public static function page_form( $taxonomy ) {
+	public static function page_form( $taxonomy = null, $custom = true ) {
+		if ( isset( $taxonomy ) ) {
+			if ( $custom ) {
+				// translators: %s is the taxonomy name.
+				$title = sprintf( __( 'Custom Taxonomy : %s', 'simple-taxonomy-refreshed' ), stripslashes( $taxonomy['labels']['name'] ) );
+			} else {
+				// translators: %s is the taxonomy name.
+				$title = sprintf( __( 'External Taxonomy : %s', 'simple-taxonomy-refreshed' ), stripslashes( $taxonomy['labels']['name'] ) );
+			}
+		} else {
+			$title = __( 'Add Custom Taxonomy', 'simple-taxonomy-refreshed' );
+		}
 		?>
 		<div class="wrap">
-			<h2>
-			<?php
-			// translators: %s is the taxonomy name.
-			echo esc_html( sprintf( __( 'Custom Taxonomy : %s', 'simple-taxonomy-refreshed' ), stripslashes( $taxonomy['labels']['name'] ) ) );
-			?>
-			</h2>
+			<h1 class="wp-heading-_"><?php echo esc_html( $title ); ?></h1>
+
+			<hr class="wp-header-end">
+
+			<h2 class="screen-reader-text"><?php esc_html_e( 'Add/Modify taxonomy', 'simple-taxonomy-refreshed' ); ?></h2>
 
 			<div class="form-wrap">
-				<?php self::form_merge_custom_type( $taxonomy ); ?>
+				<?php self::form_merge_custom_type( $taxonomy, $custom ); ?>
 			</div>
 		</div>
 		<?php
@@ -331,25 +473,30 @@ class SimpleTaxonomyRefreshed_Admin {
 	 */
 	public static function page_manage() {
 		// Admin URL.
-		$admin_url = admin_url( 'options-general.php?page=' . self::ADMIN_SLUG );
+		$admin_url = admin_url( 'admin.php?page=' . self::ADMIN_SLUG );
 
 		// Get current options.
 		$current_options = get_option( OPTION_STAXO );
 		// Check get for message.
-		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['message'] ) ) {
+		// phpcs:disable  WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['message'] ) && isset( $_GET['staxo'] ) ) {
+			$staxo = sanitize_text_field( wp_unslash( $_GET['staxo'] ) );
 			switch ( $_GET['message'] ) { // phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 				case 'flush-deleted':
-					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Taxonomy and relations deleted with success !', 'simple-taxonomy-refreshed' ), 'updated' );
+					// translators: %1$s is the taxonomy slug name.
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', sprintf( __( 'Taxonomy "%1$s" and relations deleted successfully !', 'simple-taxonomy-refreshed' ), $staxo ), 'updated' );
 					break;
 				case 'deleted':
-					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Taxonomy deleted with success !', 'simple-taxonomy-refreshed' ), 'updated' );
+					// translators: %1$s is the taxonomy slug name.
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', sprintf( __( 'Taxonomy "%1$s" deleted successfully !', 'simple-taxonomy-refreshed' ), $staxo ), 'updated' );
 					break;
 				case 'added':
-					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Taxonomy added with success !', 'simple-taxonomy-refreshed' ), 'updated' );
+					// translators: %1$s is the taxonomy slug name.
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', sprintf( __( 'Taxonomy "%1$s" added successfully !', 'simple-taxonomy-refreshed' ), $staxo ), 'updated' );
 					break;
 				case 'updated':
-					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'Taxonomy updated with success !', 'simple-taxonomy-refreshed' ), 'updated' );
+					// translators: %1$s is the taxonomy slug name.
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', sprintf( __( 'Taxonomy "%1$s" updated successfully !', 'simple-taxonomy-refreshed' ), $staxo ), 'updated' );
 					break;
 			}
 		}
@@ -357,14 +504,71 @@ class SimpleTaxonomyRefreshed_Admin {
 		// Display message.
 		settings_errors( 'simple-taxonomy-refreshed' );
 
-		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
+		// edit custom taxonomy.
 		if ( isset( $_GET['action'] ) && isset( $_GET['taxonomy_name'] ) && 'edit' === $_GET['action'] && isset( $current_options['taxonomies'][ $_GET['taxonomy_name'] ] ) ) {
 			self::page_form( $current_options['taxonomies'][ sanitize_text_field( wp_unslash( $_GET['taxonomy_name'] ) ) ] );  // phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 			return;
 		}
+
+		// add option invoked.
+		if ( isset( $_GET['action'] ) && 'add' === $_GET['action'] ) {
+			self::page_form();
+			return;
+		}
+
+		// edit other taxonomy.
+		if ( isset( $_GET['action'] ) && isset( $_GET['taxonomy_name'] ) && 'edit' === $_GET['action'] ) {
+			$tax_name = sanitize_text_field( wp_unslash( $_GET['taxonomy_name'] ) ); // phpcs:ignore  WordPress.Security.NonceVerification.Recommended
+			// Get existing options if exist.
+			$options = get_option( OPTION_STAXO );
+			if ( isset( $options['externals'] ) && is_array( $options['externals'] && array_key_exists( $tax_name, $options['externals'] ) ) ) {
+				$taxonomy = $options['externals'][ $tax_name ];
+			} else {
+				// set defaults.
+				$taxonomy = array(
+					'name'               => $tax_name,
+					'st_show_in_graphql' => 0,
+					'st_graphql_single'  => '',
+					'st_graphql_plural'  => '',
+					'st_adm_types'       => array(),
+					'st_adm_hier'        => 0,
+					'st_adm_depth'       => 0,
+					'st_adm_count'       => 0,
+					'st_adm_h_e'         => 0,
+					'st_adm_h_i_e'       => 0,
+					'st_cb_type'         => 0,
+					'st_cb_pub'          => 0,
+					'st_cb_fut'          => 0,
+					'st_cb_dft'          => 0,
+					'st_cb_pnd'          => 0,
+					'st_cb_prv'          => 0,
+					'st_cb_tsh'          => 0,
+					'st_cc_type'         => 0,
+					'st_cc_hard'         => 0,
+					'st_cc_umin'         => 0,
+					'st_cc_umax'         => 0,
+					'st_cc_min'          => 0,
+					'st_cc_max'          => 0,
+				);
+				// add data from taxonomy . Not stored.
+				$tax_obj                              = get_taxonomy( $tax_name );
+				$taxonomy['labels']                   = (array) $tax_obj->labels;
+				$taxonomy['objects']                  = (array) $tax_obj->object_type;
+				$taxonomy['st_update_count_callback'] = $tax_obj->update_count_callback;
+			}
+			self::page_form( $taxonomy, false );
+			return;
+		}
+		// phpcs:enable  WordPress.Security.NonceVerification.Recommended
 		?>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Simple Taxonomy : Custom Taxonomies', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h1 class="wp-heading-inline"><?php esc_html_e( 'Custom Taxonomies', 'simple-taxonomy-refreshed' ); ?></h1>
+
+			<a href="<?php echo esc_url( $admin_url ); ?>&action=add" class="page-title-action"><?php esc_html_e( 'Add New', 'simple-taxonomy-refreshed' ); ?></a>
+
+			<hr class="wp-header-end">
+
+			<h2 class="screen-reader-text"><?php esc_html_e( 'Custom taxonomy list', 'simple-taxonomy-refreshed' ); ?></h2>
 
 			<div class="message updated">
 				<p>
@@ -425,9 +629,9 @@ class SimpleTaxonomyRefreshed_Admin {
 										<br />
 										<div class="row-actions">
 											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>"><?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?></a> | </span>
-											<span class="export"><a class="export_php-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=export_php&amp;taxonomy_name=' . esc_attr( $_t_name ), 'staxo-export_php-' . $_t_name ) ); ?>"><?php esc_html_e( 'Export PHP', 'simple-taxonomy-refreshed' ); ?></a> | </span>
-											<span class="delete"><a class="delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=delete&amp;taxonomy_name=' . $_t_name, 'staxo-delete-' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $del_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Delete', 'simple-taxonomy-refreshed' ); ?></a> | </span>
-											<span class="delete"><a class="flush-delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=flush-delete&amp;taxonomy_name=' . $_t_name, 'staxo-flush-delete-' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $dfl_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Flush & Delete', 'simple-taxonomy-refreshed' ); ?></a></span>
+											<span class="export"><a class="export_php-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=export_php&amp;taxonomy_name=' . esc_attr( $_t_name ), 'staxo_export_php-' . $_t_name ) ); ?>"><?php esc_html_e( 'Export PHP', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<span class="delete"><a class="delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=delete&amp;taxonomy_name=' . $_t_name, 'staxo_delete_' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $del_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Delete', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<span class="delete"><a class="flush-delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=flush-delete&amp;taxonomy_name=' . $_t_name, 'staxo_flush_delete-' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $dfl_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Flush & Delete', 'simple-taxonomy-refreshed' ); ?></a></span>
 										</div>
 									</td>
 									<td><?php echo esc_html( $_t['name'] ); ?></td>
@@ -462,36 +666,100 @@ class SimpleTaxonomyRefreshed_Admin {
 
 				<br class="clear" />
 
-				<div class="form-wrap">
-					<h3><?php esc_html_e( 'Add a new taxonomy', 'simple-taxonomy-refreshed' ); ?></h3>
-					<?php self::form_merge_custom_type(); ?>
-				</div>
 			</div><!-- /col-container -->
 		</div>
 
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Simple Taxonomy : Export/Import', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h2><?php esc_html_e( 'External Taxonomies', 'simple-taxonomy-refreshed' ); ?></h2>
 
-			<a class="button" href="<?php echo esc_url( wp_nonce_url( $admin_url . '&amp;action=staxo-export-config', 'staxo-export-config' ) ); ?>"><?php esc_html_e( 'Export config file', 'simple-taxonomy-refreshed' ); ?></a>
-			<a class="button" href="#" id="toggle-import_form"><?php esc_html_e( 'Import config file', 'simple-taxonomy-refreshed' ); ?></a>
-			<script type="text/javascript">
-				jQuery( "#toggle-import_form" ).click(function(event) {
-					event.preventDefault();
-					jQuery( '#import_form' ).removeClass('hide-if-js');
-				});
-			</script>
-			<div id="import_form" class="hide-if-js">
-				<form action="<?php echo esc_url( $admin_url ); ?>" method="post" enctype="multipart/form-data">
-					<p>
-						<label><?php esc_html_e( 'Config file', 'simple-taxonomy-refreshed' ); ?></label>
-						<input type="file" name="config_file" />
-					</p>
-					<p class="submit">
-						<?php wp_nonce_field( 'staxo-import-config-file' ); ?>
-						<input class="button-primary" type="submit" name="staxo-import-config-file" value="<?php esc_html_e( 'I want import a config from a previous backup, this action will REPLACE current configuration', 'simple-taxonomy-refreshed' ); ?>" />
-					</p>
-				</form>
-			</div>
+			<h2 class="screen-reader-text"><?php esc_html_e( 'Other taxonomy list', 'simple-taxonomy-refreshed' ); ?></h2>
+
+			<div id="col-container">
+				<table class="widefat tag fixed" cellspacing="0">
+					<thead>
+						<tr>
+							<th scope="col" id="labell" class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="nameh"  class="manage-column column-slug"><?php esc_html_e( 'Name', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="labelt" class="manage-column column-name"><?php esc_html_e( 'Post Types', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="labelh" class="manage-column column-name"><?php esc_html_e( 'Hierarchical', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" id="labelb" class="manage-column column-name"><?php esc_html_e( 'Block Editor', 'simple-taxonomy-refreshed' ); ?></th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-slug"><?php esc_html_e( 'Name', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Post Types', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Hierarchical', 'simple-taxonomy-refreshed' ); ?></th>
+							<th scope="col" class="manage-column column-name"><?php esc_html_e( 'Block Editor', 'simple-taxonomy-refreshed' ); ?></th>
+						</tr>
+					</tfoot>
+
+					<tbody id="the-list" class="list:taxonomies">
+						<?php
+						global $wp_taxonomies;
+
+						$use_all = ( false === $current_options ) || empty( $current_options['taxonomies'] );
+						$others  = array();
+						foreach ( $wp_taxonomies as $key => $wp_tax ) {
+							if ( $wp_tax->public && ( $use_all || ! isset( $current_options['taxonomies'][ $key ] ) ) ) {
+								$others [ $key ] = $wp_tax;
+							}
+						}
+						if ( empty( $others ) ) {
+							echo '<tr><td colspan="3">' . esc_html__( 'No external taxonomy.', 'simple-taxonomy-refreshed' ) . '</td></tr>';
+						} else {
+							$class = 'alternate';
+							$i     = 0;
+							foreach ( (array) $others as $_t_name => $_t ) :
+								$i++;
+								$class = ( 'alternate' === $class ) ? '' : 'alternate';
+								// phpcs:disable  WordPress.Security.EscapeOutput
+								// translators: %s is the taxonomy name.
+								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), $_t->labels->name ) );
+								// phpcs:enable  WordPress.Security.EscapeOutput
+								?>
+								<tr id="taxonomy-<?php echo esc_attr( $i ); ?>" class="<?php esc_attr( $class ); ?>">
+									<td class="name column-name">
+										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php esc_attr( $edit_msg ); ?>"><?php echo esc_html( stripslashes( $_t->labels->name ) ); ?></a></strong>
+										<br />
+										<div class="row-actions">
+											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>"><?php esc_html_e( 'Extra Functions', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<?php if ( isset( $current_options['externals'] ) && array_key_exists( $_t_name, $current_options['externals'] ) ) { ?>
+											<span class="delete"><a class="delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=delete&amp;taxonomy_name=' . $_t_name, 'staxo_delete_' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $del_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Delete Extra Functions', 'simple-taxonomy-refreshed' ); ?></a></span>
+											<?php } ?>
+										</div>
+									</td>
+									<td><?php echo esc_html( $_t->name ); ?></td>
+									<td>
+										<?php
+										if ( is_array( $_t->object_type ) && ! empty( $_t->object_type ) ) {
+											$pt = array();
+											foreach ( $_t->object_type as $k => $post_type ) {
+												$cpt = get_post_type_object( $post_type );
+												if ( null !== $cpt ) {
+													$pt[] = $cpt->labels->name;
+												}
+											}
+											echo esc_html( implode( ', ', $pt ) );
+										} else {
+											echo '-';
+										}
+										?>
+									</td>
+									<td><?php echo esc_html( self::get_true_false( (int) $_t->hierarchical ) ); ?></td>
+									<td><?php echo esc_html( self::get_true_false( (int) $_t->show_in_rest ) ); ?></td>
+								</tr>
+								<?php
+							endforeach;
+						}
+						?>
+					</tbody>
+				</table>
+
+				<br class="clear" />
+
+			</div><!-- /col-container -->
 		</div>
 		<?php
 	}
@@ -499,12 +767,13 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Build HTML for form custom taxonomy, add with list on right column
 	 *
-	 * @param array $taxonomy  taxonomy name.
+	 * @param array   $taxonomy  taxonomy name.
+	 * @param boolean $custom    taxonomy is custom.
 	 * @return void
 	 */
-	private static function form_merge_custom_type( $taxonomy = null ) {
+	private static function form_merge_custom_type( $taxonomy, $custom ) {
 		// Admin URL.
-		$admin_url = admin_url( 'options-general.php?page=' . self::ADMIN_SLUG );
+		$admin_url = admin_url( 'admin.php?page=' . self::ADMIN_SLUG );
 
 		if ( null === $taxonomy ) {
 			$taxonomy                 = SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields();
@@ -513,101 +782,110 @@ class SimpleTaxonomyRefreshed_Admin {
 			$edit                     = false;
 			$_action                  = 'add-taxonomy';
 			$submit_val               = __( 'Add taxonomy', 'simple-taxonomy-refreshed' );
-			$nonce_field              = 'staxo-add-taxo';
+			$nonce_field              = 'staxo_add_taxo';
 		} else {
-			$edit        = true;
-			$_action     = 'merge-taxonomy';
+			$edit = true;
+			if ( $custom ) {
+				$_action = 'merge-taxonomy';
+			} else {
+				$_action = 'merge-external';
+			}
 			$submit_val  = __( 'Update taxonomy', 'simple-taxonomy-refreshed' );
-			$nonce_field = 'staxo-edit-taxo';
+			$nonce_field = 'staxo_edit_taxo';
 		}
 
-		// Get default values if need.
-		$taxonomy = wp_parse_args( SimpleTaxonomyRefreshed_Client::prepare_args( $taxonomy ), $taxonomy );
+		// set up the taxonomy parameter array. Note. $taxonomy has two different structure.
+		if ( $custom ) {
+			// Get default values if need.
+			$taxonomy = wp_parse_args( SimpleTaxonomyRefreshed_Client::prepare_args( $taxonomy ), $taxonomy );
 
-		// Migration case - Not updated yet.
-		if ( ! array_key_exists( 'st_before', $taxonomy ) ) {
-			$taxonomy['st_before'] = '';
-			$taxonomy['st_after']  = '';
-		}
-
-		// Added 1.0.
-		if ( ! array_key_exists( 'st_slug', $taxonomy ) ) {
-			$taxonomy['st_slug']                  = '';
-			$taxonomy['st_with_front']            = 1;
-			$taxonomy['st_hierarchical']          = 1;
-			$taxonomy['st_ep_mask']               = '';
-			$taxonomy['st_update_count_callback'] = '';
-			$taxonomy['st_meta_box_cb']           = '';
-			$taxonomy['st_meta_box_sanitize_cb']  = '';
-			$taxonomy['st_args']                  = '';
-		}
-
-		// Added 1.1.
-		if ( ! array_key_exists( 'st_adm_types', $taxonomy ) ) {
-			$taxonomy['st_adm_types'] = array();
-			$taxonomy['st_adm_hier']  = 0;
-			$taxonomy['st_adm_depth'] = 0;
-			$taxonomy['st_adm_count'] = 0;
-			$taxonomy['st_adm_h_e']   = 0;
-			$taxonomy['st_adm_h_i_e'] = 0;
-			$taxonomy['st_cb_type']   = 0;
-			$taxonomy['st_cb_pub']    = 0;
-			$taxonomy['st_cb_fut']    = 0;
-			$taxonomy['st_cb_dft']    = 0;
-			$taxonomy['st_cb_pnd']    = 0;
-			$taxonomy['st_cb_prv']    = 0;
-			$taxonomy['st_cb_tsh']    = 0;
-		}
-
-		// Added 1.2.
-		if ( ! array_key_exists( 'st_cc_type', $taxonomy ) ) {
-			$taxonomy['st_cc_type']  = 0;
-			$taxonomy['st_cc_hard']  = 0;
-			$taxonomy['st_cc_umin']  = 0;
-			$taxonomy['st_cc_umax']  = 0;
-			$taxonomy['st_cc_min']   = 0;
-			$taxonomy['st_cc_max']   = 0;
-			$taxonomy['st_dft_name'] = '';
-			$taxonomy['st_dft_slug'] = '';
-			$taxonomy['st_dft_desc'] = '';
-		}
-
-		// Label menu_name needs to exist to edit (it is removed for registering).
-		if ( ! array_key_exists( 'menu_name', $taxonomy['labels'] ) ) {
-			$taxonomy['labels']['menu_name'] = '';
-		}
-
-		// If rewrite is true, then set st_ variables from rewrite (may have passed through a filter).
-		if ( $taxonomy['rewrite'] && isset( $taxonomy['rewrite']['slug'] ) ) {
-			$taxonomy['st_slug']         = $taxonomy['rewrite']['slug'];
-			$taxonomy['st_with_front']   = (int) $taxonomy['rewrite']['with_front'];
-			$taxonomy['st_hierarchical'] = (int) $taxonomy['rewrite']['hierarchical'];
-			$taxonomy['st_ep_mask']      = $taxonomy['rewrite']['ep_mask'];
-		}
-		if ( isset( $taxonomy['default_term'] ) && isset( $taxonomy['default_term']['name'] ) ) {
-			$taxonomy['st_dft_name'] = $taxonomy['default_term']['name'];
-			if ( isset( $taxonomy['default_term']['slug'] ) ) {
-				$taxonomy['st_dft_slug'] = $taxonomy['default_term']['slug'];
+			// Migration case - Not updated yet.
+			if ( ! array_key_exists( 'st_before', $taxonomy ) ) {
+				$taxonomy['st_before'] = '';
+				$taxonomy['st_after']  = '';
 			}
-			if ( isset( $taxonomy['default_term']['desc'] ) ) {
-				$taxonomy['st_dft_desc'] = $taxonomy['default_term']['desc'];
+
+			// Added 1.0.
+			if ( ! array_key_exists( 'st_slug', $taxonomy ) ) {
+				$taxonomy['st_slug']                  = '';
+				$taxonomy['st_with_front']            = 1;
+				$taxonomy['st_hierarchical']          = 1;
+				$taxonomy['st_ep_mask']               = '';
+				$taxonomy['st_update_count_callback'] = '';
+				$taxonomy['st_meta_box_cb']           = '';
+				$taxonomy['st_meta_box_sanitize_cb']  = '';
+				$taxonomy['st_args']                  = '';
 			}
-		}
 
-		// set output if user data has existing value.
-		if ( ! isset( $taxonomy['update_count_callback'] ) && isset( $taxonomy['st_update_count_callback'] ) ) {
-			$taxonomy['update_count_callback'] = $taxonomy['st_update_count_callback'];
-		}
-		if ( ! isset( $taxonomy['meta_box_cb'] ) && isset( $taxonomy['st_meta_box_cb'] ) ) {
-			$taxonomy['meta_box_cb'] = ( 'false' === $taxonomy['st_meta_box_cb'] ? false : $taxonomy['st_meta_box_cb'] );
-		}
-		if ( ! isset( $taxonomy['meta_box_sanitize_cb'] ) && isset( $taxonomy['st_meta_box_sanitize_cb'] ) ) {
-			$taxonomy['meta_box_sanitize_cb'] = $taxonomy['st_meta_box_sanitize_cb'];
-		}
-		if ( ! isset( $taxonomy['args'] ) && isset( $taxonomy['st_args'] ) ) {
-			$taxonomy['args'] = $taxonomy['st_args'];
-		}
+			// Added 1.1.
+			if ( ! array_key_exists( 'st_adm_types', $taxonomy ) ) {
+				$taxonomy['st_adm_types'] = array();
+				$taxonomy['st_adm_hier']  = 0;
+				$taxonomy['st_adm_depth'] = 0;
+				$taxonomy['st_adm_count'] = 0;
+				$taxonomy['st_adm_h_e']   = 0;
+				$taxonomy['st_adm_h_i_e'] = 0;
+				$taxonomy['st_cb_type']   = 0;
+				$taxonomy['st_cb_pub']    = 0;
+				$taxonomy['st_cb_fut']    = 0;
+				$taxonomy['st_cb_dft']    = 0;
+				$taxonomy['st_cb_pnd']    = 0;
+				$taxonomy['st_cb_prv']    = 0;
+				$taxonomy['st_cb_tsh']    = 0;
+			}
 
+			// Added 1.2.
+			if ( ! array_key_exists( 'st_cc_type', $taxonomy ) ) {
+				$taxonomy['st_cc_type']  = 0;
+				$taxonomy['st_cc_hard']  = 0;
+				$taxonomy['st_cc_umin']  = 0;
+				$taxonomy['st_cc_umax']  = 0;
+				$taxonomy['st_cc_min']   = 0;
+				$taxonomy['st_cc_max']   = 0;
+				$taxonomy['st_dft_name'] = '';
+				$taxonomy['st_dft_slug'] = '';
+				$taxonomy['st_dft_desc'] = '';
+			}
+
+			// Label menu_name needs to exist to edit (it is removed for registering).
+			if ( ! array_key_exists( 'menu_name', $taxonomy['labels'] ) ) {
+				$taxonomy['labels']['menu_name'] = '';
+			}
+
+			// If rewrite is true, then set st_ variables from rewrite (may have passed through a filter).
+			if ( $taxonomy['rewrite'] && isset( $taxonomy['rewrite']['slug'] ) ) {
+				$taxonomy['st_slug']         = $taxonomy['rewrite']['slug'];
+				$taxonomy['st_with_front']   = (int) $taxonomy['rewrite']['with_front'];
+				$taxonomy['st_hierarchical'] = (int) $taxonomy['rewrite']['hierarchical'];
+				$taxonomy['st_ep_mask']      = $taxonomy['rewrite']['ep_mask'];
+			}
+			if ( isset( $taxonomy['default_term'] ) && isset( $taxonomy['default_term']['name'] ) ) {
+				$taxonomy['st_dft_name'] = $taxonomy['default_term']['name'];
+				if ( isset( $taxonomy['default_term']['slug'] ) ) {
+					$taxonomy['st_dft_slug'] = $taxonomy['default_term']['slug'];
+				}
+				if ( isset( $taxonomy['default_term']['desc'] ) ) {
+					$taxonomy['st_dft_desc'] = $taxonomy['default_term']['desc'];
+				}
+			}
+
+			// set output if user data has existing value.
+			if ( ! isset( $taxonomy['update_count_callback'] ) && isset( $taxonomy['st_update_count_callback'] ) ) {
+				$taxonomy['update_count_callback'] = $taxonomy['st_update_count_callback'];
+			}
+			if ( ! isset( $taxonomy['meta_box_cb'] ) && isset( $taxonomy['st_meta_box_cb'] ) ) {
+				$taxonomy['meta_box_cb'] = ( 'false' === $taxonomy['st_meta_box_cb'] ? false : $taxonomy['st_meta_box_cb'] );
+			}
+			if ( ! isset( $taxonomy['meta_box_sanitize_cb'] ) && isset( $taxonomy['st_meta_box_sanitize_cb'] ) ) {
+				$taxonomy['meta_box_sanitize_cb'] = $taxonomy['st_meta_box_sanitize_cb'];
+			}
+			if ( ! isset( $taxonomy['args'] ) && isset( $taxonomy['st_args'] ) ) {
+				$taxonomy['args'] = $taxonomy['st_args'];
+			}
+		} else {
+			// Taxonomy array prepared before calling.
+			null;
+		}
 		// If show_in_graphql is true, then set st_ variables from values (may have passed through a filter).
 		$taxonomy['st_show_in_graphql'] = ( isset( $taxonomy['show_in_graphql'] ) ? +$taxonomy['show_in_graphql'] : 0 );
 		$taxonomy['st_graphql_single']  = ( isset( $taxonomy['graphql_single'] ) ? $taxonomy['graphql_single'] : '' );
@@ -659,24 +937,34 @@ class SimpleTaxonomyRefreshed_Admin {
 
 			<p><?php esc_html_e( 'Click on the tabs to see all the options and facilities available.', 'simple-taxonomy-refreshed' ); ?></p>
 
-			<p><?php esc_html_e( 'The taxonomy definition options are spread across 7 tabs. The remaining 4 are for integrating the taxonomy.', 'simple-taxonomy-refreshed' ); ?></p>
+			<?php if ( $custom ) { ?>
+				<p><?php esc_html_e( 'The taxonomy definition options are spread across 7 tabs. The remaining 4 are for integrating the taxonomy.', 'simple-taxonomy-refreshed' ); ?></p>
+			<?php } else { ?>
+				<p><?php esc_html_e( 'The taxonomy is defined outside this plugin. These inputs are for integrating the taxonomy.', 'simple-taxonomy-refreshed' ); ?></p>
+				<p><strong><?php esc_html_e( 'Note that these options may already be defined for the taxonomy. Please check before defining.', 'simple-taxonomy-refreshed' ); ?></strong></p>
+			<?php } ?>
 
 			<div id="poststuff" class="metabox-holder">
 				<div id="post-body-content">
 					<div class="tab">
-						<button type="button" class="tablinks active" onclick="openTab(event, 'mainopts')"><?php esc_html_e( 'Main Options', 'simple-taxonomy-refreshed' ); ?></button>
-						<button type="button" class="tablinks" onclick="openTab(event, 'visibility')"><?php esc_html_e( 'Visibility', 'simple-taxonomy-refreshed' ); ?></button>
-						<button type="button" class="tablinks" onclick="openTab(event, 'labels')"><?php esc_html_e( 'Labels', 'simple-taxonomy-refreshed' ); ?></button>
-						<button type="button" class="tablinks" onclick="openTab(event, 'rewrite')"><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-refreshed' ); ?></button>
-						<button type="button" class="tablinks" onclick="openTab(event, 'permissions')"><?php esc_html_e( 'Permissions', 'simple-taxonomy-refreshed' ); ?></button>
-						<button type="button" class="tablinks" onclick="openTab(event, 'rest')"><?php esc_html_e( 'REST', 'simple-taxonomy-refreshed' ); ?></button>
-						<button type="button" class="tablinks" onclick="openTab(event, 'other')"><?php esc_html_e( 'Other', 'simple-taxonomy-refreshed' ); ?></button>
-						<button type="button" class="tablinks" onclick="openTab(event, 'wpgraphql')"><?php esc_html_e( 'WPGraphQL', 'simple-taxonomy-refreshed' ); ?></button>
+						<?php if ( $custom ) { ?>
+							<button type="button" class="tablinks active" onclick="openTab(event, 'mainopts')"><?php esc_html_e( 'Main Options', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" class="tablinks" onclick="openTab(event, 'visibility')"><?php esc_html_e( 'Visibility', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" class="tablinks" onclick="openTab(event, 'labels')"><?php esc_html_e( 'Labels', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" class="tablinks" onclick="openTab(event, 'rewrite')"><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" class="tablinks" onclick="openTab(event, 'permissions')"><?php esc_html_e( 'Permissions', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" class="tablinks" onclick="openTab(event, 'rest')"><?php esc_html_e( 'REST', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" class="tablinks" onclick="openTab(event, 'other')"><?php esc_html_e( 'Other', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" class="tablinks" onclick="openTab(event, 'wpgraphql')"><?php esc_html_e( 'WPGraphQL', 'simple-taxonomy-refreshed' ); ?></button>
+						<?php } else { ?>
+							<button type="button" class="tablinks active" onclick="openTab(event, 'wpgraphql')"><?php esc_html_e( 'WPGraphQL', 'simple-taxonomy-refreshed' ); ?></button>
+						<?php } ?>
 						<button type="button" class="tablinks" onclick="openTab(event, 'adm_filter')"><?php esc_html_e( 'Admin List Filter', 'simple-taxonomy-refreshed' ); ?></button>
 						<button type="button" class="tablinks" onclick="openTab(event, 'callback')"><?php esc_html_e( 'Term Count', 'simple-taxonomy-refreshed' ); ?></button>
 						<button type="button" class="tablinks" onclick="openTab(event, 'countt')"><?php esc_html_e( 'Term Control', 'simple-taxonomy-refreshed' ); ?></button>
 					</div>
 
+					<?php if ( $custom ) { ?>
 					<div id="mainopts" class="meta-box-sortabless tabcontent" style="display: block;">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Main Options', 'simple-taxonomy-refreshed' ); ?></span></h3>
@@ -1180,6 +1468,11 @@ class SimpleTaxonomyRefreshed_Admin {
 					</div>
 
 					<div id="wpgraphql" class="meta-box-sortabless tabcontent">
+					<?php } else { ?>
+					<div id="wpgraphql" class="meta-box-sortabless tabcontent" style="display: block;">
+					<input type="hidden" name="name" value="<?php echo esc_attr( $taxonomy['name'] ); ?>" />
+					<input type="hidden" name="st_update_count_callback" id="st_update_count_callback" value="<?php echo esc_attr( $taxonomy['st_update_count_callback'] ); ?>" />
+					<?php } ?>
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'WPGraphQL Support', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
@@ -1222,7 +1515,11 @@ class SimpleTaxonomyRefreshed_Admin {
 								<table class="form-table" style="clear:none;">
 									<p><?php esc_html_e( 'Taxonomy needs to be allocated to Post Types and Publicly Queryable.', 'simple-taxonomy-refreshed' ); ?></p>
 									<p><?php esc_html_e( 'Advisable to have a column on the admin list screen.', 'simple-taxonomy-refreshed' ); ?></p>
-									<p><?php esc_html_e( '(See Visibility tab for these parameters.)', 'simple-taxonomy-refreshed' ); ?></p>
+									<?php if ( $custom ) { ?>
+										<p><?php esc_html_e( '(See Visibility tab for these parameters.)', 'simple-taxonomy-refreshed' ); ?></p>
+									<?php } else { ?>
+										<p><strong><?php esc_html_e( 'Attention. You can use this function to define a duplicate filter if it already exists', 'simple-taxonomy-refreshed' ); ?></strong></p>
+									<?php } ?>
 									<tr valign="top">
 										<th scope="row"><label><?php esc_html_e( 'Post types', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
@@ -1232,8 +1529,12 @@ class SimpleTaxonomyRefreshed_Admin {
 											} else {
 												$objects = array();
 											}
+											// External taxonomies types should only show defined post types.
 											$i = 0;
 											foreach ( self::get_object_types() as $type ) {
+												if ( ! $custom && ! in_array( $type->name, (array) $taxonomy['objects'], true ) ) {
+													continue;
+												}
 												echo '<label class="inline">';
 												echo '<input id="admlist' . esc_attr( $i ) . '" type="checkbox" ' . checked( true, in_array( $type->name, (array) $objects, true ), false );
 												if ( ! in_array( $type->name, (array) $taxonomy['objects'], true ) ) {
@@ -1289,6 +1590,12 @@ class SimpleTaxonomyRefreshed_Admin {
 							<h3 class="hndle"><span><?php esc_html_e( 'Term Count', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
 							<div class="inside">
+								<div id="count_tab_0" style="display: <?php echo ( empty( $taxonomy['st_update_count_callback'] ) ? 'none;' : 'block;' ); ?>">
+								<table  class="form-table" style="clear:none;">
+									<p><?php esc_html_e( 'A function has been defined for calculating term counts. This function is therefore not available.', 'simple-taxonomy-refreshed' ); ?></p>
+								</table>
+								</div>
+								<div id="count_tab_1" style="display: <?php echo ( empty( $taxonomy['st_update_count_callback'] ) ? 'block;' : 'none;' ); ?>">
 								<table class="form-table" style="clear:none;">
 									<p><?php esc_html_e( 'Term counts are normally based on Published posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
 									<tr valign="top">
@@ -1299,8 +1606,6 @@ class SimpleTaxonomyRefreshed_Admin {
 											<input type="radio" id="cb_any" name="st_cb_type" <?php checked( 1, $taxonomy['st_cb_type'], true ); ?> value="1" onclick="hideSel(event, 1)"><label for="cb_any"><?php esc_html_e( 'Any (Except Trash)', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											<input type="radio" id="cb_sel" name="st_cb_type" <?php checked( 2, $taxonomy['st_cb_type'], true ); ?> value="2" onclick="hideSel(event, 2)"><label for="cb_sel"><?php esc_html_e( 'Selection', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											</fieldset>
-											<span class="description"><?php esc_html_e( 'Setting Any or Selection needs Update Count Callback NOT to be set.', 'simple-taxonomy-refreshed' ); ?></span>
-											<p><?php esc_html_e( '(See Other tab for this parameter.)', 'simple-taxonomy-refreshed' ); ?></p>
 										</td>
 									</tr>
 									<tr valign="top">
@@ -1320,6 +1625,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											</td>
 									</tr>
 								</table>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -1455,6 +1761,21 @@ class SimpleTaxonomyRefreshed_Admin {
 			}
 			evt.stopPropagation();
 		}
+		function hideCnt(evt) {
+			var tab_visible = (document.getElementById("st_update_count_callback").value.length == 0);
+			if (tab_visible) {
+				document.getElementById("count_tab_0").style.display = "none";
+				document.getElementById("count_tab_1").style.display = "block";
+			} else {
+				document.getElementById("count_tab_0").style.display = "block";
+				document.getElementById("count_tab_1").style.display = "none";
+				document.getElementById("cb_sel").checked = false;
+				document.getElementById("cb_any").checked = false;
+				document.getElementById("cb_std").checked = true;
+				hideSel(evt, 0);
+			}
+			evt.stopPropagation();
+		}
 		function hideSel(evt, objNo) {
 			if (objNo === 2) {
 				document.getElementById("count_sel").style.display = "block";
@@ -1489,71 +1810,17 @@ class SimpleTaxonomyRefreshed_Admin {
 			document.getElementById("st_cc_umax").addEventListener('change', event => {
 				switchMinMax(evt);
 			});
+			document.getElementById("st_update_count_callback").addEventListener('change', event => {
+				hideCnt(evt);
+			});
+			document.getElementById("st_update_count_callback").addEventListener("keydown",function(e){
+				if(e.keyCode == 32){
+					e.preventDefault();
+				}
+			})
 		});
 		</script>
 		<?php
-	}
-
-	/**
-	 * Check $_GET/$_POST/$_FILES for Export/Import
-	 *
-	 * @return void
-	 */
-	private static function check_importexport() {
-		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['action'] ) && 'staxo-export-config' === $_GET['action'] ) {
-			check_admin_referer( 'staxo-export-config' );
-
-			// No cache.
-			header( 'Expires: ' . gmdate( 'D, d M Y H:i:s', time() + ( 24 * 60 * 60 ) ) . ' GMT' );
-			header( 'Last-Modified: ' . gmdate( 'D, d M Y H:i:s' ) . ' GMT' );
-			header( 'Cache-Control: no-store, no-cache, must-revalidate' );
-			header( 'Cache-Control: post-check=0, pre-check=0', false );
-			header( 'Pragma: no-cache' );
-
-			// Force download dialog.
-			header( 'Content-Type: application/force-download' );
-			header( 'Content-Type: application/octet-stream' );
-			header( 'Content-Type: application/download' );
-
-			// use the Content-Disposition header to supply a recommended filename.
-			// and force the browser to display the save dialog.
-			// As a local file, we want it in the user timezone.
-			// phpcs:ignore
-			header( 'Content-Disposition: attachment; filename=staxo-config-' . date( 'ymdHisT' ) . '.json;' );
-			// phpcs:ignore  WordPress.Security.EscapeOutput
-			die( 'SIMPLETAXONOMYREFRESHED' . wp_json_encode( get_option( OPTION_STAXO ) ) );
-		} elseif ( isset( $_POST['staxo-import-config-file'] ) && isset( $_FILES['config_file'] ) ) {  // phpcs:ignore  WordPress.Security.NonceVerification.Recommended
-			check_admin_referer( 'staxo-import-config-file' );
-
-			// phpcs:ignore
-			if ( $_FILES['config_file']['error'] > 0 ) {
-				add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'An error occured during the config file upload. Please fix your server configuration and retry.', 'simple-taxonomy-refreshed' ), 'error' );
-			} else {
-				// phpcs:ignore
-				$config_file = file_get_contents( $_FILES['config_file']['tmp_name'] );
-				if ( 'SIMPLETAXONOMYREFRESHED' !== substr( $config_file, 0, strlen( 'SIMPLETAXONOMYREFRESHED' ) ) ) {
-					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
-				} else {
-					$config_file = json_decode( substr( $config_file, strlen( 'SIMPLETAXONOMYREFRESHED' ) ), true );
-					if ( ! is_array( $config_file ) ) {
-						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
-					} else {
-						// clear cache (need to do first as values could be different).
-						$options = get_option( OPTION_STAXO );
-						if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-							foreach ( (array) $options['taxonomies'] as $taxonomy => $tax_data ) {
-								wp_cache_delete( 'staxo_sel_' . $taxonomy );
-							}
-						}
-						update_option( OPTION_STAXO, $config_file );
-						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'OK. Configuration is restored.', 'simple-taxonomy-refreshed' ), 'updated' );
-						// Change of file may provoke a change of rewrite rules, so trigger it via transient data.
-						set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
-					}
-				}
-			}
-		}
 	}
 
 	/**
@@ -1563,15 +1830,21 @@ class SimpleTaxonomyRefreshed_Admin {
 	 */
 	private static function check_merge_taxonomy() {
 		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_POST['action'] ) && in_array( wp_unslash( $_POST['action'] ), array( 'add-taxonomy', 'merge-taxonomy' ), true ) ) {
+		if ( isset( $_POST['action'] ) && in_array( wp_unslash( $_POST['action'] ), array( 'add-taxonomy', 'merge-taxonomy', 'merge-external' ), true ) ) {
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_die( esc_html__( 'You cannot edit the Simple Taxonomy options.', 'simple-taxonomy-refreshed' ) );
+				wp_die( esc_html__( 'You cannot edit the Simple Taxonomy Refresher options.', 'simple-taxonomy-refreshed' ) );
 			}
 
+			// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
+			$action = sanitize_text_field( wp_unslash( $_POST['action'] ) );
 			// Clean values from _POST.
 			$taxonomy = array();
 			foreach ( SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields() as $field => $default_value ) {
+				if ( 'merge-external' === $action && ! array_key_exists( $field, $_POST ) ) {
+					// Don't create non-xeisting fields for external taxonomies.
+					continue;
+				}
 				// phpcs:ignore  WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput
 				$post_field = ( array_key_exists( $field, $_POST ) ? wp_unslash( $_POST[ $field ] ) : '' );
 				if ( isset( $post_field ) && is_string( $post_field ) ) {// String ?
@@ -1598,9 +1871,8 @@ class SimpleTaxonomyRefreshed_Admin {
 				$taxonomy['st_ep_mask'] = $taxonomy['st_ep_mask'] + $_v;
 			}
 
-			// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
-			if ( 'merge-taxonomy' === $_POST['action'] && empty( $taxonomy['name'] ) ) {
-				wp_die( esc_html__( 'Cheating ? You try to edit a taxonomy without name. Impossible !', 'simple-taxonomy-refreshed' ) );
+			if ( 'merge-taxonomy' === $action && empty( $taxonomy['name'] ) ) {
+				wp_die( esc_html__( 'You are trying to edit a taxonomy without name. Impossible !', 'simple-taxonomy-refreshed' ) );
 			}
 
 			if ( ! empty( $taxonomy['name'] ) ) { // Label exist ?
@@ -1622,16 +1894,18 @@ class SimpleTaxonomyRefreshed_Admin {
 				$taxonomy = apply_filters( 'staxo_check_merge', $taxonomy );
 
 				// N.B. add_taxonomy and update_taxonomy functions do not return, so put any terminating logic in them.
-				// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
-				if ( 'add-taxonomy' === $_POST['action'] ) {
-					check_admin_referer( 'staxo-add-taxo' );
+				if ( 'add-taxonomy' === $action ) {
+					check_admin_referer( 'staxo_add_taxo' );
 					if ( taxonomy_exists( $taxonomy['name'] ) ) { // Default Taxo already exist ?
-						wp_die( esc_html__( 'Cheating ? You try to add a taxonomy with a name already used by another taxonomy.', 'simple-taxonomy-refreshed' ) );
+						wp_die( esc_html__( 'You are trying to add a taxonomy with a name already used by another taxonomy.', 'simple-taxonomy-refreshed' ) );
 					}
 					self::add_taxonomy( $taxonomy );
-				} else {
-					check_admin_referer( 'staxo-edit-taxo' );
+				} elseif ( 'merge-taxonomy' === $action ) {
+					check_admin_referer( 'staxo_edit_taxo' );
 					self::update_taxonomy( $taxonomy );
+				} else {
+					check_admin_referer( 'staxo_edit_taxo' );
+					self::update_external( $taxonomy );
 				}
 
 				// Won't actually get here.
@@ -1656,12 +1930,12 @@ class SimpleTaxonomyRefreshed_Admin {
 			$taxo_name     = stripslashes( $taxonomy_name );
 
 			// check nonce.
-			check_admin_referer( 'staxo-export_php-' . $taxonomy_name );
+			check_admin_referer( 'staxo_export_php-' . $taxonomy_name );
 
 			// Get taxo data.
 			$current_options = get_option( OPTION_STAXO );
 			if ( ! isset( $current_options['taxonomies'][ $taxo_name ] ) ) { // Taxo not exist ?
-				wp_die( esc_html__( "Cheating, uh ? You try to output a taxonomy that doesn't exist...", 'simple-taxonomy-refreshed' ) );
+				wp_die( esc_html__( "You are trying to output a taxonomy that doesn't exist...", 'simple-taxonomy-refreshed' ) );
 				return false;
 			}
 
@@ -1845,7 +2119,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		if ( isset( $_GET['action'] ) && isset( $_GET['taxonomy_name'] ) && 'delete' === sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 			$taxonomy_name = sanitize_text_field( wp_unslash( $_GET['taxonomy_name'] ) );
 
-			check_admin_referer( 'staxo-delete-' . $taxonomy_name );
+			check_admin_referer( 'staxo_delete_' . $taxonomy_name );
 
 			$taxonomy         = array();
 			$taxonomy['name'] = stripslashes( $taxonomy_name );
@@ -1857,14 +2131,11 @@ class SimpleTaxonomyRefreshed_Admin {
 			return true;
 		} elseif ( isset( $_GET['action'] ) && isset( $_GET['taxonomy_name'] ) && 'flush-delete' === sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 			$taxonomy_name = sanitize_text_field( wp_unslash( $_GET['taxonomy_name'] ) );
-			check_admin_referer( 'staxo-flush-delete-' . $taxonomy_name );
+			check_admin_referer( 'staxo_flush_delete-' . $taxonomy_name );
 
 			$taxonomy         = array();
 			$taxonomy['name'] = stripslashes( $taxonomy_name );
 			self::delete_taxonomy( $taxonomy, true );
-
-			// Flush rewriting rules !
-			flush_rewrite_rules( false );
 
 			return true;
 		}
@@ -1880,20 +2151,23 @@ class SimpleTaxonomyRefreshed_Admin {
 	 */
 	private static function add_taxonomy( $taxonomy ) {
 		$current_options = get_option( OPTION_STAXO );
+		$staxo           = $taxonomy['name'];
 
-		if ( isset( $current_options['taxonomies'][ $taxonomy['name'] ] ) ) { // User taxo already exist ?
-			wp_die( esc_html__( 'Cheating, uh ? You try to add a taxonomy with a name already used by an another taxonomy.', 'simple-taxonomy-refreshed' ) );
+		if ( isset( $current_options['taxonomies'][ $staxo ] ) ) { // User taxo already exist ?
+			wp_die( esc_html__( 'You are trying to add a taxonomy with a name already used by an another taxonomy.', 'simple-taxonomy-refreshed' ) );
 		}
-		$current_options['taxonomies'][ $taxonomy['name'] ] = $taxonomy;
+		$current_options['taxonomies'][ $staxo ] = $taxonomy;
 
 		update_option( OPTION_STAXO, $current_options );
+
+		self::refresh_term_cntl_cache();
 
 		if ( (bool) $taxonomy['rewrite'] ) {
 			// Unfortunately we cannot register the new taxonomy and refresh rules here, so create transient data.
 			set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
 		}
 
-		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::ADMIN_SLUG ) . '&message=added' );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::ADMIN_SLUG ) . '&message=added&staxo=' . $staxo );
 		exit();
 	}
 
@@ -1905,13 +2179,14 @@ class SimpleTaxonomyRefreshed_Admin {
 	 */
 	private static function update_taxonomy( $taxonomy ) {
 		$current_options = get_option( OPTION_STAXO );
+		$staxo           = $taxonomy['name'];
 
-		if ( ! isset( $current_options['taxonomies'][ $taxonomy['name'] ] ) ) { // Taxo not exist ?
-			wp_die( esc_html__( 'Cheating, uh ? You try to edit a taxonomy with a name different as original. Simple Taxonomy dont allow update the name. Propose a patch ;)', 'simple-taxonomy-refreshed' ) );
+		if ( ! isset( $current_options['taxonomies'][ $staxo ] ) ) { // Taxo not exist ?
+			wp_die( esc_html__( 'You are trying to edit a taxonomy with a name different as original. Use the Rename Slug function for this.', 'simple-taxonomy-refreshed' ) );
 		}
 
 		// Is there a change of rewrite rules involved in this update?
-		$old_tax = $current_options['taxonomies'][ $taxonomy['name'] ];
+		$old_tax = $current_options['taxonomies'][ $staxo ];
 		if ( (bool) $old_tax['rewrite'] ) {
 			// this plugin has a specific element, old one uses query_var.
 			$old_slug = ( array_key_exists( 'st_slug', $old_tax ) ? $old_tax['st_slug'] : $old_tax['query_var'] );
@@ -1919,22 +2194,24 @@ class SimpleTaxonomyRefreshed_Admin {
 			$old_slug = '!impossible!';
 		}
 		if ( (bool) $taxonomy['rewrite'] ) {
-			$new_slug = ( empty( $taxonomy['st_slug'] ) ? $taxonomy['name'] : $taxonomy['st_slug'] );
+			$new_slug = ( empty( $taxonomy['st_slug'] ) ? $staxo : $taxonomy['st_slug'] );
 		} else {
 			$new_slug = '!impossible!';
 		}
 
-		$current_options['taxonomies'][ $taxonomy['name'] ] = $taxonomy;
+		$current_options['taxonomies'][ $staxo ] = $taxonomy;
 
 		update_option( OPTION_STAXO, $current_options );
 
+		self::refresh_term_cntl_cache();
+
 		// Clear cache if there.
-		wp_cache_delete( 'staxo_sel_' . $taxonomy['name'] );
+		delete_transient( 'staxo_sel_' . $staxo );
 
 		if ( $new_slug !== $old_slug ) {
 			// Change in rewrite rules - Flush !
 			// Ensure taxonomy entries updated before any flush.
-			unregister_taxonomy( $taxonomy['name'] );
+			unregister_taxonomy( $staxo );
 			if ( '!impossible!' !== $old_slug ) {
 				// remove old slug from rewrite rules.
 				flush_rewrite_rules( false );
@@ -1945,7 +2222,36 @@ class SimpleTaxonomyRefreshed_Admin {
 			}
 		}
 
-		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::ADMIN_SLUG ) . '&message=updated' );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::ADMIN_SLUG ) . '&message=updated&staxo=' . $staxo );
+		exit();
+	}
+
+	/**
+	 * Update external taxonomy in options.
+	 *
+	 * @param array $taxonomy  taxonomy name.
+	 * @return void
+	 */
+	private static function update_external( $taxonomy ) {
+		$current_options = get_option( OPTION_STAXO );
+		$staxo           = $taxonomy['name'];
+
+		// Remove added detail from external taxonomy definition.
+		unset( $taxonomy['labels'] );
+		unset( $taxonomy['objects'] );
+		unset( $taxonomy['st_ep_mask'] );
+		unset( $taxonomy['st_update_count_callback'] );
+
+		$current_options['externals'][ $staxo ] = $taxonomy;
+
+		update_option( OPTION_STAXO, $current_options );
+
+		self::refresh_term_cntl_cache();
+
+		// Clear cache if there.
+		delete_transient( 'staxo_sel_' . $staxo );
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::ADMIN_SLUG ) . '&message=updated&staxo=' . $staxo );
 		exit();
 	}
 
@@ -1954,25 +2260,42 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @param string  $taxonomy        taxonomy name.
 	 * @param boolean $flush_relations whether to delete the object relations/terms.
-	 * @return boolean|void
+	 * @return void
 	 */
 	private static function delete_taxonomy( $taxonomy, $flush_relations = false ) {
 		$current_options = get_option( OPTION_STAXO );
+		$staxo           = $taxonomy['name'];
 
-		if ( ! isset( $current_options['taxonomies'][ $taxonomy['name'] ] ) ) { // Taxo not exist ?
-			wp_die( esc_html__( 'Cheating, uh ? You try to delete a taxonomy who not exist...', 'simple-taxonomy-refreshed' ) );
-			return false;
-		}
+		if ( isset( $current_options['taxonomies'][ $staxo ] ) ) {
+			// custom taxonomy.
+			unset( $current_options['taxonomies'][ $staxo ] ); // Delete from options.
 
-		unset( $current_options['taxonomies'][ $taxonomy['name'] ] ); // Delete from options.
+			$opt = 'deleted';
+			if ( true === $flush_relations ) {
+				// Delete object relations/terms.
+				self::delete_objects_taxonomy( $staxo );
+				$opt = 'flush-deleted';
+			}
 
-		if ( true === $flush_relations ) {
-			self::delete_objects_taxonomy( $taxonomy['name'] ); // Delete object relations/terms.
+			// Flush rewriting rules !
+			flush_rewrite_rules( false );
+
+		} elseif ( isset( $current_options['externals'][ $staxo ] ) ) {
+			// external taxonomy.
+			$opt = 'deleted';
+			unset( $current_options['externals'][ $staxo ] ); // Delete from options.
+
+		} else {
+			// Taxo not exist ?
+			wp_die( esc_html__( 'You are trying to delete a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
+			exit();
 		}
 
 		update_option( OPTION_STAXO, $current_options );
 
-		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::ADMIN_SLUG ) . '&message=deleted' );
+		self::refresh_term_cntl_cache();
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::ADMIN_SLUG ) . '&message=' . $opt . '&staxo=' . $staxo );
 		exit();
 	}
 
@@ -2000,6 +2323,83 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Ensure term control cache is current..
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param bool $force_refresh whether to force a refresh.
+	 * @return mixed array of post_types and the term control requirements.
+	 */
+	public static function refresh_term_cntl_cache( $force_refresh = true ) {
+		$cache_key       = 'staxo_cntl_post_types';
+		$cntl_post_types = get_transient( $cache_key );
+
+		// does cache exist.
+		if ( false !== $cntl_post_types ) {
+			// yes, but do we to force a refresh.
+			if ( ! $force_refresh ) {
+				return $cntl_post_types;
+			}
+		}
+
+		// reset as post_type list as empty.
+		$cntl_post_types = array();
+		$options         = get_option( OPTION_STAXO );
+		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
+
+				// Identify if term count control limits wanted.
+				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
+					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
+						// add to post types list.
+						if ( ! empty( $taxonomy['objects'] ) ) {
+							foreach ( $taxonomy['objects'] as $post_type ) {
+								$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
+									'st_cc_type' => $taxonomy['st_cc_type'],
+									'st_cc_hard' => $taxonomy['st_cc_hard'],
+									'st_cc_umin' => $taxonomy['st_cc_umin'],
+									'st_cc_min'  => $taxonomy['st_cc_min'],
+									'st_cc_umax' => $taxonomy['st_cc_umax'],
+									'st_cc_max'  => $taxonomy['st_cc_max'],
+								);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
+			foreach ( (array) $options['externals'] as $key => $args ) {
+
+				// Identify if term count control limits wanted.
+				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
+					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
+						// add to post types list.
+						if ( ! empty( $taxonomy['objects'] ) ) {
+							foreach ( $taxonomy['objects'] as $post_type ) {
+								$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
+									'st_cc_type' => $taxonomy['st_cc_type'],
+									'st_cc_hard' => $taxonomy['st_cc_hard'],
+									'st_cc_umin' => $taxonomy['st_cc_umin'],
+									'st_cc_min'  => $taxonomy['st_cc_min'],
+									'st_cc_umax' => $taxonomy['st_cc_umax'],
+									'st_cc_max'  => $taxonomy['st_cc_max'],
+								);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		write_log( $cntl_post_types );
+		set_transient( $cache_key, $cntl_post_types, DAY_IN_SECONDS );
+
+		return $cntl_post_types;
+	}
+
+	/**
 	 * Check if an existing post has too few or too many taxonomy entries.
 	 *
 	 * Also possibly inject change to checkbox to radio.
@@ -2014,47 +2414,31 @@ class SimpleTaxonomyRefreshed_Admin {
 			return;
 		}
 
-		if ( is_null( self::$use_block_editor ) ) {
-			// phpcs:disable WordPress.WhiteSpace.PrecisionAlignment.Found
-			self::$use_block_editor = method_exists( $current_screen, 'is_block_editor' ) && $current_screen->is_block_editor()
-			 || function_exists( 'is_gutenberg_page' ) && is_gutenberg_page()
-			 || false;
-			// phpcs:enable  WordPress.WhiteSpace.PrecisionAlignment.Found
-		}
-
 		// get the post type.
 		$post_type = $post->post_type;
 
-		// dont control some statuses or with not title.
-		$no_cntl = in_array( $post->post_status, array( 'new', 'auto-draft', 'trash' ), true ) || empty( $post->post_title ) && post_type_supports( $post_type, 'title' );
+		// dont control some statuses.
+		if ( in_array( $post->post_status, array( 'new', 'auto-draft', 'trash' ), true ) ) {
+			return;
+		}
 
-		$options = get_option( OPTION_STAXO );
-		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
-				// is this taxonomy implicated.
-				if ( empty( $taxonomy['objects'] ) || ! in_array( $post_type, $taxonomy['objects'], true ) ) {
+		// find out which checks are needed.
+		$cntl_post_types = self::refresh_term_cntl_cache( false );
+		if ( isset( $cntl_post_types[ $post_type ] ) ) {
+			// there are controls for this post_type.
+			foreach ( $cntl_post_types[ $post_type ] as $tax => $cntl ) {
+				// check the post_status (trash already excluded so all cc_type 2 need processing).
+				if ( 1 === $cntl['st_cc_type'] && ! in_array( $post->post_status, array( 'publish', 'future' ), true ) ) {
 					continue;
-				}
-
-				// is control set up.
-				if ( ( ! isset( $taxonomy['st_cc_type'] ) ) || empty( $taxonomy['st_cc_type'] ) ) {
-					continue;
-				}
-
-				// control required. check the status.
-				$test = false;
-				$cntl = (int) $taxonomy['st_cc_type'];
-				if ( ( 1 === $cntl && in_array( $post->post_status, array( 'publish', 'future' ), true ) ) || ( 2 === $cntl && ! $no_cntl ) ) {
-					$test = true;
 				}
 
 				// get user capabilities.
-				$user_manage = current_user_can( $taxonomy['capabilities']['manage_terms'] );
-				$user_change = current_user_can( $taxonomy['capabilities']['assign_terms'] );
+				$tax_obj     = get_taxonomy( $tax );
+				$user_manage = current_user_can( $tax_obj->cap->manage_terms );
+				$user_change = current_user_can( $tax_obj->cap->assign_terms );
 
 				// get the terms and count them.
-				$tax   = $taxonomy['name'];
-				$label = $taxonomy['labels']['name'];
+				$label = $tax_obj->labels->name;
 				$terms = get_the_terms( $post->ID, $tax );
 				if ( false === $terms ) {
 					$num_terms = 0;
@@ -2066,56 +2450,111 @@ class SimpleTaxonomyRefreshed_Admin {
 
 				// check minimum if test is needed.
 				$chg = true;
-				$min = (int) $taxonomy['st_cc_min'];
-				$vmn = (bool) $taxonomy['st_cc_umin'];
-				if ( $test && $vmn && $num_terms < $min ) {
-					?>
-					<div><p>&nbsp;</p></div>
-					<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-min"><p>
-					<?php
-					// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-					echo esc_html( sprintf( __( 'The number of terms for taxonomy "%1$s" is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $min ) );
-					echo '</p><p>';
-					if ( $user_change ) {
-						esc_html_e( 'Please review and add additional terms.', 'simple-taxonomy-refreshed' );
+				$min = (int) $cntl['st_cc_min'];
+				$vmn = (bool) $cntl['st_cc_umin'];
+				if ( $vmn && $num_terms < $min ) {
+					if ( 'add' === $current_screen->action ) {
+						// New document.
+						$err = 'warning';
+						// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
+						$text_1 = sprintf( __( 'The number of terms for taxonomy "%1$s" needs to be at least %2$d.', 'simple-taxonomy-refreshed' ), $label, $min );
+						if ( $user_change ) {
+							$text_2 = __( 'Please review and add additional terms.', 'simple-taxonomy-refreshed' );
+							$text_3 = '';
+						} else {
+							$err    = 'warning';
+							$text_2 = __( 'For information as you cannot add them.', 'simple-taxonomy-refreshed' );
+							if ( $cntl['st_cc_hard'] > 0 ) {
+								$text_3 = __( 'N.B. You will not be able to save any changes!', 'simple-taxonomy-refreshed' );
+							}
+						}
 					} else {
-						esc_html_e( 'For information as you cannot add them.', 'simple-taxonomy-refreshed' );
-						if ( $taxonomy['st_cc_hard'] > 0 ) {
-							echo '</p><p>' . esc_html__( 'N.B. You will not be able to save any changes!', 'simple-taxonomy-refreshed' );
+						$err = 'error';
+						// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
+						$text_1 = sprintf( __( 'The number of terms for taxonomy "%1$s" is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $min );
+						if ( $user_change ) {
+							$text_2 = __( 'Please review and add additional terms before trying to save.', 'simple-taxonomy-refreshed' );
+							$text_3 = '';
+						} else {
+							$err    = 'warning';
+							$text_2 = __( 'For information as you cannot add them.', 'simple-taxonomy-refreshed' );
+							if ( $cntl['st_cc_hard'] > 0 ) {
+								$text_3 = __( 'N.B. You will not be able to save any changes!', 'simple-taxonomy-refreshed' );
+							}
 						}
 					}
-					?>
-					</p></div>
-					<?php
+					if ( self::is_block_editor() ) {
+						$script =
+							'( function( wp ) { ' . PHP_EOL .
+							"	wp.data.dispatch( 'core/notices' ).createNotice(" . PHP_EOL .
+							"  '" . $err . "'," . PHP_EOL .
+							"  '" . $text_1 . '  ' . $text_2 . '  ' . $text_3 . "'," . PHP_EOL .
+							'  { isDismissible: true, id: "tax-' . $tax . '" }' . PHP_EOL .
+							' );' . PHP_EOL .
+							'} )( window.wp );' . PHP_EOL .
+							'window.onload = function() {' . PHP_EOL .
+							' var sub = document.getElementsByClassName("edit-post-header__settings");' . PHP_EOL .
+							' if (sub.length > 0) {' . PHP_EOL .
+							'  sub[0].addEventListener("click", event => {' . PHP_EOL .
+							'	  wp.data.dispatch( "core/notices" ).removeNotice( "tax-' . $tax . '" );' . PHP_EOL .
+							'  });' . PHP_EOL .
+							' };' . PHP_EOL .
+							'};';
+						wp_add_inline_script( 'staxo_placeholder', $script, 'after' );
+					} else {
+						?>
+						<div><p>&nbsp;</p></div>
+						<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-min"><p>
+						<?php
+						echo esc_html( $text_1 . '  ' . $text_2 . '  ' . $text_3 );
+						?>
+						</div>
+						<?php
+					}
 				}
 
 				// check maximum if test is needed.
-				$max = (int) $taxonomy['st_cc_max'];
-				$vmx = (bool) $taxonomy['st_cc_umax'];
-				if ( $test && $vmx && $num_terms > $max ) {
+				$max = (int) $cntl['st_cc_max'];
+				$vmx = (bool) $cntl['st_cc_umax'];
+				if ( $vmx && $num_terms > $max ) {
 					$chg = false;
-					?>
-					<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-max"><p>
-					<?php
+					$err = 'error';
 					// translators: %1$s is the taxonomy label; %2$d is the required maximum number of terms.
-					echo esc_html( sprintf( __( 'The number of terms for taxonomy "%1$s" is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $max ) );
-					echo '</p><p>';
+					$text_1 = sprintf( __( 'The number of terms for taxonomy "%1$s" is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $max );
 					if ( $user_change ) {
-						esc_html_e( 'Please review and remove terms.', 'simple-taxonomy-refreshed' );
+						$text_2 = __( 'Please review and remove terms before trying to save.', 'simple-taxonomy-refreshed' );
+						$text_3 = '';
 					} else {
-						esc_html_e( 'For information as you cannot remove them.', 'simple-taxonomy-refreshed' );
-						if ( $taxonomy['st_cc_hard'] > 0 ) {
-							echo '</p><p>' . esc_html__( 'N.B. You will not be able to save any changes!', 'simple-taxonomy-refreshed' );
+						$err    = 'warning';
+						$text_2 = __( 'For information as you cannot remove them.', 'simple-taxonomy-refreshed' );
+						if ( $cntl['st_cc_hard'] > 0 ) {
+							$text_3 = __( 'N.B. You will not be able to save any changes!', 'simple-taxonomy-refreshed' );
 						}
 					}
-					?>
-					</p></div>
-					<?php
+					if ( self::is_block_editor() ) {
+						$script =
+							'( function( wp ) { ' . PHP_EOL .
+							"	wp.data.dispatch( 'core/notices' ).createNotice(" . PHP_EOL .
+							"  '" . $err . "'," . PHP_EOL .
+							"  '" . $text_1 . '  ' . $text_2 . '  ' . $text_3 . "'," . PHP_EOL .
+							'  { isDismissible: true, }' . PHP_EOL .
+							' );' . PHP_EOL .
+							'} )( window.wp );';
+						wp_add_inline_script( 'staxo_placeholder', $script, 'after' );
+					} else {
+						?>
+						<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-max"><p>
+						<?php
+						echo esc_html( $text_1 . '</p><p>' . $text_2 . '</p><p>' . $text_3 );
+						?>
+						</p></div>
+						<?php
+					}
 				}
 
 				// should we change checkbox to a radio button.
 				// (Not over limit, hierarchical, min and max limits exist and set to 1).
-				if ( $chg && (bool) $taxonomy['hierarchical'] && $vmn && 1 === $min && $vmx && 1 === $max ) {
+				if ( $chg && (bool) $tax_obj->hierarchical && $vmn && 1 === $min && $vmx && 1 === $max ) {
 					self::script_radio( $tax );
 					// if we converted to radio and there is already one term, then it always is in limits.
 					if ( 1 === $num_terms ) {
@@ -2124,8 +2563,8 @@ class SimpleTaxonomyRefreshed_Admin {
 				}
 
 				// should hard limits apply.
-				if ( 2 === (int) $taxonomy['st_cc_hard'] && $user_change ) {
-					if ( (bool) $taxonomy['hierarchical'] ) {
+				if ( 2 === (int) $cntl['st_cc_hard'] && $user_change ) {
+					if ( (bool) $tax_obj->hierarchical ) {
 						self::hard_term_limits_hier( $tax, $label, $num_terms, $cntl, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
 					} else {
 						self::hard_term_limits_tag( $tax, $label, $num_terms, $cntl, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
@@ -2152,8 +2591,9 @@ class SimpleTaxonomyRefreshed_Admin {
 		$taxn = esc_html( $tax_name );
 		$taxf = esc_html( str_replace( '-', '_', $tax_name ) );
 
-		if ( self::$use_block_editor ) {
+		if ( self::is_block_editor() ) {
 			// not yet supported.
+			null;
 		} else {
 			// All output has passed through esc_html so switch off checking.
 			// phpcs:disable  WordPress.Security.EscapeOutput
@@ -2279,8 +2719,9 @@ class SimpleTaxonomyRefreshed_Admin {
 		}
 		$taxn = esc_html( $tax_name );
 		$taxf = esc_html( str_replace( '-', '_', $tax_name ) );
-		if ( self::$use_block_editor ) {
+		if ( self::is_block_editor() ) {
 			// not yet supported.
+			null;
 		} else {
 			// All output has passed through esc_html so switch off checking.
 			// phpcs:disable  WordPress.Security.EscapeOutput
@@ -2388,8 +2829,9 @@ class SimpleTaxonomyRefreshed_Admin {
 		$taxn  = esc_html( $tax_name );
 		$taxf  = esc_html( str_replace( '-', '_', $tax_name ) );
 		$terms = esc_html( $num_terms );
-		if ( self::$use_block_editor ) {
+		if ( self::is_block_editor() ) {
 			// not yet supported.
+			null;
 		} else {
 			// All output has passed through esc_html so switch off checking.
 			// phpcs:disable  WordPress.Security.EscapeOutput
@@ -2437,11 +2879,11 @@ class SimpleTaxonomyRefreshed_Admin {
 
 				if ( ! is_null( $max_bound ) ) {
 					?>
-					if ( cnt > <?php echo $mab; ?> ) { 
+					if ( cnt > <?php echo $mab; ?> ) {
 						alert( "<?php echo $more; ?>" );
 						err = true;
 					}
-					if ( cnt >= <?php echo $mab; ?> ) { 
+					if ( cnt >= <?php echo $mab; ?> ) {
 						document.getElementById("new-tag-<?php echo $taxn; ?>").setAttribute("readonly", true);
 						document.getElementById("link-<?php echo $taxn; ?>").setAttribute("disabled", true);
 					}
@@ -2488,12 +2930,207 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Check that the necessary taxonomy term(s) is entered for the post.
+	 *
+	 * Invoked *before* post is inserted/updated.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param bool  $maybe_empty Whether the post should be considered "empty".
+	 * @param array $postarr     Array of post data.
+	 */
+	public static function check_taxonomy_value_set( $maybe_empty, $postarr ) {
+		// ignore whilst doing autosave.
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return $maybe_empty;
+		}
+
+		// status checks. Ignore new, auto-draft and trash, and when the title is empty.
+		if ( in_array( $postarr['post_status'], array( 'new', 'auto-draft', 'trash' ), true ) ) {
+			return $maybe_empty;
+		}
+		if ( empty( $postarr['post_title'] ) && post_type_supports( $postarr['post_type'], 'title' ) ) {
+			return $maybe_empty;
+		}
+		$post_status = ( 'inherit' === $postarr['post_status'] ? get_post_status( $postarr['post_parent'] ) : $postarr['post_status'] );
+		// No post object available, use the arrays.
+		// find out which checks are needed.
+		$cntl_post_types = self::refresh_term_cntl_cache( false );
+		if ( isset( $cntl_post_types[ $postarr['post_type'] ] ) ) {
+			// there are controls for this post_type.
+			foreach ( $cntl_post_types[ $postarr['post_type'] ] as $tax => $cntl ) {
+				// check the post_status (trash already excluded so all cc_type 2 need processing).
+				if ( 1 === $cntl['st_cc_type'] && ! in_array( $postarr['post_status'], array( 'publish', 'future' ), true ) ) {
+					continue;
+				}
+
+				$error_type = '';
+				// count the number of terms.
+				$terms_count = 0;
+				if ( isset( $postarr['tax_input'][ $tax ] ) ) {
+					$terms = $postarr['tax_input'][ $tax ];
+					// ignore the 0 element.
+					unset( $terms[0] );
+					$terms_count = ( empty( $terms ) ? 0 : count( $terms ) );
+				}
+
+				// check the minimum bound.
+				if ( true === (bool) $cntl['st_cc_umin'] && $terms_count < $cntl['st_cc_min'] ) {
+					$error_type = 'min';
+
+				}
+				// check the maximum bound.
+				if ( true === (bool) $cntl['st_cc_umax'] && $terms_count > $cntl['st_cc_max'] ) {
+					$error_type .= 'max';
+				}
+
+				// commen error path.
+				if ( '' !== $error_type ) {
+					if ( isset( $postarr['_inline_edit'] ) ) {
+						// Quickedit.
+						$tax_label = get_taxonomy( $tax )->labels->name;
+						if ( 'min' === $error_type ) {
+							// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
+							echo esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $cntl['st_cc_min'] ) );
+						} else {
+							// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
+							echo esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $cntl['st_cc_max'] ) );
+						}
+						wp_die();
+					}
+					$referer = ( isset( $postarr['_wp_http_referer'] ) ? $postarr['_wp_http_referer'] : '' );
+					if ( empty( $referer ) && isset( $_SERVER['REQUEST_URI'] ) ) {
+						$referer = esc_attr( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
+					}
+					$url = add_query_arg(
+						array(
+							'post'        => $postarr['ID'],
+							'action'      => 'edit',
+							'staxo_tax'   => $tax,
+							'staxo_error' => $error_type,
+							'staxo_terms' => wp_create_nonce( 'terms' ),
+						),
+						get_home_url( null, $referer )
+					);
+
+					if ( wp_safe_redirect( $url ) ) {
+						exit;
+					}
+				}
+			}
+		}
+
+		return $maybe_empty;
+	}
+
+	/**
+	 * Filters a post before it is inserted via the REST API to check termz control.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param stdClass        $prepared_post An object representing a single post prepared
+	 *                                       for inserting or updating the database.
+	 * @param WP_REST_Request $request       Request object.
+	 */
+	public function check_taxonomy_value_rest( $prepared_post, $request ) {
+		// previous filter has invalidated it.
+		if ( is_wp_error( $prepared_post ) ) {
+			return $prepared_post;
+		}
+
+		// determine post_status.
+		if ( isset( $prepared_post->post_status ) ) {
+			$post_status = $prepared_post->post_status;
+		} else {
+			$post = get_post( $prepared_post->ID );
+			if ( false === $post ) {
+				$post_status = 'new';
+			} else {
+				$post_status = $post->post_status;
+			}
+		}
+		// status checks. Ignore new, auto-draft and trash.
+		if ( in_array( $post_status, array( 'new', 'auto-draft', 'trash' ), true ) ) {
+			return $prepared_post;
+		}
+
+		// it would be wonderful to be able to read $request, but object is entirely protected.
+		$json = file_get_contents( 'php://input' );
+		$data = json_decode( $json, true );
+
+		// find out which checks are needed.
+		$cntl_post_types = self::refresh_term_cntl_cache( false );
+		if ( isset( $cntl_post_types[ $prepared_post->post_type ] ) ) {
+			// there are controls for this post_type.
+			foreach ( $cntl_post_types[ $prepared_post->post_type ] as $tax => $cntl ) {
+				// check the post_status (trash already excluded so all cc_type 2 need processing).
+				if ( 1 === $cntl['st_cc_type'] && ! in_array( $post_status, array( 'publish', 'future' ), true ) ) {
+					continue;
+				}
+
+				$tax_obj = get_taxonomy( $tax );
+				if ( ! $tax->show_in_rest ) {
+					continue;
+				}
+
+				$base = ! empty( $tax->rest_base ) ? $tax->rest_base : $tax->name;
+				if ( ! isset( $data[ $base ] ) ) {
+					continue;
+				}
+
+				// count the number of terms.
+				$terms_count = ( empty( $data[ $base ] ) ? 0 : count( $data[ $base ] ) );
+
+				// check the minimum bound.
+				if ( true === (bool) $cntl['st_cc_umin'] && $terms_count < $cntl['st_cc_min'] ) {
+					return new WP_Error(
+						'rest_minimum_terms',
+						// translators: %s is the taxonomy label name.
+						sprintf( __( 'Not enough terms entered for Taxonomy "%s"', 'simple-taxonomy-refreshed' ), $taxtax_obj->labels->name ),
+						array( 'status' => 403 )
+					);
+				}
+				// check the minimum bound.
+				if ( true === (bool) $taxonomy['st_cc_umax'] && $terms_count > $taxonomy['st_cc_max'] ) {
+					return new WP_Error(
+						'rest_maximum_terms',
+						// translators: %s is the taxonomy label name.
+						sprintf( __( 'Too many terms entered for Taxonomy "%s"', 'simple-taxonomy-refreshed' ), $taxtax_obj->labels->name ),
+						array( 'status' => 403 )
+					);
+				}
+			}
+		}
+
+		return $prepared_post;
+	}
+
+	/**
 	 * Function to determine whether the page is being rendered by Block editor.
 	 *
 	 * @return void
 	 */
 	public static function block_editor_active() {
 		self::$use_block_editor = true;
+	}
+
+	/**
+	 * Function to return whether the page is being rendered by Block editor.
+	 *
+	 * @return boolean
+	 */
+	public static function is_block_editor() {
+		if ( is_null( self::$use_block_editor ) ) {
+			$screen = get_current_screen();
+			if ( method_exists( $screen, 'is_block_editor' ) ) {
+				self::$use_block_editor = $screen->is_block_editor();
+			} elseif ( function_exists( 'is_gutenberg_page' ) ) {
+				self::$use_block_editor = is_gutenberg_page();
+			} else {
+				self::$use_block_editor = false;
+			}
+		}
+		return self::$use_block_editor;
 	}
 
 	/**

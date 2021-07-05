@@ -12,14 +12,35 @@
  * @package simple-taxonomy-refreshed
  */
 class SimpleTaxonomyRefreshed_Admin_Rename {
-	const RENAME_SLUG = 'staxo-rename';
+	const RENAME_SLUG = 'staxo_rename';
 
 	/**
-	 * Constructor
+	 * Instance variable to ensure singleton.
+	 *
+	 * @var int
 	 */
-	public function __construct() {
+	private static $instance = null;
+
+	/**
+	 * Call to construct the singleton instance.
+	 *
+	 * @return object
+	 */
+	final public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new SimpleTaxonomyRefreshed_Admin_Rename();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Protected Constructor
+	 *
+	 * @return void
+	 */
+	final protected function __construct() {
 		add_action( 'admin_init', array( __CLASS__, 'check_admin_post' ) );
-		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ) );
+		add_action( 'admin_menu', array( __CLASS__, 'add_menu' ), 20 );
 	}
 
 	/**
@@ -35,10 +56,10 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 	public static function add_menu() {
 		$options = get_option( OPTION_STAXO );
 		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-			add_management_page( __( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ), __( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ), 'manage_options', self::RENAME_SLUG, array( __CLASS__, 'page_rename' ) );
+			add_submenu_page( SimpleTaxonomyRefreshed_Admin::ADMIN_SLUG, __( 'Rename Taxonomy Slug', 'simple-taxonomy-refreshed' ), __( 'Rename Taxonomy Slug', 'simple-taxonomy-refreshed' ), 'manage_options', self::RENAME_SLUG, array( __CLASS__, 'page_rename' ) );
 
 			// help text.
-			add_action( 'load-tools_page_staxo-rename', array( __CLASS__, 'add_help_tab' ) );
+			add_action( 'load-taxonomies_page_' . self::RENAME_SLUG, array( __CLASS__, 'add_help_tab' ) );
 		}
 	}
 
@@ -48,13 +69,13 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 	 * @return void
 	 */
 	private static function check_rename() {
-		if ( isset( $_POST['staxo-rename'] ) && isset( $_POST['taxonomy'] ) && ! empty( $_POST['taxonomy'] ) ) {
+		if ( isset( $_POST[ self::RENAME_SLUG ] ) && isset( $_POST['taxonomy'] ) && ! empty( $_POST['taxonomy'] ) ) {
 			// check nonce for form submit.
-			check_admin_referer( 'staxo-rename' );
+			check_admin_referer( self::RENAME_SLUG );
 
 			$taxonomy = sanitize_text_field( wp_unslash( $_POST['taxonomy'] ) );
 			if ( ! taxonomy_exists( $taxonomy ) ) {
-				wp_die( esc_html__( 'Cheating ? You are trying to rename the slug on a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
+				wp_die( esc_html__( 'You are trying to rename the slug on a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
 			}
 
 			$new_slug    = ( isset( $_POST['new_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['new_slug'] ) ) : '' );
@@ -68,7 +89,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 
 			$taxonomy_obj = get_taxonomy( $taxonomy );
 			if ( ! ( current_user_can( 'manage_options' ) || current_user_can( $taxonomy_obj->cap->manage_terms ) ) ) {
-				wp_die( esc_html__( 'Cheating ? You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ) );
+				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ) );
 			}
 
 			// Modify the taxonomy settings.
@@ -121,6 +142,14 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			// Do not use clean_taxonomy_cache as it rebuilds the hierarchy - which we already have.
 			// However the new taxonomy does not yet exist so terms will not be found.
 			// Can delete any terms cached.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$terms = $wpdb->get_results(
+				$wpdb->prepare( "SELECT term_id FROM $wpdb->term_taxonomy WHERE taxonomy = %s", $taxonomy ),
+				ARRAY_A
+			);
+			foreach ( (array) $terms as $term ) {
+				wp_cache_delete( $term->term_id, 'terms' );
+			}
 			wp_cache_delete( 'all_ids', $taxonomy );
 			wp_cache_delete( 'get', $taxonomy );
 
@@ -185,8 +214,14 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				}
 				$args = SimpleTaxonomyRefreshed_Client::prepare_args( $taxonomy );
 				$objs = array();
-				foreach ( $taxonomy['objects'] as $obj ) {
-					$objs[] = $wp_post_types[ $obj ]->label;
+				if ( empty( $taxonomy['objects'] ) ) {
+					$objs[] = __( 'Used on no Post Type', 'simple-taxonomy-refreshed' );
+				} else {
+					foreach ( $taxonomy['objects'] as $obj ) {
+						if ( isset( $wp_post_types[ $obj ] ) ) {
+							$objs[] = $wp_post_types[ $obj ]->label;
+						}
+					}
 				}
 				$taxo = array(
 					'n'         => $i,
@@ -206,11 +241,11 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 		}
 		?>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h2><?php esc_html_e( 'Rename Taxonomy Slug', 'simple-taxonomy-refreshed' ); ?></h2>
 			<p><?php esc_html_e( 'Rename a Taxonomy slug and its terms.', 'simple-taxonomy-refreshed' ); ?></p>
 			<p><?php esc_html_e( 'All usages of these terms will be updated as well.', 'simple-taxonomy-refreshed' ); ?></p>
 			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
-			<form action="<?php echo esc_url( admin_url( 'tools.php?page=' . self::RENAME_SLUG ) ); ?>" method="post">
+			<form action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::RENAME_SLUG ) ); ?>" method="post">
 				<p>
 					<label for="taxonomy"><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></label>
 					<br />
@@ -223,12 +258,12 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 						?>
 					</fieldset>
 				</p>
-				<p><?php esc_html_e( 'Note: Existing terms may be cached. They may appear until timed out.', 'simple-taxonomy-refreshed' ); ?></p>
+				<p><?php esc_html_e( 'Note: Standard WordPress Term caches will be cleared during the Rename process. However other caches may exist and cause some confusion until timed out.', 'simple-taxonomy-refreshed' ); ?></p>
 
 				<p class="submit">
-					<input type="hidden" name="action" value="staxo_rename" />
-					<?php wp_nonce_field( 'staxo-rename' ); ?>
-					<input type="submit" name="staxo-rename" id="staxo-rename"value="<?php esc_html_e( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" disabled />
+					<input type="hidden" name="action" value="<?php echo esc_html( self::RENAME_SLUG ); ?>" />
+					<?php wp_nonce_field( self::RENAME_SLUG ); ?>
+					<input type="submit" name="<?php echo esc_html( self::RENAME_SLUG ); ?>" id="<?php echo esc_html( self::RENAME_SLUG ); ?>" value="<?php esc_html_e( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" disabled />
 				</p>
 				<h3><?php esc_html_e( 'Taxonomy applies to Post Types', 'simple-taxonomy-refreshed' ); ?></h3>
 				<p id="curr_objects">&nbsp;</p>
@@ -248,7 +283,6 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			</form>
 		</div>
 		<script type="text/javascript">
-			var $=jQuery.noConflict();
 			<?php
 			foreach ( $taxos as $taxo ) {
 				// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -261,7 +295,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				echo ' document.getElementById("curr_rewrite").innerHTML = ' . $taxo['slug'] . ";\n";
 				echo ' document.getElementById("new_rewrite").value = "";' . "\n";
 				// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
-				echo ' document.getElementById("staxo-rename").disabled = true;' . "\n";
+				echo ' document.getElementById("' . esc_html( self::RENAME_SLUG ) . '").disabled = true;' . "\n";
 				if ( '""' === $taxo['slug'] ) {
 					// Hide rewrite section.
 					echo ' document.getElementById("rewrite_block").style.display = "none";' . "\n";
@@ -273,12 +307,15 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			?>
 			function staxo_check() {
 				// need extra here.
-				document.getElementById("staxo-rename").disabled = false;
+				document.getElementById("<?php echo esc_html( self::RENAME_SLUG ); ?>").disabled = false;
 			}
-			$( document ).ready( function() {
+			document.addEventListener('DOMContentLoaded', function(evt) {			
 				// no taxonomy value clicked at start.
-				$( '.taxonomy' ).prop("checked", false);
-				$( '.new_slug').val("");
+				var taxos = document.getElementsByClassName( "taxonomy" );
+				for (var i = 0; i < taxos.length; i++) {
+					taxos[i].checked = false;
+				}
+				document.getElementById("new_slug").value = "";
 			});
 		</script>
 		<?php

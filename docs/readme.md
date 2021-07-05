@@ -1,33 +1,39 @@
 # Simple Taxonomy Refreshed
 
-WordPress provides a simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code.
+This plugin provides a no-code facility to manage your taxonomies - either by defining your own or by adding additional function to existing ones.
 
 * Contributors: nwjames, momo360modena
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
 * Requires at least: 4.8
-* Stable tag: 1.3.0
+* Stable tag: 2.0.0
 * Tested up to: 5.7
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 ## Description
 
-WordPress provides a simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code.
+This plugin provides a no-code process to manage your taxonomies - either by defining your own or by adding additional function to existing ones.
 
 Supports adding one or more taxonomies (either hierarchical or tag) to any objects registered on your installation.
 
-This plugin is a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-5.7 and PHP 7.2-7.4.
+This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-5.7 and PHP 7.2-7.4.
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 
 It provides a widget that you can use to display a "taxonomy cloud" or a list of all the terms; it allows you to show the taxonomy contents at the end of posts and excerpts as well.
 
+You can also export the Taxonomy definition to include it directly in your own code.
+
 You can also create terms easily by typing them into a list; or by copying them from an existing taxonomy.
 
-A tool has been provided to support changing the taxonomy slug. Any terms and their usages will also be renamed.
+A tool has been provided to support changing the taxonomy slug. Any terms and their usages will also be linked to the renamed slug.
+
+For admin screens displaying multiple taxonomies it is possible to define their display order.
+
+A tool is provided to merge a number of terms within a taxonomy into a single one. All usages of the terms are changed to the merged one.
 
 Options are provided to add a selection dropdown in the admin list and to define term counts using posts of selected statuses (and not just "published").
-(The Term Count functionality requires version 1.3+ when WP 5.7+ is installed.)
+(The Term Count functionality requires version 1.3+ when WP 5.7+ is installed.) These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
 
 For those wishing to change its operation, this will require code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
 
@@ -39,7 +45,7 @@ Also see the [example page](./example.md) to see usage of the update screen and 
 
 ### Does this plugin handle custom fields, roles or post types?
 
-No, it is focused only on registering Taxonomies.
+No, it is focused only on registering and supporting Taxonomies and their terms.
 
 There are a number of very good plugins for these functions.
 
@@ -53,7 +59,7 @@ Enter just the Name (slug) whether Hierarchical or not and the Post Types used o
 
 ## Migration process
 
-Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) so if this is installed, deactivate it first.
+Functionally replaces and extends [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) so if this is installed, deactivate it first.
 
 If you are an existing user of the Simple Taxonomy plugin as this plugin uses the Simple Taxonomy options data to save setting it up again completely, before starting you can use the Simple Taxonomy export function to first take a copy of your data.
 
@@ -72,6 +78,14 @@ You should review the parameters to ensure that your needs are correctly set.
 See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 ## Changelog
+
+* Version 2.0.0
+	* NEW: Restructure functions to regroup under a Taxonomy menu item.
+	* NEW: Add/Modify taxonomy and Export/Import configuration split into separate functions.
+	* NEW: Enable extra functions for all taxonomies.
+	* NEW: Provide a Merge taxonomy terms function.
+	* FIX: Server-side terms control errors passed back to Block Editor screens and for Quick Edit.
+	* FIX: Help Text reviewed.
 
 * Version 1.3.0
 	* NEW: Term counts now implemented by WP 5.7 functionality.

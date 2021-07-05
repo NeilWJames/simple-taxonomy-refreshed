@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/NeilWJames/simple-taxonomy-refreshed
  * Description:       WordPress provides simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code
  *                    Converted, Standardised and Extended from Simple Taxonomy by Amaury Balmer
- * Version:           1.3.0
+ * Version:           2.0.0
  * Requires at least: 4.8
  * Requires PHP:      5.6
  * Author:            Neil James
@@ -69,12 +69,18 @@ function init_staxo_refreshed() {
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin.php';
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-conversion.php';
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-import.php';
+		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-merge.php';
+		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-order.php';
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-rename.php';
+		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-config.php';
 
 		$staxo_a = SimpleTaxonomyRefreshed_Admin::get_instance();
 		$staxo_c = SimpleTaxonomyRefreshed_Admin_Conversion::get_instance();
-		new SimpleTaxonomyRefreshed_Admin_Import();
-		new SimpleTaxonomyRefreshed_Admin_Rename();
+		$staxo_i = SimpleTaxonomyRefreshed_Admin_Import::get_instance();
+		$staxo_o = SimpleTaxonomyRefreshed_Admin_Merge::get_instance();
+		$staxo_o = SimpleTaxonomyRefreshed_Admin_Order::get_instance();
+		$staxo_r = SimpleTaxonomyRefreshed_Admin_Rename::get_instance();
+		$staxo_e = SimpleTaxonomyRefreshed_Admin_Config::get_instance();
 	}
 
 	// Widget.

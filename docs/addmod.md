@@ -1,6 +1,8 @@
 # Add/Modify a Taxonomy
 
-The main purpose of the plug-in is to be able to set the very many parameters available to the user when defining a Taxonomy.
+**Note. To define a taxonomy uses the first seven panel. There are an additional four panels used for defining additional uses of the taxonomy. These four panels are available to both custom taxonomies and external ones.**
+
+The main purpose of the plugin is to be able to set the very many parameters available to the user when defining a Taxonomy.
 
 They are all set within this section. This appears in the middle of the initial Settings screen. It also appears as the entire screen for modification.
 
@@ -12,9 +14,17 @@ See the [WordPress Documentation](https://developer.wordpress.org/reference/func
 
 You can move from panel to panel reviewing the parameters - but they need to be stored into the database by clicking the Add or Update Taxonomy before they will take effect.
 
-## Main
+## Custom Main
 
 ![Main Panel](../images/AddTaxAdmin.png)
+
+The name **must** be completed in order to add the taxonomy.
+
+The last fields *Display Terms with Posts* is not related to WordPress standard functionality. It allows you to request that the taxonomy terms are added to posts are displayed with the post content and/or excerpt. When used, the list of terms can be prefixed and suffixed by the user-defined Before and After texts.
+
+## External Main
+
+![Main Panel](../images/ExternalExtraOpts.png)
 
 The name **must** be completed in order to add the taxonomy.
 
