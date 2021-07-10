@@ -2393,7 +2393,6 @@ class SimpleTaxonomyRefreshed_Admin {
 			}
 		}
 
-		write_log( $cntl_post_types );
 		set_transient( $cache_key, $cntl_post_types, DAY_IN_SECONDS );
 
 		return $cntl_post_types;
