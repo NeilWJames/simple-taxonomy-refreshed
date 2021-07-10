@@ -118,7 +118,19 @@ See the [example page](./example.md) for a specific example of the function usag
 
 ### Terms Merge
 
-This tool allows terms to be entered in bulk into a selected taxonomy.
+This tool merges one or more terms of a taxonomy into a single term. All uses of the deleted term(s) will be migrated to the merge term.
+
+It operates in five phases:
+
+- Select the taxonomy whose terms you wish to merge.
+
+- All terms of the taxonomy will be displayed for you to select the Destination term.
+
+- Then you select one or more Source terms to be merged into the Destination term and deleted.
+
+- The options selected are displayed for you to confirm the processing to be carried out, with all posts using the Source Term(s) will be linked to the Destination term and the Source Term(s) will be deleted.
+
+- Once processes, the results of the processing are presented and standard WordPress caches are cleared.
 
 ### Taxonomy List Order
 

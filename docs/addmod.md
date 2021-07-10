@@ -1,6 +1,6 @@
 # Add/Modify a Taxonomy
 
-**Note. To define a taxonomy uses the first seven panel. There are an additional four panels used for defining additional uses of the taxonomy. These four panels are available to both custom taxonomies and external ones.**
+**Note. Defining a taxonomy uses the first seven panels. There are an additional four panels used for defining additional uses of the taxonomy. These four panels are available to both custom taxonomies and external ones.**
 
 The main purpose of the plugin is to be able to set the very many parameters available to the user when defining a Taxonomy.
 
@@ -16,6 +16,7 @@ You can move from panel to panel reviewing the parameters - but they need to be 
 
 ## Custom Main
 
+This will be titled *Add Taxonomy* when adding a taxonomy or *Modify Taxonomy* (with its name) when updating it.
 ![Main Panel](../images/AddTaxAdmin.png)
 
 The name **must** be completed in order to add the taxonomy.
@@ -26,9 +27,7 @@ The last fields *Display Terms with Posts* is not related to WordPress standard 
 
 ![Main Panel](../images/ExternalExtraOpts.png)
 
-The name **must** be completed in order to add the taxonomy.
-
-The last fields *Display Terms with Posts* is not related to WordPress standard functionality. It allows you to request that the taxonomy terms are added to posts are displayed with the post content and/or excerpt. When used, the list of terms can be prefixed and suffixed by the user-defined Before and After texts.
+These are optional entries that may be added to an existing taxonomy - and the corresponding element, e.g. WPGraphQL may already be set up. Clearly this should not then be used.
 
 ## Visibility
 
@@ -41,6 +40,8 @@ This panel contains all the fields that control how the taxonomy is used within 
 ![Labels Panel](../images/AddTaxLabl.png)
 
 There are many labels that can be used for a taxonomy, any and all can be changed here.
+
+Scroll down using the plugin to see them all. 
 
 ## Rewrite URL
 
@@ -72,9 +73,9 @@ Various other parameters are managed here.
 
 This is an optional set of parameters and is provided as a convenience to avoid user coding when WPGraphQL is installed.
 
-## Admin Filter
+## Admin List Filter
 
-![Admin Filter Panel](../images/AddTaxAdmin.png)
+![Admin List Filter Panel](../images/AddTaxAdmin.png)
 
 This is an optional set of parameters and allows the user to use the taxonomy as a dropdown filter for selected post types on the admin list screens.
 

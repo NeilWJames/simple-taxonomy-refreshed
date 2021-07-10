@@ -29,6 +29,12 @@ class SimpleTaxonomyRefreshed_Client {
 		add_filter( 'wp_title', array( __CLASS__, 'wp_title' ), 10, 2 );
 
 		add_action( 'restrict_manage_posts', array( __CLASS__, 'manage_filters' ) );
+		
+		// WPGraphQL for external taxonomies.
+		$options = get_option( OPTION_STAXO );
+		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
+			add_action( 'registered_taxonomy', array( __CLASS__, 'registered_taxonomy' ), 10, 3 );
+		}
 	}
 
 	/**
@@ -120,6 +126,28 @@ class SimpleTaxonomyRefreshed_Client {
 		if ( isset( $options['list_order'] ) && is_array( $options['list_order'] ) ) {
 			foreach ( $options['list_order'] as $post_type => $taxos ) {
 				add_action( "manage_taxonomies_for_{$post_type}_columns", array( __CLASS__, 'reorder_admin_list' ), 10, 2 );
+			}
+		}
+	}
+
+	/**
+	 * Modify external taxonomies for WPGraphql if set.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param string       $taxonomy    Taxonomy slug.
+	 * @param array|string $object_type Object type or array of object types.
+	 * @param array        $args        Array of taxonomy registration arguments.
+	 */
+	public static function registered_taxonomy( $taxonomy, $object_type, $taxonomy_object ) {
+		$options = get_option( OPTION_STAXO );
+		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
+			$externals = $options['externals'];
+			if ( isset( $externals[ $taxonomy ] ) && (bool) $externals[ $taxonomy ]['st_show_in_graphql'] ) {
+				global $wp_taxonomies;
+				$wp_taxonomies[ $taxonomy ]['show_in_graphql'] = true;
+				$wp_taxonomies[ $taxonomy ]['graphql_single']  = $externals[ $taxonomy ]['st_graphql_single'];
+				$wp_taxonomies[ $taxonomy ]['graphql_plural']  = $externals[ $taxonomy ]['st_graphql_plural'];
 			}
 		}
 	}

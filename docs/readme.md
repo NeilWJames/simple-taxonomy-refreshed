@@ -6,7 +6,7 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
 * Requires at least: 4.8
 * Stable tag: 2.0.0
-* Tested up to: 5.7
+* Tested up to: 5.8
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
