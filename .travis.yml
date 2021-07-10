@@ -23,8 +23,6 @@ matrix:
       env: WP_TRAVISCI=phpcs
     - php: 7.4
       env: WP_VERSION=latest
-    - php: 8.0
-      env: WP_VERSION=latest
 
 before_install:
   - export PATH="$HOME/bin:$PATH"
@@ -36,9 +34,6 @@ install:
       composer require "phpunit/phpunit=5.7.*"
     fi
 
-    if [[ "$TRAVIS_PHP_VERSION" == "8.0" ]]; then
-      composer require "phpunit/phpunit=7.5.*"
-    fi
   # Install our Composer dependencies
   - composer install --prefer-dist --no-interaction
 

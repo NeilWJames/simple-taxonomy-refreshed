@@ -29,7 +29,7 @@ class SimpleTaxonomyRefreshed_Client {
 		add_filter( 'wp_title', array( __CLASS__, 'wp_title' ), 10, 2 );
 
 		add_action( 'restrict_manage_posts', array( __CLASS__, 'manage_filters' ) );
-		
+
 		// WPGraphQL for external taxonomies.
 		$options = get_option( OPTION_STAXO );
 		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
@@ -135,9 +135,9 @@ class SimpleTaxonomyRefreshed_Client {
 	 *
 	 * @since 2.0.0
 	 *
-	 * @param string       $taxonomy    Taxonomy slug.
-	 * @param array|string $object_type Object type or array of object types.
-	 * @param array        $args        Array of taxonomy registration arguments.
+	 * @param string       $taxonomy        Taxonomy slug.
+	 * @param array|string $object_type     Object type or array of object types.
+	 * @param array        $taxonomy_object Array of taxonomy registration arguments.
 	 */
 	public static function registered_taxonomy( $taxonomy, $object_type, $taxonomy_object ) {
 		$options = get_option( OPTION_STAXO );
@@ -145,9 +145,11 @@ class SimpleTaxonomyRefreshed_Client {
 			$externals = $options['externals'];
 			if ( isset( $externals[ $taxonomy ] ) && (bool) $externals[ $taxonomy ]['st_show_in_graphql'] ) {
 				global $wp_taxonomies;
+				// phpcs:disable WordPress.WP.GlobalVariablesOverride.Prohibited
 				$wp_taxonomies[ $taxonomy ]['show_in_graphql'] = true;
 				$wp_taxonomies[ $taxonomy ]['graphql_single']  = $externals[ $taxonomy ]['st_graphql_single'];
 				$wp_taxonomies[ $taxonomy ]['graphql_plural']  = $externals[ $taxonomy ]['st_graphql_plural'];
+				// phpcs:enable WordPress.WP.GlobalVariablesOverride.Prohibited
 			}
 		}
 	}
