@@ -17,11 +17,11 @@ matrix:
       env: WP_VERSION=latest WP_COVERAGE=coveralls
     - php: 7.1
       env: WP_VERSION=4.9
-    - php: 7.4
-      env: WP_TRAVISCI=phpcs
     - php: 7.2
       env: WP_VERSION=latest WP_MULTISITE=1
     - php: 7.3
+      env: WP_TRAVISCI=phpcs
+    - php: 7.4
       env: WP_VERSION=latest
     - php: 8.0
       env: WP_VERSION=latest
@@ -36,8 +36,11 @@ install:
       composer require "phpunit/phpunit=5.7.*"
     fi
 
+    if [[ "$TRAVIS_PHP_VERSION" == "8.0" ]]; then
+      composer require "phpunit/phpunit=7.5.*"
+    fi
   # Install our Composer dependencies
-  - composer install --dev --prefer-dist --no-interaction
+  - composer install --prefer-dist --no-interaction
 
 before_script:
   - mkdir -p build/logs
