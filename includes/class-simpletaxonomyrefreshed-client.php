@@ -24,6 +24,7 @@ class SimpleTaxonomyRefreshed_Client {
 
 		add_filter( 'the_excerpt', array( __CLASS__, 'the_excerpt' ), 10, 1 );
 		add_filter( 'the_content', array( __CLASS__, 'the_content' ), 10, 1 );
+		add_filter( 'the_category_rss', array( __CLASS__, 'the_category_feed' ), 10, 2 );
 
 		add_action( 'template_redirect', array( __CLASS__, 'template_redirect' ) );
 		add_filter( 'wp_title', array( __CLASS__, 'wp_title' ), 10, 2 );
@@ -423,6 +424,65 @@ class SimpleTaxonomyRefreshed_Client {
 	}
 
 	/**
+	 * Meta function for call filter taxonomy.
+	 *
+	 * @param string $the_list All of the RSS post categories.
+	 * @param string $type     Type of feed. Possible values include 'rss2', 'atom'.
+	 *                         Default 'rss2'.
+	 * @return string
+	 */
+	public static function the_category_feed( $the_list, $type ) {
+		global $post;
+
+		if ( ! isset( $post->post_type ) ) {
+			return $the_list;
+		}
+
+		$options = get_option( OPTION_STAXO );
+		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+			null; // Drop through.
+		} else {
+			return $the_list;
+		}
+
+		$new_list = '';
+		$filter   = 'rss';
+		if ( 'atom' === $type ) {
+			$filter = 'raw';
+		}
+
+		foreach ( (array) $options['taxonomies'] as $taxonomy ) {
+			// Does the post_type uses this taxonomy.
+			if ( isset( $taxonomy['st_feed'] ) && ( ! empty( $taxonomy['objects'] ) ) && in_array( $post->post_type, $taxonomy['objects'], true ) ) {
+
+				$terms      = get_the_terms( $post->ID, $taxonomy['name'] );
+				$term_names = array();
+
+				if ( ! empty( $terms ) ) {
+					foreach ( (array) $terms as $term ) {
+						$term_names[] = sanitize_term_field( 'name', $term->name, $term->term_id, $taxonomy['name'], $filter );
+					}
+				}
+
+				$term_names = array_unique( $term_names );
+
+				foreach ( $term_names as $term_name ) {
+					if ( 'rdf' === $type ) {
+						$new_list .= "\t\t<dc:subject><![CDATA[$term_name]]></dc:subject>\n";
+					} elseif ( 'atom' === $type ) {
+						$new_list .= sprintf( '<%1$s scheme="%2$s" term="%3$s" />', esc_attr( $taxonomy['name'] ), esc_attr( get_bloginfo_rss( 'url' ) ), esc_attr( $term_name ) );
+					} else {
+						// phpcs:ignore Squiz.Strings.DoubleQuoteUsage
+						$new_list .= "\t\t<" . esc_attr( $taxonomy['name'] ) . "><![CDATA[" . html_entity_decode( $term_name, ENT_COMPAT, get_option( 'blog_charset' ) ) . "]]></" . esc_attr( $taxonomy['name'] ) . ">\n";
+					}
+				}
+			}
+		}
+
+		return $the_list . $new_list;
+	}
+
+	/**
 	 * Prepare the dropdown filter args.
 	 *
 	 * @param array $taxonomy The current taxonomy structure.
@@ -695,6 +755,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'st_cc_umax'               => 0,
 			'st_cc_min'                => 0,
 			'st_cc_max'                => 0,
+			'st_feed'                  => 0,
 			'st_dft_name'              => '',
 			'st_dft_slug'              => '',
 			'st_dft_desc'              => '',

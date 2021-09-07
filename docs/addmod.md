@@ -17,7 +17,7 @@ You can move from panel to panel reviewing the parameters - but they need to be 
 ## Custom Main
 
 This will be titled *Add Taxonomy* when adding a taxonomy or *Modify Taxonomy* (with its name) when updating it.
-![Main Panel](../images/AddTaxAdmin.png)
+![Main Panel](../images/AddTaxMain.png)
 
 The name **must** be completed in order to add the taxonomy.
 

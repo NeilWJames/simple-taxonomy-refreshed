@@ -51,7 +51,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	public static $use_block_editor = null;
 
 	/**
-	 * Variable to indicate if placeholder enqueued..
+	 * Variable to indicate if placeholder enqueued.
 	 *
 	 * @var boolean
 	 */
@@ -68,7 +68,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				'staxo_placeholder',
 				plugins_url( '/js/placeholder.js', __DIR__ ),
 				array( 'wp-data' ),
-				'1.4',
+				null,
 				true
 			);
 			self::$placeholder = true;
@@ -549,6 +549,7 @@ class SimpleTaxonomyRefreshed_Admin {
 					'st_cc_umax'         => 0,
 					'st_cc_min'          => 0,
 					'st_cc_max'          => 0,
+					'st_feed'            => 0,
 				);
 				// add data from taxonomy . Not stored.
 				$tax_obj                              = get_taxonomy( $tax_name );
@@ -847,6 +848,11 @@ class SimpleTaxonomyRefreshed_Admin {
 				$taxonomy['st_dft_desc'] = '';
 			}
 
+			// Added 2.0.
+			if ( ! array_key_exists( 'st_feed', $taxonomy ) ) {
+				$taxonomy['st_feed'] = 0;
+			}
+
 			// Label menu_name needs to exist to edit (it is removed for registering).
 			if ( ! array_key_exists( 'menu_name', $taxonomy['labels'] ) ) {
 				$taxonomy['labels']['menu_name'] = '';
@@ -1053,6 +1059,12 @@ class SimpleTaxonomyRefreshed_Admin {
 											esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'This text will be used after the Post terms display list', 'simple-taxonomy-refreshed' ) . '<br/>' .
 											esc_html__( 'The text will be trimmed and a single space output before this.', 'simple-taxonomy-refreshed' )
+										);
+										self::option_yes_no(
+											$taxonomy,
+											'st_feed',
+											esc_html__( 'Show in feeds ?', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Whether taxonomy tems will be shown in post feeds', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -2011,6 +2023,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			$display .= ( 'both' === $taxo_data['auto'] ? 'content, excerpt' : $taxo_data['auto'] );
 			$display .= "\n" . '// ' . esc_html__( 'Display Terms Before text', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_before'];
 			$display .= "\n" . '// ' . esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_after'];
+			$display .= "\n" . '// ' . esc_html__( 'Show Terms in Feeds', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_feed'];
 
 			$output .= $display . "\n";
 
@@ -2340,8 +2353,9 @@ class SimpleTaxonomyRefreshed_Admin {
 			if ( ! $force_refresh ) {
 				return $cntl_post_types;
 			}
+			// transient exists but going to update it.
+			delete_transient( $cache_key );
 		}
-
 		// reset as post_type list as empty.
 		$cntl_post_types = array();
 		$options         = get_option( OPTION_STAXO );
@@ -3089,7 +3103,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						array( 'status' => 403 )
 					);
 				}
-				// check the minimum bound.
+				// check the maximum bound.
 				if ( true === (bool) $taxonomy['st_cc_umax'] && $terms_count > $taxonomy['st_cc_max'] ) {
 					return new WP_Error(
 						'rest_maximum_terms',
