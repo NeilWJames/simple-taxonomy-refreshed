@@ -99,5 +99,5 @@ Since a user may be able tro edit the post, but not add or delete terms, this ca
 
 The option "When post is saved" means that the test is done during save post processing - and updates will be rejected if outside the bounds.
 
-The option "As terms are changed and when post is changed" means the bounds are checked during editing as well. This functionality is a "work in progress", that is, not complete. In particular, posts edited with the Block Editor are not currently controlled except when saving the post.
+The option "As terms are changed and when post is changed" means the bounds are checked during editing as well. This functionality is a "work in progress", that is, not complete.
 

@@ -7,7 +7,7 @@
  * Version:           2.0.0
  * Requires at least: 4.8
  * Requires PHP:      5.6
- * Author:            Neil James
+ * Author:            Neil W James
  * License:           GPL v3
  * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain:       simple-taxonomy-refreshed
