@@ -136,11 +136,10 @@ class SimpleTaxonomyRefreshed_Admin {
 		</script>
 		<?php
 	}
-
 	/**
 	 * Add settings init page
 	 *
-	 * @since 1.4.0
+	 * @since 2.0.0
 	 *
 	 * @return void
 	 */
@@ -151,7 +150,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		register_setting( 'simple-taxonomy-refreshed', 'settings_updated' );
 
-		$cntl_post_types = self::refresh_term_cntl_cache( false );
+		global $strc;
+		$cntl_post_types = $strc::refresh_term_cntl_cache( false );
 		// if terms control wanted, invoke the code.
 		if ( isset( $cntl_post_types ) && ! empty( $cntl_post_types ) ) {
 			// filters the post to implement the taxonomy controls.
@@ -159,14 +159,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 			// make sure that there is no taxonomy error to report.
 			add_action( 'admin_notices', array( __CLASS__, 'admin_error_check' ), 1 );
-
-			// register rest filters for any post types.
-			global $strc;
-			foreach ( $cntl_post_types as $post_type => $tax ) {
-				add_filter( "rest_pre_insert_{$post_type}", array( $strc, 'check_taxonomy_value_rest' ), 10, 2 );
-			}
 		}
-
 	}
 
 	/**
@@ -1667,15 +1660,16 @@ class SimpleTaxonomyRefreshed_Admin {
 										<td>
 											<fieldset>
 											<input type="radio" id="cc_pos" name="st_cc_hard" <?php checked( 0, $taxonomy['st_cc_hard'], true ); ?> value="0" ><label for="cc_pos"><?php esc_html_e( 'When user cannot change terms give notification message but allow changes (notification at start of edit)', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="radio" id="cc_sft" name="st_cc_hard" <?php checked( 1, $taxonomy['st_cc_hard'], true ); ?> value="1" ><label for="cc_sft"><?php esc_html_e( 'When post is saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="radio" id="cc_hrd" name="st_cc_hard" <?php checked( 2, $taxonomy['st_cc_hard'], true ); ?> value="2" ><label for="cc_hrd"><?php esc_html_e( 'As terms are changed and when is post saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<input type="radio" id="cc_sft" name="st_cc_hard" <?php checked( 1, $taxonomy['st_cc_hard'], true ); ?> value="1" ><label for="cc_sft"><?php esc_html_e( 'When the post is saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<input type="radio" id="cc_hrd" name="st_cc_hard" <?php checked( 2, $taxonomy['st_cc_hard'], true ); ?> value="2" ><label for="cc_hrd"><?php esc_html_e( 'As terms are changed and when the post is saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											</fieldset>
 											<span class="description">
 											<p><?php esc_html_e( 'Choose the control level to be applied.', 'simple-taxonomy-refreshed' ); ?></p>
 											<p><?php esc_html_e( 'Notification option allows a user who can edit the post but cannot change the terms attached to make other updates.', 'simple-taxonomy-refreshed' ); ?></p>
-											<p><?php esc_html_e( 'Other options will block this user from making updates if the number of terms are not within required limits.', 'simple-taxonomy-refreshed' ); ?></p></p>
-											<p><?php esc_html_e( 'NOTE. The option to apply the control as terms are entered is incomplete; notably does not currently apply for Gutenberg posts.', 'simple-taxonomy-refreshed' ); ?></p></span>
-										</td>
+											<p><?php esc_html_e( 'Other options will block the user from making updates if the number of terms are not within required limits.', 'simple-taxonomy-refreshed' ); ?></p></p>
+											<p><?php esc_html_e( 'NOTE. The option to apply the control as terms are entered is a Work in Progress.', 'simple-taxonomy-refreshed' ); ?></p></span>
+											<p><?php esc_html_e( 'Specifically issues may occur with Block Editor post types and their notifications.', 'simple-taxonomy-refreshed' ); ?></p></span>
+									</td>
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label><?php esc_html_e( 'Minimum Control', 'simple-taxonomy-refreshed' ); ?></label></th>
@@ -2175,7 +2169,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		update_option( OPTION_STAXO, $current_options );
 
-		self::refresh_term_cntl_cache();
+		global $strc;
+		$cntl_post_types = $strc::refresh_term_cntl_cache();
 
 		if ( (bool) $taxonomy['rewrite'] ) {
 			// Unfortunately we cannot register the new taxonomy and refresh rules here, so create transient data.
@@ -2218,7 +2213,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		update_option( OPTION_STAXO, $current_options );
 
-		self::refresh_term_cntl_cache();
+		global $strc;
+		$cntl_post_types = $strc::refresh_term_cntl_cache();
 
 		// Clear cache if there.
 		delete_transient( 'staxo_sel_' . $staxo );
@@ -2261,7 +2257,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		update_option( OPTION_STAXO, $current_options );
 
-		self::refresh_term_cntl_cache();
+		global $strc;
+		$cntl_post_types = $strc::refresh_term_cntl_cache();
 
 		// Clear cache if there.
 		delete_transient( 'staxo_sel_' . $staxo );
@@ -2308,7 +2305,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		update_option( OPTION_STAXO, $current_options );
 
-		self::refresh_term_cntl_cache();
+		global $strc;
+		$cntl_post_types = $strc::refresh_term_cntl_cache();
 
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::ADMIN_SLUG ) . '&message=' . $opt . '&staxo=' . $staxo );
 		exit();
@@ -2335,83 +2333,6 @@ class SimpleTaxonomyRefreshed_Admin {
 		}
 
 		return true;
-	}
-
-	/**
-	 * Ensure term control cache is current..
-	 *
-	 * @since 2.0.0
-	 *
-	 * @param bool $force_refresh whether to force a refresh.
-	 * @return mixed array of post_types and the term control requirements.
-	 */
-	public static function refresh_term_cntl_cache( $force_refresh = true ) {
-		$cache_key       = 'staxo_cntl_post_types';
-		$cntl_post_types = get_transient( $cache_key );
-
-		// does cache exist.
-		if ( false !== $cntl_post_types ) {
-			// yes, but do we to force a refresh.
-			if ( ! $force_refresh ) {
-				return $cntl_post_types;
-			}
-			// transient exists but going to update it.
-			delete_transient( $cache_key );
-		}
-		// reset as post_type list as empty.
-		$cntl_post_types = array();
-		$options         = get_option( OPTION_STAXO );
-		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
-
-				// Identify if term count control limits wanted.
-				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
-					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
-						// add to post types list.
-						if ( ! empty( $taxonomy['objects'] ) ) {
-							foreach ( $taxonomy['objects'] as $post_type ) {
-								$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
-									'st_cc_type' => $taxonomy['st_cc_type'],
-									'st_cc_hard' => $taxonomy['st_cc_hard'],
-									'st_cc_umin' => $taxonomy['st_cc_umin'],
-									'st_cc_min'  => $taxonomy['st_cc_min'],
-									'st_cc_umax' => $taxonomy['st_cc_umax'],
-									'st_cc_max'  => $taxonomy['st_cc_max'],
-								);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
-			foreach ( (array) $options['externals'] as $key => $args ) {
-
-				// Identify if term count control limits wanted.
-				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
-					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
-						// add to post types list.
-						if ( ! empty( $taxonomy['objects'] ) ) {
-							foreach ( $taxonomy['objects'] as $post_type ) {
-								$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
-									'st_cc_type' => $taxonomy['st_cc_type'],
-									'st_cc_hard' => $taxonomy['st_cc_hard'],
-									'st_cc_umin' => $taxonomy['st_cc_umin'],
-									'st_cc_min'  => $taxonomy['st_cc_min'],
-									'st_cc_umax' => $taxonomy['st_cc_umax'],
-									'st_cc_max'  => $taxonomy['st_cc_max'],
-								);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		set_transient( $cache_key, $cntl_post_types, DAY_IN_SECONDS );
-
-		return $cntl_post_types;
 	}
 
 	/**
@@ -2442,7 +2363,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		}
 
 		// find out which checks are needed.
-		$cntl_post_types = self::refresh_term_cntl_cache( false );
+		global $strc;
+		$cntl_post_types = $strc::refresh_term_cntl_cache( false );
 		if ( isset( $cntl_post_types[ $post_type ] ) ) {
 			// there are controls for this post_type.
 			foreach ( $cntl_post_types[ $post_type ] as $tax => $cntl ) {
@@ -3104,7 +3026,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		$post_status = ( 'inherit' === $postarr['post_status'] ? get_post_status( $postarr['post_parent'] ) : $postarr['post_status'] );
 		// No post object available, use the arrays.
 		// find out which checks are needed.
-		$cntl_post_types = self::refresh_term_cntl_cache( false );
+		global $strc;
+		$cntl_post_types = $strc::refresh_term_cntl_cache( false );
 		if ( isset( $cntl_post_types[ $postarr['post_type'] ] ) ) {
 			// there are controls for this post_type.
 			foreach ( $cntl_post_types[ $postarr['post_type'] ] as $tax => $cntl ) {
@@ -3198,6 +3121,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				$post_status = $post->post_status;
 			}
 		}
+
 		// status checks. Ignore new, auto-draft and trash.
 		if ( in_array( $post_status, array( 'new', 'auto-draft', 'trash' ), true ) ) {
 			return $prepared_post;
@@ -3208,7 +3132,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		$data = json_decode( $json, true );
 
 		// find out which checks are needed.
-		$cntl_post_types = self::refresh_term_cntl_cache( false );
+		global $strc;
+		$cntl_post_types = $strc::refresh_term_cntl_cache( false );
 		if ( isset( $cntl_post_types[ $prepared_post->post_type ] ) ) {
 			// there are controls for this post_type.
 			foreach ( $cntl_post_types[ $prepared_post->post_type ] as $tax => $cntl ) {
@@ -3217,34 +3142,32 @@ class SimpleTaxonomyRefreshed_Admin {
 					continue;
 				}
 
-				$tax_obj = get_taxonomy( $tax );
-				if ( ! $tax->show_in_rest ) {
-					continue;
-				}
-
-				$base = ! empty( $tax->rest_base ) ? $tax->rest_base : $tax->name;
-				if ( ! isset( $data[ $base ] ) ) {
+				if ( ! $cntl['show_in_rest'] ) {
 					continue;
 				}
 
 				// count the number of terms.
-				$terms_count = ( empty( $data[ $base ] ) ? 0 : count( $data[ $base ] ) );
+				if ( isset( $data[ $cntl['rest_base'] ] ) ) {
+					$terms_count = ( empty( $data[ $cntl['rest_base'] ] ) ? 0 : count( $data[ $cntl['rest_base'] ] ) );
+				} else {
+					$terms_count = 0;
+				}
 
 				// check the minimum bound.
 				if ( true === (bool) $cntl['st_cc_umin'] && $terms_count < $cntl['st_cc_min'] ) {
 					return new WP_Error(
 						'rest_minimum_terms',
 						// translators: %s is the taxonomy label name.
-						sprintf( __( 'Not enough terms entered for Taxonomy "%s"', 'simple-taxonomy-refreshed' ), $taxtax_obj->labels->name ),
+						sprintf( __( 'Not enough terms entered for Taxonomy "%s"', 'simple-taxonomy-refreshed' ), $cntl['label_name'] ),
 						array( 'status' => 403 )
 					);
 				}
 				// check the maximum bound.
-				if ( true === (bool) $taxonomy['st_cc_umax'] && $terms_count > $taxonomy['st_cc_max'] ) {
+				if ( true === (bool) $cntl['st_cc_umax'] && $terms_count > $cntl['st_cc_max'] ) {
 					return new WP_Error(
 						'rest_maximum_terms',
 						// translators: %s is the taxonomy label name.
-						sprintf( __( 'Too many terms entered for Taxonomy "%s"', 'simple-taxonomy-refreshed' ), $taxtax_obj->labels->name ),
+						sprintf( __( 'Too many terms entered for Taxonomy "%s"', 'simple-taxonomy-refreshed' ), $cntl['label_name'] ),
 						array( 'status' => 403 )
 					);
 				}

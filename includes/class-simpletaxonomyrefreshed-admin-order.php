@@ -294,7 +294,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 	/**
 	 * Caches the posts and taxonomies.
 	 *
-	 * @since 1.4
+	 * @since 2.0.0
 	 *
 	 * @param boolean $refresh Whether to refresh the cache.
 	 * @return Array
@@ -398,7 +398,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 	/**
 	 * Adds js libraries for sorting.
 	 *
-	 * @since 1.4
+	 * @since 2.0.0
 	 * @return void
 	 */
 	public static function add_js_libs() {

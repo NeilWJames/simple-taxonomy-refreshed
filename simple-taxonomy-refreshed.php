@@ -7,7 +7,7 @@
  * Version:           2.0.0
  * Requires at least: 4.8
  * Requires PHP:      5.6
- * Author:            Neil W James
+ * Author:            Neil James
  * License:           GPL v3
  * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain:       simple-taxonomy-refreshed
@@ -60,7 +60,7 @@ function init_staxo_refreshed() {
 	require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-widget.php';
 
 	// Client.
-	global $strc;
+	global $strc, $stra;
 	$strc = new SimpleTaxonomyRefreshed_Client();
 
 	// Admin (Load when needed).
@@ -74,7 +74,9 @@ function init_staxo_refreshed() {
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-rename.php';
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-config.php';
 
-		$staxo_a = SimpleTaxonomyRefreshed_Admin::get_instance();
+		if ( ! $stra ) {
+			$stra = SimpleTaxonomyRefreshed_Admin::get_instance();
+		}
 		$staxo_c = SimpleTaxonomyRefreshed_Admin_Conversion::get_instance();
 		$staxo_i = SimpleTaxonomyRefreshed_Admin_Import::get_instance();
 		$staxo_o = SimpleTaxonomyRefreshed_Admin_Merge::get_instance();

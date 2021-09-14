@@ -19,6 +19,8 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @return void
 	 */
 	public function __construct() {
+		add_action( 'rest_api_init', array( __CLASS__, 'rest_api_init' ) );
+		add_action( 'rest_api_init', array( __CLASS__, 'init' ), 1 );
 		add_action( 'init', array( __CLASS__, 'init' ), 1 );
 		add_action( 'admin_init', array( __CLASS__, 'admin_init' ) );
 
@@ -35,6 +37,33 @@ class SimpleTaxonomyRefreshed_Client {
 		$options = get_option( OPTION_STAXO );
 		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
 			add_action( 'registered_taxonomy', array( __CLASS__, 'registered_taxonomy' ), 10, 3 );
+		}
+	}
+
+
+	/**
+	 * Add rest api init process.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param WP_REST_Server $wp_rest_server Server object.
+	 * @return void
+	 */
+	public static function rest_api_init( $wp_rest_server ) {
+		$cntl_post_types = self::refresh_term_cntl_cache( false );
+		// if terms control wanted, invoke the code.
+		if ( isset( $cntl_post_types ) && ! empty( $cntl_post_types ) ) {
+			global $stra;
+			if ( ! $stra ) {
+				// we are in the includes directory.
+				require_once __DIR__ . '/class-simpletaxonomyrefreshed-admin.php';
+				$stra = SimpleTaxonomyRefreshed_Admin::get_instance();
+			}
+
+			// register rest filters for any post types.
+			foreach ( $cntl_post_types as $post_type => $tax ) {
+				add_filter( "rest_pre_insert_{$post_type}", array( $stra, 'check_taxonomy_value_rest' ), 10, 2 );
+			}
 		}
 	}
 
@@ -79,12 +108,6 @@ class SimpleTaxonomyRefreshed_Client {
 					}
 				}
 			};
-
-			// need to refresh the rewrite rules once registered.
-			if ( get_transient( 'simple_taxonomy_refreshed_rewrite' ) ) {
-				delete_transient( 'simple_taxonomy_refreshed_rewrite' );
-				flush_rewrite_rules( false );
-			}
 		}
 
 		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
@@ -101,12 +124,12 @@ class SimpleTaxonomyRefreshed_Client {
 					}
 				}
 			};
+		}
 
-			// need to refresh the rewrite rules once registered.
-			if ( get_transient( 'simple_taxonomy_refreshed_rewrite' ) ) {
-				delete_transient( 'simple_taxonomy_refreshed_rewrite' );
-				flush_rewrite_rules( false );
-			}
+		// need to refresh the rewrite rules once registered.
+		if ( get_transient( 'simple_taxonomy_refreshed_rewrite' ) ) {
+			delete_transient( 'simple_taxonomy_refreshed_rewrite' );
+			flush_rewrite_rules( false );
 		}
 		// if terms count wanted and new taxonomy, set up the code.
 		if ( $terms_count ) {
@@ -118,7 +141,7 @@ class SimpleTaxonomyRefreshed_Client {
 	/**
 	 * Create filters for taxonomy order on screens if set.
 	 *
-	 * @since 1.4.0
+	 * @since 2.0.0
 	 *
 	 * @return void
 	 */
@@ -158,7 +181,7 @@ class SimpleTaxonomyRefreshed_Client {
 	/**
 	 * Change taxonomy order on admin screens if set.
 	 *
-	 * @since 1.4.0
+	 * @since 2.0.0
 	 *
 	 * @param array  $taxonomies  taxonomy name list.
 	 * @param string $post_type   post type.
@@ -568,7 +591,7 @@ class SimpleTaxonomyRefreshed_Client {
 					'statuses'  => array(),  // empty means pass though values.
 					'in_string' => '',
 				);
-				set_transient( 'staxo_sel_' . $taxonomy, $tax_details, '', ( WP_DEBUG ? 10 : SECONDS_IN_HOUR ) );
+				set_transient( 'staxo_sel_' . $taxonomy, $tax_details, '', ( WP_DEBUG ? 10 : HOUR_IN_SECONDS ) );
 
 				return $tax_details;
 			}
@@ -627,7 +650,7 @@ class SimpleTaxonomyRefreshed_Client {
 				'in_string' => $in_string,
 			);
 
-			set_transient( 'staxo_sel_' . $taxonomy, $tax_details, '', ( WP_DEBUG ? 10 : SECONDS_IN_HOUR ) );
+			set_transient( 'staxo_sel_' . $taxonomy, $tax_details, '', ( WP_DEBUG ? 10 : HOUR_IN_SECONDS ) );
 		}
 
 		return $tax_details;
@@ -652,8 +675,8 @@ class SimpleTaxonomyRefreshed_Client {
 	 * See generally, #17548
 	 *
 	 * @since 1.1
-	 * @param Object $query the query object.
-	 * @return String the modified query
+	 * @param string $query the query object.
+	 * @return string the modified query
 	 */
 	public static function term_count_query_filter_sel( $query ) {
 		if ( 'SELECT COUNT(*)' !== substr( $query, 0, 15 ) ) {
@@ -691,6 +714,91 @@ class SimpleTaxonomyRefreshed_Client {
 		}
 
 		return $filter['statuses'];
+	}
+
+	/**
+	 * Ensure term control cache is current..
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param bool $force_refresh whether to force a refresh.
+	 * @return mixed array of post_types and the term control requirements.
+	 */
+	public static function refresh_term_cntl_cache( $force_refresh = true ) {
+		$cache_key       = 'staxo_cntl_post_types';
+		$cntl_post_types = get_transient( $cache_key );
+
+		// does cache exist.
+		if ( false !== $cntl_post_types ) {
+			// yes, but do we to force a refresh.
+			if ( ! $force_refresh ) {
+				return $cntl_post_types;
+			}
+			// transient exists but going to update it.
+			delete_transient( $cache_key );
+		}
+		// reset as post_type list as empty.
+		$cntl_post_types = array();
+		$options         = get_option( OPTION_STAXO );
+		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
+
+				// Identify if term count control limits wanted.
+				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
+					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
+						// add to post types list.
+						if ( ! empty( $taxonomy['objects'] ) ) {
+							foreach ( $taxonomy['objects'] as $post_type ) {
+								$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
+									'st_cc_type'   => $taxonomy['st_cc_type'],
+									'st_cc_hard'   => $taxonomy['st_cc_hard'],
+									'st_cc_umin'   => $taxonomy['st_cc_umin'],
+									'st_cc_min'    => $taxonomy['st_cc_min'],
+									'st_cc_umax'   => $taxonomy['st_cc_umax'],
+									'st_cc_max'    => $taxonomy['st_cc_max'],
+									'show_in_rest' => $taxonomy['show_in_rest'],
+									'rest_base'    => ( empty( $taxonomy['rest_base'] ) ? $taxonomy['name'] : $taxonomy['rest_base'] ),
+									'label_name'   => $taxonomy['labels']['name'],
+								);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
+			foreach ( (array) $options['externals'] as $key => $taxonomy ) {
+
+				// Identify if term count control limits wanted.
+				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
+					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
+						// add to post types list.
+						if ( ! empty( $taxonomy['objects'] ) ) {
+							// need to get some properties from external taxonomy.
+							$tax_obj = get_taxonomy( $taxonomy );
+							foreach ( $taxonomy['objects'] as $post_type ) {
+								$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
+									'st_cc_type'   => $taxonomy['st_cc_type'],
+									'st_cc_hard'   => $taxonomy['st_cc_hard'],
+									'st_cc_umin'   => $taxonomy['st_cc_umin'],
+									'st_cc_min'    => $taxonomy['st_cc_min'],
+									'st_cc_umax'   => $taxonomy['st_cc_umax'],
+									'st_cc_max'    => $taxonomy['st_cc_max'],
+									'show_in_rest' => $tax_obj->show_in_rest,
+									'rest_base'    => ( empty( $tax_obj->rest_base ) ? $tax_obj->name : $tax_obj->rest_base ),
+									'label_name'   => $taxonomy['labels']['name'],
+								);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		set_transient( $cache_key, $cntl_post_types, WEEK_IN_SECONDS );
+
+		return $cntl_post_types;
 	}
 
 	/**
