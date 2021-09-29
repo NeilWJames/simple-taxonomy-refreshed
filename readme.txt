@@ -2,7 +2,7 @@
 
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
-Tested up to: 5.8
+Tested up to: 5.8.1
 Requires PHP: 5.6
 Stable tag: 2.0.0
 License: GPLv3 or later
@@ -59,6 +59,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 == Changelog ==
 
 * Version 2.0.0
+	* NEW: Support of Description labels introduced with WP 5.9.
 	* NEW: Restructure functions to regroup under a Taxonomy menu item.
 	* NEW: Add/Modify taxonomy and Export/Import configuration split into separate functions.
 	* NEW: Enable extra functions for all taxonomies.

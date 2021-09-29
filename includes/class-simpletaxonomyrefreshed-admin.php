@@ -1149,6 +1149,12 @@ class SimpleTaxonomyRefreshed_Admin {
 										);
 										self::option_label(
 											$taxonomy,
+											'name_description',
+											esc_html__( 'Name Description', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'The description of the name.', 'simple-taxonomy-refreshed' )
+										);
+										self::option_label(
+											$taxonomy,
 											'menu_name',
 											esc_html__( 'Menu Name', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'If not set this will default to the taxonomy label.', 'simple-taxonomy-refreshed' )
@@ -1188,6 +1194,24 @@ class SimpleTaxonomyRefreshed_Admin {
 											'parent_item_colon',
 											esc_html__( 'Parent Term:', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'Parent Term with colon', 'simple-taxonomy-refreshed' )
+										);
+										self::option_label(
+											$taxonomy,
+											'parent_description',
+											esc_html__( 'Parent Term Description', 'simple-taxonomy-refreshed' ),
+											''
+										);
+										self::option_label(
+											$taxonomy,
+											'slug_description',
+											esc_html__( 'Slug Description', 'simple-taxonomy-refreshed' ),
+											''
+										);
+										self::option_label(
+											$taxonomy,
+											'description_description',
+											esc_html__( 'Descriptiom Description', 'simple-taxonomy-refreshed' ),
+											''
 										);
 										self::option_label(
 											$taxonomy,
@@ -3196,6 +3220,9 @@ class SimpleTaxonomyRefreshed_Admin {
 			$screen = get_current_screen();
 			if ( method_exists( $screen, 'is_block_editor' ) ) {
 				self::$use_block_editor = $screen->is_block_editor();
+			} elseif ( function_exists( 'use_block_editor_for_post' ) ) {
+				global $post;
+				self::$use_block_editor = use_block_editor_for_post( $post );
 			} elseif ( function_exists( 'is_gutenberg_page' ) ) {
 				self::$use_block_editor = is_gutenberg_page();
 			} else {

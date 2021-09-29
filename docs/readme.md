@@ -5,7 +5,7 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 * Contributors: nwjames, momo360modena
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
 * Stable tag: 2.0.0
-* Tested up to: 5.8
+* Tested up to: 5.8.1
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -79,6 +79,7 @@ See [Usage details](./usage.md) for more information on the usage of the plugin.
 ## Changelog
 
 * Version 2.0.0
+	* NEW: Support of Description labels introduced with WP 5.9.
 	* NEW: Restructure functions to regroup under a Taxonomy menu item.
 	* NEW: Add/Modify taxonomy and Export/Import configuration split into separate functions.
 	* NEW: Enable extra functions for all taxonomies.

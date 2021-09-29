@@ -39,7 +39,7 @@ Clicking on *Export PHP* will download a file called test_hier.php to the browse
 	 ----
 	 
 	 Copyright 2021 - XXX-Author
-	  
+	 
 	 This program is free software; you can redistribute it and/or modify
 	 it under the terms of the GNU General Public License as published by
 	 the Free Software Foundation; either version 3 of the License, or
@@ -68,12 +68,17 @@ Clicking on *Export PHP* will download a file called test_hier.php to the browse
 	   'labels' => 
 	   array (
 	     'name' => 'Test Terms',
+	     'name_description' => 'The name is how it appears on your site.',
+	     'menu_name' => 'Test Terms',
 	     'singular_name' => 'Test Term',
 	     'search_items' => 'Search Terms',
 	     'popular_items' => 'Popular Terms',
 	     'all_items' => 'All Terms',
 	     'parent_item' => 'Parent Term',
 	     'parent_item_colon' => 'Parent Term:',
+	     'parent_description' => 'Assign a parent term to create a hierarchy. The term Jazz, for example, would be the parent of Bebop and Big Band.',
+	     'slug_description' => 'The &#8220;slug&#8221; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.',
+	     'description_description' => 'The description is not prominent by default; however, some themes may show it.',
 	     'edit_item' => 'Edit Term',
 	     'view_item' => 'View Term',
 	     'update_item' => 'Update Term',
@@ -106,7 +111,13 @@ Clicking on *Export PHP* will download a file called test_hier.php to the browse
 	     'delete_terms' => 'manage_categories',
 	     'assign_terms' => 'edit_posts',
 	   ),
-	   'rewrite' => false,
+	   'rewrite' => 
+	   array (
+	     'slug' => 'test_hier',
+	     'with_front' => true,
+	     'hierarchical' => true,
+	     'ep_mask' => 0,
+	   ),
 	   'query_var' => 'test_hier',
 	   'update_count_callback' => '',
 	   'show_in_rest' => true,
