@@ -896,7 +896,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'update_item'                => __( 'Update Term' ),
 			'add_new_item'               => __( 'Add New Term' ),
 			'new_item_name'              => __( 'New Term Name', 'simple-taxonomy-refreshed' ),
- 			'separate_items_with_commas' => __( 'Separate terms with commas' ),
+			'separate_items_with_commas' => __( 'Separate terms with commas' ),
 			'add_or_remove_items'        => __( 'Add or remove terms' ),
 			'choose_from_most_used'      => __( 'Choose from the most used terms' ),
 			'not_found'                  => __( 'No Terms found' ),
