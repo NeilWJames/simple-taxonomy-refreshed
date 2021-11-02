@@ -942,7 +942,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				<p><?php esc_html_e( 'The taxonomy definition options are spread across 7 tabs. The remaining 4 are for integrating the taxonomy.', 'simple-taxonomy-refreshed' ); ?></p>
 			<?php } else { ?>
 				<p><?php esc_html_e( 'The taxonomy is defined outside this plugin. These inputs are for integrating the taxonomy.', 'simple-taxonomy-refreshed' ); ?></p>
-				<p><strong><?php esc_html_e( 'Note that these options may already be defined for the taxonomy. Please check before defining.', 'simple-taxonomy-refreshed' ); ?></strong></p>
+				<p><strong><?php esc_html_e( 'Note that these functionalities may already be defined for the taxonomy. Please check before defining then here.', 'simple-taxonomy-refreshed' ); ?></strong></p>
 			<?php } ?>
 
 			<div id="poststuff" class="metabox-holder">
@@ -1302,6 +1302,18 @@ class SimpleTaxonomyRefreshed_Admin {
 											'filter_by_item',
 											esc_html__( 'Related filter', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'The related filter is displayed at the top of list tables, but only for hierarchical taxonomies', 'simple-taxonomy-refreshed' )
+										);
+										self::option_label(
+											$taxonomy,
+											'item_link',
+											esc_html__( 'Title for a navigation link block variation.', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Used in the block editor.', 'simple-taxonomy-refreshed' )
+										);
+										self::option_label(
+											$taxonomy,
+											'item_link_description',
+											esc_html__( 'Description for a navigation link block', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Used in the block editor.', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -3120,7 +3132,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
-	 * Filters a post before it is inserted via the REST API to check termz control.
+	 * Filters a post before it is inserted via the REST API to check terms control.
 	 *
 	 * @since 1.3.0
 	 *

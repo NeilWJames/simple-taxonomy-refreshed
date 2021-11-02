@@ -907,6 +907,8 @@ class SimpleTaxonomyRefreshed_Client {
 			'most_used'                  => _x( 'Most Used', 'categories' ),
 			'back_to_items'              => __( '&#8592; Back to Terms' ),
 			'filter_by_item'             => __( 'Filter by category' ),
+			'item_link'                  => __( 'Category Link' ),
+			'item_link_description'      => __( 'A link to a category' ),
 		);
 	}
 

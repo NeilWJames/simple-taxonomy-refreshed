@@ -26,9 +26,9 @@ You can also create terms easily by typing them into a list; or by copying them 
 
 A tool has been provided to support changing the taxonomy slug. Any terms and their usages will also be linked to the renamed slug.
 
-For admin screens displaying multiple taxonomies it is possible to define their display order.
+For admin screens displaying multiple taxonomies it is possible to define their display column order.
 
-A tool is provided to merge a number of terms within a taxonomy into a single one. All usages of the terms are changed to the merged one.
+A tool is provided to merge a number of terms within a taxonomy into a single one. All usages of the selected terms are changed to the merged one.
 
 Options are provided to add a selection dropdown in the admin list and to define minimum and maximum required term counts using posts of selected statuses (and not only "published"). [Term counts with WP 5.7+ requires version 1.3+ of this plugin.] These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
 
@@ -60,6 +60,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 * Version 2.0.0
 	* NEW: Support of Description labels introduced with WP 5.9.
+	* NEW: Support of `item_link` and `item_link_description` labels introduced with WP 5.8.
 	* NEW: Restructure functions to regroup under a Taxonomy menu item.
 	* NEW: Add/Modify taxonomy and Export/Import configuration split into separate functions.
 	* NEW: Enable extra functions for all taxonomies.
@@ -70,7 +71,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 * Version 1.3.0
 	* NEW: Term counts now implemented by WP 5.7 functionality.
-	* NEW: Label filter_by_item supported (introduced in WP 5.7).
+	* NEW: Label `filter_by_item` supported (introduced in WP 5.7).
 	* NEW: Term controls test applied when saving via Rest.
 	* FIX: Don't test Term controls during Autosave.
 	* FIX: Review Term controls Front End processing.

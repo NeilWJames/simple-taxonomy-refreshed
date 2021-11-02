@@ -5,7 +5,7 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 * Contributors: nwjames, momo360modena
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
 * Stable tag: 2.0.0
-* Tested up to: 5.8.1
+* Tested up to: 5.8.2
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -27,9 +27,9 @@ You can also create terms easily by typing them into a list; or by copying them 
 
 A tool has been provided to support changing the taxonomy slug. Any terms and their usages will also be linked to the renamed slug.
 
-For admin screens displaying multiple taxonomies it is possible to define their display order.
+For admin screens displaying multiple taxonomies it is possible to define their display column order.
 
-A tool is provided to merge a number of terms within a taxonomy into a single one. All usages of the terms are changed to the merged one.
+A tool is provided to merge a number of terms within a taxonomy into a single one. All usages of the selected terms are changed to the merged one.
 
 Options are provided to add a selection dropdown in the admin list and to define term counts using posts of selected statuses (and not just "published").
 (The Term Count functionality requires version 1.3+ when WP 5.7+ is installed.) These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
@@ -80,6 +80,7 @@ See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 * Version 2.0.0
 	* NEW: Support of Description labels introduced with WP 5.9.
+	* NEW: Support of `item_link` and `item_link_description` labels introduced with WP 5.8.
 	* NEW: Restructure functions to regroup under a Taxonomy menu item.
 	* NEW: Add/Modify taxonomy and Export/Import configuration split into separate functions.
 	* NEW: Enable extra functions for all taxonomies.
