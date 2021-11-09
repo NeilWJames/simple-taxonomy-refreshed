@@ -79,7 +79,7 @@ See [Usage details](./usage.md) for more information on the usage of the plugin.
 ## Changelog
 
 * Version 2.0.0
-	* NEW: Support of Description labels introduced with WP 5.9.
+	* NEW: Support of Description labels and 'rest_namespace' introduced with WP 5.9.
 	* NEW: Support of `item_link` and `item_link_description` labels introduced with WP 5.8.
 	* NEW: Restructure functions to regroup under a Taxonomy menu item.
 	* NEW: Add/Modify taxonomy and Export/Import configuration split into separate functions.

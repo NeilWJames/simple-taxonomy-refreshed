@@ -292,6 +292,9 @@ class SimpleTaxonomyRefreshed_Client {
 		if ( ! empty( $taxonomy['rest_base'] ) ) {
 			$tax_out['rest_base'] = $taxonomy['rest_base'];
 		}
+		if ( ! empty( $taxonomy['rest_namespace'] ) ) {
+			$tax_out['rest_namespace'] = $taxonomy['rest_namespace'];
+		}
 		if ( ! empty( $taxonomy['rest_controller_class'] ) ) {
 			$tax_out['rest_controller_class'] = $taxonomy['rest_controller_class'];
 		}
@@ -826,6 +829,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'update_count_callback'    => '',
 			'show_in_rest'             => 1,
 			'rest_base'                => '',
+			'rest_namespace'           => '',
 			'rest_controller_class'    => '',
 			'sort'                     => 0,
 			// Specific to plugin.

@@ -845,7 +845,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 			// Added 2.0.
 			if ( ! array_key_exists( 'st_feed', $taxonomy ) ) {
-				$taxonomy['st_feed'] = 0;
+				$taxonomy['st_feed']        = 0;
+				$taxonomy['rest_namespace'] = '';
 			}
 
 			// Label menu_name needs to exist to edit (it is removed for registering).
@@ -1199,6 +1200,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											$taxonomy,
 											'parent_description',
 											esc_html__( 'Parent Term Description', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'These Description texts will appear in the term item entry screen.', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
@@ -1430,6 +1432,12 @@ class SimpleTaxonomyRefreshed_Admin {
 											'rest_base',
 											esc_html__( 'REST Base', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'To change the base url of REST API route.', 'simple-taxonomy-refreshed' )
+										);
+										self::option_text(
+											$taxonomy,
+											'rest_namespace',
+											esc_html__( 'REST Namespace', 'simple-taxonomy-refreshed' ),
+											esc_html__( "Defaults to '/wp/v2'.", 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
