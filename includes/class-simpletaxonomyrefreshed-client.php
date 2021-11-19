@@ -884,7 +884,7 @@ class SimpleTaxonomyRefreshed_Client {
 		// These labels us the default WP name domains so that translations are automatically done.
 		return array(
 			'name'                       => _x( 'Post Terms', 'taxonomy general name' ),
-			'name_description'           => __( 'The name is how it appears on your site.' ),
+			'name_field_description'     => __( 'The name is how it appears on your site.' ),
 			'menu_name'                  => '',
 			'singular_name'              => _x( 'Post Term', 'taxonomy singular name' ),
 			'search_items'               => __( 'Search Terms' ),
@@ -892,9 +892,9 @@ class SimpleTaxonomyRefreshed_Client {
 			'all_items'                  => __( 'All Terms' ),
 			'parent_item'                => __( 'Parent Term' ),
 			'parent_item_colon'          => __( 'Parent Term:' ),
-			'parent_description'         => __( 'Assign a parent term to create a hierarchy. The term Jazz, for example, would be the parent of Bebop and Big Band.' ),
-			'slug_description'           => __( 'The &#8220;slug&#8221; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.' ),
-			'description_description'    => __( 'The description is not prominent by default; however, some themes may show it.' ),
+			'parent_field_description'   => __( 'Assign a parent term to create a hierarchy. The term Jazz, for example, would be the parent of Bebop and Big Band.' ),
+			'slug_field_description'     => __( 'The &#8220;slug&#8221; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.' ),
+			'desc_field_description'     => __( 'The description is not prominent by default; however, some themes may show it.' ),
 			'edit_item'                  => __( 'Edit Term' ),
 			'view_item'                  => __( 'View Term' ),
 			'update_item'                => __( 'Update Term' ),

@@ -79,13 +79,14 @@ See [Usage details](./usage.md) for more information on the usage of the plugin.
 ## Changelog
 
 * Version 2.0.0
+	* NEW: Taxonomy labels use core translations for default values rather plugin-specific ones.
 	* NEW: Support of Description labels and 'rest_namespace' introduced with WP 5.9.
 	* NEW: Support of `item_link` and `item_link_description` labels introduced with WP 5.8.
-	* NEW: Restructure functions to regroup under a Taxonomy menu item.
+	* NEW: Restructure functions to regroup them under a Taxonomy menu item.
 	* NEW: Add/Modify taxonomy and Export/Import configuration split into separate functions.
 	* NEW: Enable extra functions for all taxonomies.
 	* NEW: Provide a Merge taxonomy terms function.
-	* NEW: Allow Custom Taxonomy terms to be delivered to RSS Feeds.
+	* NEW: Deliver Custom Taxonomy terms to RSS Feeds.
 	* FIX: Server-side terms control errors passed back to Block Editor screens and for Quick Edit.
 	* FIX: Help Text reviewed.
 

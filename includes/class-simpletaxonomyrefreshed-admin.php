@@ -1150,9 +1150,9 @@ class SimpleTaxonomyRefreshed_Admin {
 										);
 										self::option_label(
 											$taxonomy,
-											'name_description',
-											esc_html__( 'Name Description', 'simple-taxonomy-refreshed' ),
-											esc_html__( 'The description of the name.', 'simple-taxonomy-refreshed' )
+											'name_Field_description',
+											esc_html__( 'Name Field Description', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'The description of the name field.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_label(
 											$taxonomy,
@@ -1198,21 +1198,21 @@ class SimpleTaxonomyRefreshed_Admin {
 										);
 										self::option_label(
 											$taxonomy,
-											'parent_description',
-											esc_html__( 'Parent Term Description', 'simple-taxonomy-refreshed' ),
+											'parent_field_description',
+											esc_html__( 'Parent Term Field Description', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'These Description texts will appear in the term item entry screen.', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
-											'slug_description',
-											esc_html__( 'Slug Description', 'simple-taxonomy-refreshed' ),
+											'slug_field_description',
+											esc_html__( 'Slug G=Field Description', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
 											$taxonomy,
-											'description_description',
-											esc_html__( 'Descriptiom Description', 'simple-taxonomy-refreshed' ),
+											'desc_field_description',
+											esc_html__( 'Descriptiom Field Description', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
