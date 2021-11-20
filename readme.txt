@@ -59,6 +59,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 == Changelog ==
 
 * Version 2.0.0
+	* NEW: Taxonomy labels that are default values are not saved with options.
 	* NEW: Taxonomy labels use core translations for default values rather plugin-specific ones.
 	* NEW: Support of Description labels and 'rest_namespace' introduced with WP 5.9.
 	* NEW: Support of `item_link` and `item_link_description` labels introduced with WP 5.8.
@@ -68,7 +69,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* NEW: Provide a Merge taxonomy terms function.
 	* NEW: Deliver Custom Taxonomy terms to RSS Feeds.
 	* FIX: Server-side terms control errors passed back to Block Editor screens and for Quick Edit.
-	* FIX: Help Text reviewed.
+	* FIX: Help Text reviewed. (Also github documentation.)
 
 * Version 1.3.0
 	* NEW: Term counts now implemented by WP 5.7 functionality.

@@ -14,7 +14,23 @@
 class SimpleTaxonomyRefreshed_Client {
 
 	/**
+	 * Default WP taxonomy labels.
+	 *
+	 * @var array
+	 */
+	public static $wp_default_labels = array();
+
+	/**
+	 * Default WP taxonomy labels but html decoded.
+	 *
+	 * @var array
+	 */
+	public static $wp_decoded_labels = array();
+
+	/**
 	 * Constructor
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -83,6 +99,8 @@ class SimpleTaxonomyRefreshed_Client {
 		} else {
 			$count_method = 'old';
 		}
+		// get default taxonomy labels.
+		self::get_wp_default_labels();
 		$options = get_option( OPTION_STAXO );
 		// is terms count implemented anywhere with new rules.
 		$terms_count = false;
@@ -201,7 +219,8 @@ class SimpleTaxonomyRefreshed_Client {
 	public static function prepare_args( $taxonomy ) {
 		// Ensure complete.
 		$taxonomy                 = wp_parse_args( $taxonomy, self::get_taxonomy_default_fields() );
-		$taxonomy['labels']       = wp_parse_args( $taxonomy['labels'], self::get_taxonomy_default_labels() );
+		$hier                     = ( isset( $taxonomy['hierarchical'] ) ? $taxonomy['hierarchical'] : 1 );
+		$taxonomy['labels']       = wp_parse_args( $taxonomy['labels'], self::get_taxonomy_default_labels( $hier ) );
 		$taxonomy['capabilities'] = wp_parse_args( $taxonomy['capabilities'], self::get_taxonomy_default_capabilities() );
 
 		// Empty query_var ? use name.
@@ -324,6 +343,8 @@ class SimpleTaxonomyRefreshed_Client {
 	/**
 	 * Allow to display the taxonomy template, even if the term is empty.
 	 *
+	 * @since 1.0.0
+	 *
 	 * @return void
 	 */
 	public static function template_redirect() {
@@ -337,6 +358,8 @@ class SimpleTaxonomyRefreshed_Client {
 
 	/**
 	 * Allow to build a correct page title for empty term. Otherwise, the term is null.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $title page title.
 	 * @param string $sep   title separator.
@@ -370,6 +393,8 @@ class SimpleTaxonomyRefreshed_Client {
 
 	/**
 	 * Build an xHTML list of terms when the post have custom taxonomy.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $content content of the content or excerpt.
 	 * @param string $type    content or excerpt selector.
@@ -432,6 +457,8 @@ class SimpleTaxonomyRefreshed_Client {
 	/**
 	 * Meta function for call filter taxonomy with the context "content".
 	 *
+	 * @since 1.0.0
+	 *
 	 * @param string $content content of the_content.
 	 * @return string
 	 */
@@ -441,6 +468,8 @@ class SimpleTaxonomyRefreshed_Client {
 
 	/**
 	 * Meta function for call filter taxonomy with the context "excerpt".
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $content content of the_excerpt.
 	 * @return string
@@ -511,6 +540,8 @@ class SimpleTaxonomyRefreshed_Client {
 	/**
 	 * Prepare the dropdown filter args.
 	 *
+	 * @since 1.3.0
+	 *
 	 * @param array $taxonomy The current taxonomy structure.
 	 */
 	public static function prepare_filter_args( &$taxonomy ) {
@@ -533,6 +564,8 @@ class SimpleTaxonomyRefreshed_Client {
 
 	/**
 	 * Manage the dropdown filters.
+	 *
+	 * @since 1.3.0
 	 *
 	 * @param string $post_type The current post type.
 	 */
@@ -807,6 +840,8 @@ class SimpleTaxonomyRefreshed_Client {
 	/**
 	 * Get array fields for CPT object.
 	 *
+	 * @since 1.0.0
+	 *
 	 * @return array
 	 */
 	public static function get_taxonomy_default_fields() {
@@ -876,48 +911,22 @@ class SimpleTaxonomyRefreshed_Client {
 	}
 
 	/**
-	 * Get array fields for CPT object.
+	 * Get array label fields for CPT object.
 	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $hier set of default parameters wanted.
 	 * @return array
 	 */
-	public static function get_taxonomy_default_labels() {
+	public static function get_taxonomy_default_labels( $hier = 1 ) {
 		// These labels us the default WP name domains so that translations are automatically done.
-		return array(
-			'name'                       => _x( 'Post Terms', 'taxonomy general name' ),
-			'name_field_description'     => __( 'The name is how it appears on your site.' ),
-			'menu_name'                  => '',
-			'singular_name'              => _x( 'Post Term', 'taxonomy singular name' ),
-			'search_items'               => __( 'Search Terms' ),
-			'popular_items'              => __( 'Popular Terms' ),
-			'all_items'                  => __( 'All Terms' ),
-			'parent_item'                => __( 'Parent Term' ),
-			'parent_item_colon'          => __( 'Parent Term:' ),
-			'parent_field_description'   => __( 'Assign a parent term to create a hierarchy. The term Jazz, for example, would be the parent of Bebop and Big Band.' ),
-			'slug_field_description'     => __( 'The &#8220;slug&#8221; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.' ),
-			'desc_field_description'     => __( 'The description is not prominent by default; however, some themes may show it.' ),
-			'edit_item'                  => __( 'Edit Term' ),
-			'view_item'                  => __( 'View Term' ),
-			'update_item'                => __( 'Update Term' ),
-			'add_new_item'               => __( 'Add New Term' ),
-			'new_item_name'              => __( 'New Term Name', 'simple-taxonomy-refreshed' ),
-			'separate_items_with_commas' => __( 'Separate terms with commas' ),
-			'add_or_remove_items'        => __( 'Add or remove terms' ),
-			'choose_from_most_used'      => __( 'Choose from the most used terms' ),
-			'not_found'                  => __( 'No Terms found' ),
-			'no_terms'                   => __( 'No Terms' ),
-			'items_list_navigation'      => __( 'Terms list navigation' ),
-			'items_list'                 => __( 'Terms list' ),
-			/* translators: Tab heading when selecting from the most used terms. */
-			'most_used'                  => _x( 'Most Used', 'categories' ),
-			'back_to_items'              => __( '&#8592; Back to Terms' ),
-			'filter_by_item'             => __( 'Filter by category' ),
-			'item_link'                  => __( 'Category Link' ),
-			'item_link_description'      => __( 'A link to a category' ),
-		);
+		return self::$wp_default_labels[ $hier ];
 	}
 
 	/**
-	 * Get array fields for CPT object.
+	 * Get array capability fields for CPT object.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return array
 	 */
@@ -929,4 +938,64 @@ class SimpleTaxonomyRefreshed_Client {
 			'assign_terms' => 'edit_posts',
 		);
 	}
+
+	/**
+	 * Get WP default labels for either hierarchical or non-hierarhical.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param bool $hier set of default parameters wanted.
+	 * @return void
+	 */
+	private static function get_wp_default_labels_set( $hier ) {
+		// get set of labels.
+		$set = new WP_Taxonomy(
+			'set_dflt',
+			array(),
+			array(
+				'hierarchical' => $hier,
+			)
+		);
+		get_taxonomy_labels( $set );
+		// empty labels based on the specific taxonomy slug.
+		$labels                   = (array) $set->labels;
+		$labels['name']           = '';
+		$labels['menu_name']      = '';
+		$labels['name_admin_bar'] = '';
+
+		// Add defaults for 5.8 and 5.9 if running earlier versions..
+		if ( ! isset( $labels['item_link'] ) ) {
+			$labels['item_link']             = __( 'Category Link' );
+			$labels['item_link_description'] = __( 'A link to a category' );
+		}
+		if ( ! isset( $labels['name_field_description'] ) ) {
+			$labels['name_field_description'] = __( 'The name is how it appears on your site.' );
+			if ( $hier ) {
+				$labels['parent_field_description'] = __( 'Assign a parent term to create a hierarchy. The term Jazz, for example, would be the parent of Bebop and Big Band.' );
+			} else {
+				$labels['parent_field_description'] = null;
+			}
+			$labels['slug_field_description'] = __( 'The &#8220;slug&#8221; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.' );
+			$labels['desc_field_description'] = __( 'The description is not prominent by default; however, some themes may show it.' );
+		}
+
+		self::$wp_default_labels[ (int) $hier ] = (array) $labels;
+		self::$wp_decoded_labels[ (int) $hier ] = array_map( 'html_entity_decode', (array) $labels );
+	}
+
+	/**
+	 * Get WP default labels.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return void
+	 */
+	public static function get_wp_default_labels() {
+		// get tag (non_hierarchical) labels.
+		self::get_wp_default_labels_set( false );
+
+		// get category (hierarchical) labels.
+		self::get_wp_default_labels_set( true );
+	}
+
 }

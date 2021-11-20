@@ -41,7 +41,13 @@ This panel contains all the fields that control how the taxonomy is used within 
 
 There are many labels that can be used for a taxonomy, any and all can be changed here.
 
-Scroll down using the plugin to see them all. 
+Scroll down the page using the plugin to see them all.
+
+The plugin uses core WordPress default values. These depend on whether the taxonomy is hierarchical (Category) or not (Tag).
+
+When creating a non-hierarchical taxonomy, it is recommended to set the hierarchical value to False on the main tab (the labels appear as Category type) and save the taxonomy.
+
+Then modify the taxonomy. Tha labels will appear as Tag type and can be modified appropriately.
 
 ## Rewrite URL
 

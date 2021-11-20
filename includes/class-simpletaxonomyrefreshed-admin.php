@@ -80,6 +80,8 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Protected Constructor
 	 *
+	 * @since 1.0.0
+	 *
 	 * @return void
 	 */
 	final protected function __construct() {
@@ -103,6 +105,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 	/**
 	 * Add custom taxo on dashboard.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -139,7 +143,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Add settings init page
 	 *
-	 * @since 2.0.0
+	 * @since 1.3.0
 	 *
 	 * @return void
 	 */
@@ -1003,7 +1007,7 @@ class SimpleTaxonomyRefreshed_Admin {
 												}
 												?>
 											</select>
-											<span class="description"><?php esc_html_e( "Default <strong>hierarchical</strong> in WordPress are categories. Default post tags WP aren't hierarchical.", 'simple-taxonomy-refreshed' ); ?></span>
+											<span class="description"><?php esc_html_e( "The default hierarchical in WordPress are categories. Default post tags WP aren't hierarchical.", 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
 									<tr valign="top">
@@ -1150,7 +1154,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										);
 										self::option_label(
 											$taxonomy,
-											'name_Field_description',
+											'name_field_description',
 											esc_html__( 'Name Field Description', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'The description of the name field.', 'simple-taxonomy-refreshed' )
 										);
@@ -1206,7 +1210,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										self::option_label(
 											$taxonomy,
 											'slug_field_description',
-											esc_html__( 'Slug G=Field Description', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Slug Field Description', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
@@ -1972,6 +1976,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 	/**
 	 * Allow to export registration CPT with PHP
+	 *
+	 * @since 1.0.0
 	 */
 	private static function check_export_taxonomy() {
 
@@ -2165,6 +2171,8 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Check $_GET datas for delete a taxonomy
 	 *
+	 * @since 1.0.0
+	 *
 	 * @return boolean
 	 */
 	private static function check_delete_taxonomy() {
@@ -2199,6 +2207,8 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Add taxonomy in options
 	 *
+	 * @since 1.0.0
+	 *
 	 * @param array $taxonomy  taxonomy name.
 	 * @return void
 	 */
@@ -2209,6 +2219,14 @@ class SimpleTaxonomyRefreshed_Admin {
 		if ( isset( $current_options['taxonomies'][ $staxo ] ) ) { // User taxo already exist ?
 			wp_die( esc_html__( 'You are trying to add a taxonomy with a name already used by an another taxonomy.', 'simple-taxonomy-refreshed' ) );
 		}
+		// Before saving, remove taxonomy labels that are default.
+		global $strc;
+		foreach ( $taxonomy['labels'] as $key => $label ) {
+			if ( $strc::$wp_decoded_labels[0][ $key ] === $label || $strc::$wp_decoded_labels[1][ $key ] === $label ) {
+				unset( $taxonomy['labels'][ $key ] );
+			}
+		}
+
 		$current_options['taxonomies'][ $staxo ] = $taxonomy;
 
 		update_option( OPTION_STAXO, $current_options );
@@ -2227,6 +2245,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 	/**
 	 * Update taxonomy in options.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $taxonomy  taxonomy name.
 	 * @return void
@@ -2251,6 +2271,14 @@ class SimpleTaxonomyRefreshed_Admin {
 			$new_slug = ( empty( $taxonomy['st_slug'] ) ? $staxo : $taxonomy['st_slug'] );
 		} else {
 			$new_slug = '!impossible!';
+		}
+
+		// Before saving, remove taxonomy labels that are default.
+		global $strc;
+		foreach ( $taxonomy['labels'] as $key => $label ) {
+			if ( $strc::$wp_decoded_labels[0][ $key ] === $label || $strc::$wp_decoded_labels[1][ $key ] === $label ) {
+				unset( $taxonomy['labels'][ $key ] );
+			}
 		}
 
 		$current_options['taxonomies'][ $staxo ] = $taxonomy;
@@ -2284,6 +2312,8 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Update external taxonomy in options.
 	 *
+	 * @since 2.0.0
+	 *
 	 * @param array $taxonomy  taxonomy name.
 	 * @return void
 	 */
@@ -2313,6 +2343,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 	/**
 	 * Delete a taxonomy, and optionally flush contents.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string  $taxonomy        taxonomy name.
 	 * @param boolean $flush_relations whether to delete the object relations/terms.
@@ -2358,6 +2390,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 	/**
 	 * Delete all relationship between objects and terms for a specific taxonomy.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $taxo_name taxonomy name.
 	 * @return boolean
@@ -3224,6 +3258,8 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Function to determine whether the page is being rendered by Block editor.
 	 *
+	 * @since 2.0.0
+	 *
 	 * @return void
 	 */
 	public static function block_editor_active() {
@@ -3232,6 +3268,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 	/**
 	 * Function to return whether the page is being rendered by Block editor.
+	 *
+	 * @since 2.0.0
 	 *
 	 * @return boolean
 	 */
@@ -3254,6 +3292,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 	/**
 	 * Use for build admin taxonomy.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $key  index into object types.
 	 * @return array
@@ -3299,6 +3339,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 	/**
 	 * Use for build selector auto terms.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $key  index into content type.
 	 * @return array|string
