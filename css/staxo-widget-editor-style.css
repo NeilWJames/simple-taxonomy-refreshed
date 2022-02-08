@@ -1,0 +1,29 @@
+/* Style post statuses block elements to be grouped */
+.wp-block-str-widget > .components-base-control,
+.wp-block-str-widget li
+	{
+		margin-bottom: 8px;
+	}
+
+/* But make sure entire block has standard margins */
+.wp-block-simpletaxonomyrefreshed-widget,
+.wp-block [data-type="simpletaxonomyrefreshed-widget"],
+.staxo-terms-cloud,
+.staxo-terms-list
+	{
+		margin-bottom: 24px;
+	}
+
+/* For bug https://github.com/WordPress/gutenberg/issues/27166 */
+.staxo_excludes.staxo_excludes.staxo_excludes select[multiple]
+	{
+		height: auto;
+		padding: 8px;
+	}
+
+.staxo_excludes.staxo_excludes.staxo_excludes .components-input-control__suffix
+	{
+		display: none;
+	}
+
+	}

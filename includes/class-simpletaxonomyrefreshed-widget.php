@@ -501,12 +501,12 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 						'type'    => 'number',
 						'default' => 0,
 					),
-					'excludes'        => array(
-						'type'  => 'array',
-						'items' => array(
-							'type' => 'number',
-						),
-					),
+//					'excludes'        => array(
+//						'type'  => 'array',
+//						'items' => array(
+//							'type' => 'number',
+//						),
+//					),
 					'align'           => array(
 						'type' => 'string',
 					),
