@@ -110,7 +110,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 			ob_start();
 			settings_errors( 'simple-taxonomy-refreshed' );
 			?>
-			<h2><?php esc_html_e( 'Terms import', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h1><?php esc_html_e( 'Terms import', 'simple-taxonomy-refreshed' ); ?></h1>
 			<p><?php esc_html_e( 'Import a list of words as terms of a taxonomy using this page.', 'simple-taxonomy-refreshed' ); ?></p>
 			<form action="<?php echo esc_url( admin_url( 'admin.php?page=' . SimpleTaxonomyRefreshed_Admin_Import::IMPORT_SLUG ) ); ?>" method="post">
 				<p>
@@ -245,20 +245,22 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 		settings_errors( 'simple-taxonomy-refreshed' );
 		?>
 		<div class="wrap">
-			<h2 class="title"><?php esc_html_e( 'Taxonomy Values Migrator', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h1 class="title"><?php esc_html_e( 'Taxonomy Values Migrator', 'simple-taxonomy-refreshed' ); ?></h1>
 			<form id="copyto" action="" method="post">
-				<p><?php esc_html_e( 'Select one "Copy From" taxonomy source and one "To" taxonomy destination and then click on the Copy Terms button.', 'simple-taxonomy-refreshed' ); ?></p>
+				<p id="descCopyFrom"><?php esc_html_e( 'The first column contains a "Copy From" checkbox; one for each taxonomy source. Select one of them to be the source of terms.', 'simple-taxonomy-refreshed' ); ?></p>
+				<p id="descCopyTo"><?php esc_html_e( 'The second column contains a "Copy To" checkbox; one for each taxonomy destination. Select one of them to be where the terms are to be created.', 'simple-taxonomy-refreshed' ); ?></p>
+				<p><?php esc_html_e( 'Once one of each has been selected the Copy Terms button will become active and this should be selected.', 'simple-taxonomy-refreshed' ); ?></p>
 				<p><?php esc_html_e( 'It will simply prepare a list of terms for you to select for import.', 'simple-taxonomy-refreshed' ); ?></p>
 				<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 				<div id="col-container">
 					<table class="widefat" cellspacing="0">
 						<thead>
 							<tr>
-								<th scope="col" id="label" class="manage-column column-name"><?php esc_html_e( 'Copy From', 'simple-taxonomy-refreshed' ); ?></th>
-								<th scope="col" id="label" class="manage-column column-name"><?php esc_html_e( 'To', 'simple-taxonomy-refreshed' ); ?></th>
+								<th scope="col" id="labelFrom" class="manage-column column-name"><?php esc_html_e( 'Copy From', 'simple-taxonomy-refreshed' ); ?></th>
+								<th scope="col" id="labelTo" class="manage-column column-name"><?php esc_html_e( 'Copy To', 'simple-taxonomy-refreshed' ); ?></th>
 								<th scope="col" id="name"  class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-refreshed' ); ?></th>
 								<th scope="col" id="slug"  class="manage-column column-slug"><?php esc_html_e( 'Slug', 'simple-taxonomy-refreshed' ); ?></th>
-								<th scope="col" id="label" class="manage-column column-name"><?php esc_html_e( 'Hierarchical', 'simple-taxonomy-refreshed' ); ?></th>
+								<th scope="col" id="labelHier" class="manage-column column-name"><?php esc_html_e( 'Hierarchical', 'simple-taxonomy-refreshed' ); ?></th>
 							</tr>
 						</thead>
 
@@ -283,20 +285,24 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 							) as $taxonomy ) {
 								?>
 								<tr id="taxonomy-<?php echo esc_attr( $i ); ?>">
-									<td><input type="checkbox" onclick="copy()" class="copy" id="copy[<?php echo esc_attr( $i ); ?>]" name="copy[<?php echo esc_attr( $i ); ?>]"></td>
+									<td><input type="checkbox" onclick="copy()" class="copy" id="copy[<?php echo esc_attr( $i ); ?>]" name="copy[<?php echo esc_attr( $i ); ?>]"
+									aria-describedby="descCopyFrom" aria-labelledby="<?php echo esc_html( $taxonomy->name ); ?>"
+									title="<?php esc_html_e( 'Copy From', 'simple-taxonomy-refreshed' ); ?> checkbox <?php echo esc_html( $taxonomy->label ); ?>"></td>
 									<td>
 									<?php
 									// Can it be copied to?
 									if ( current_user_can( $taxonomy->cap->manage_terms ) ) {
 										?>
-										<input type="checkbox" onclick="oput()" class="oput" id="oput[<?php echo esc_attr( $i ); ?>]" name="oput[<?php echo esc_attr( $i ); ?>]">
+										<input type="checkbox" onclick="oput()" class="oput" id="oput[<?php echo esc_attr( $i ); ?>]" name="oput[<?php echo esc_attr( $i ); ?>]"
+										aria-describedby="descCopyTo" aria-labelledby="<?php echo esc_html( $taxonomy->name ); ?>"
+										title="<?php esc_html_e( 'Copy To', 'simple-taxonomy-refreshed' ); ?> checkbox <?php echo esc_html( $taxonomy->label ); ?>">
 										<?php
 									} else {
 										echo '<br/>';
 									}
 									?>
 									</td>
-									<td class="name column-name"><?php echo esc_html( $taxonomy->label ); ?>
+									<td class="name column-name" id="<?php echo esc_html( $taxonomy->name ); ?>"><?php echo esc_html( $taxonomy->label ); ?></td>
 									<td class="name column-name"><?php echo esc_html( $taxonomy->name ); ?>
 									<input type="hidden" id="name[<?php echo esc_attr( $i ); ?>]" name="name[<?php echo esc_attr( $i ); ?>]" value="<?php echo esc_html( $taxonomy->name ); ?>" /></td>
 									<td><?php echo esc_html( self::get_true_false( $taxonomy->hierarchical ) ); ?></td>

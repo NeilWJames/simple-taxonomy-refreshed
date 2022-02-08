@@ -241,23 +241,24 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 		}
 		?>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Rename Taxonomy Slug', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h1><?php esc_html_e( 'Rename Taxonomy Slug', 'simple-taxonomy-refreshed' ); ?></h1>
 			<p><?php esc_html_e( 'Rename a Taxonomy slug and its terms.', 'simple-taxonomy-refreshed' ); ?></p>
 			<p><?php esc_html_e( 'All usages of these terms will be updated as well.', 'simple-taxonomy-refreshed' ); ?></p>
 			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 			<form action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::RENAME_SLUG ) ); ?>" method="post">
-				<p>
-					<label for="taxonomy"><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></label>
-					<br />
-					<fieldset>
-						<?php
-						foreach ( $taxos as $taxo ) {
-							// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-							echo '<input type="radio" name="taxonomy" class="taxonomy" value="' . $taxo['name'] . '" onclick="c' . $taxo['n'] . '()" > ' . esc_html( $taxo['label'] ) . '<br />';
-						}
-						?>
-					</fieldset>
-				</p>
+				<p><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></p>
+				<fieldset>
+					<div role="radiogroup">
+					<?php
+					foreach ( $taxos as $taxo ) {
+						// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped
+						echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . $taxo['name'] . '" value="' . $taxo['name'] . '" onclick="c' . $taxo['n'] . '()" >';
+						echo '<label for="' . $taxo['name'] . '" >' . esc_html( $taxo['label'] ) . '</label><br />';
+						// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
+					}
+					?>
+					</div>
+				</fieldset>
 				<p><?php esc_html_e( 'Note: Standard WordPress Term caches will be cleared during the Rename process. However other caches may exist and cause some confusion until timed out.', 'simple-taxonomy-refreshed' ); ?></p>
 
 				<p class="submit">
@@ -265,20 +266,24 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 					<?php wp_nonce_field( self::RENAME_SLUG ); ?>
 					<input type="submit" name="<?php echo esc_html( self::RENAME_SLUG ); ?>" id="<?php echo esc_html( self::RENAME_SLUG ); ?>" value="<?php esc_html_e( 'Rename Taxonomy slug', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" disabled />
 				</p>
+				<h2><?php esc_html_e( 'Process Selected Taxonomy', 'simple-taxonomy-refreshed' ); ?></h2>
 				<h3><?php esc_html_e( 'Taxonomy applies to Post Types', 'simple-taxonomy-refreshed' ); ?></h3>
 				<p id="curr_objects">&nbsp;</p>
 				<h3><?php esc_html_e( 'Update Taxonomy slug', 'simple-taxonomy-refreshed' ); ?></h3>
 				<p><?php esc_html_e( 'Existing value: ', 'simple-taxonomy-refreshed' ); ?><span id="curr_slug">&nbsp;</span></p>
-				<p><input type="text" name="new_slug" id="new_slug" onchange="staxo_check()"></p>
+				<p><label for="new_slug" ><?php esc_html_e( 'New Slug:', 'simple-taxonomy-refreshed' ); ?></label>
+				<input type="text" name="new_slug" id="new_slug" onchange="staxo_check()"></p>
 				<p><?php esc_html_e( 'Ensure that you have entered a new value for the slug to enable the Rename.', 'simple-taxonomy-refreshed' ); ?><span id="curr_slug">&nbsp;</span></p>
 				<h3><?php esc_html_e( 'Update Query_var', 'simple-taxonomy-refreshed' ); ?></h3>
 				<p><?php esc_html_e( 'Existing value: ', 'simple-taxonomy-refreshed' ); ?><span id="curr_query">&nbsp;</span></p>
-				<p><input type="text" name="new_query" id="new_query"></p>
+				<p><label for="new_query" ><?php esc_html_e( 'New value:', 'simple-taxonomy-refreshed' ); ?></label>
+				<input type="text" name="new_query" id="new_query"></p>
 				<p><?php esc_html_e( 'If empty then the new Taxonomy slug will be used.', 'simple-taxonomy-refreshed' ); ?></p>
 				<div id="rewrite_block">
 				<h3><?php esc_html_e( 'Update Rewrite slug', 'simple-taxonomy-refreshed' ); ?></h3>
 				<p><?php esc_html_e( 'Existing value: ', 'simple-taxonomy-refreshed' ); ?><span id="curr_rewrite">&nbsp;</span></p>
-				<p><input type="text" name="new_rewrite" id="new_rewrite"></p>
+				<p><label for="new_rewrite" ><?php esc_html_e( 'New value:', 'simple-taxonomy-refreshed' ); ?></label>
+				<input type="text" name="new_rewrite" id="new_rewrite"></p>
 				</div>
 			</form>
 		</div>

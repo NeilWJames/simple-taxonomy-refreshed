@@ -109,7 +109,7 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 							}
 						}
 						update_option( OPTION_STAXO, $config_file );
-						SimpleTaxonomyRefreshed_Admin::refresh_term_cntl_cache();
+						SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache();
 						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'OK. Configuration is restored.', 'simple-taxonomy-refreshed' ), 'updated' );
 						// Change of file may provoke a change of rewrite rules, so trigger it via transient data.
 						set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
@@ -127,7 +127,7 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 	public static function page_config() {
 		?>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Export/Import Configuration', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h1><?php esc_html_e( 'Export/Import Configuration', 'simple-taxonomy-refreshed' ); ?></h1>
 			<p>These options allow you to export or import the entire configuration file.</p>
 			<?php
 			$options = get_option( OPTION_STAXO );

@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/NeilWJames/simple-taxonomy-refreshed
  * Description:       WordPress provides simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code
  *                    Converted, Standardised and Extended from Simple Taxonomy by Amaury Balmer
- * Version:           2.0.0
+ * Version:           2.1.0
  * Requires at least: 4.8
  * Requires PHP:      5.6
  * Author:            Neil James
@@ -16,7 +16,7 @@
  */
 
 /*
-Copyright This Version 2019-21 Neil James (neil@familyjames.com)
+Copyright This Version 2019-22 Neil James (neil@familyjames.com)
 Copyright Original Version 2010-2013 Amaury Balmer (amaury@beapi.fr)
 
 This program is free software; you can redistribute it and/or modify
@@ -87,6 +87,10 @@ function init_staxo_refreshed() {
 
 	// Widget.
 	add_action( 'widgets_init', 'init_staxo_widget' );
+
+	// And its block equivalent.
+	add_action( 'init', 'staxo_widgets_block_init', 99999 );
+
 }
 
 /**
@@ -97,6 +101,16 @@ function init_staxo_refreshed() {
  */
 function init_staxo_widget() {
 	register_widget( 'SimpleTaxonomyRefreshed_Widget' );
+}
+
+/**
+ * Callback to register the widget block.
+ *
+ * Call with low priority to let taxonomies be registered.
+ */
+function staxo_widgets_block_init() {
+	$staxo_widget = new SimpleTaxonomyRefreshed_Widget();
+	$staxo_widget->staxo_widget_block();
 }
 
 /**

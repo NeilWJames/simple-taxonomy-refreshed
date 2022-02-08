@@ -194,7 +194,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 		settings_errors( 'simple-taxonomy-refreshed' );
 		?>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Terms Import', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h1><?php esc_html_e( 'Terms Import', 'simple-taxonomy-refreshed' ); ?></h1>
 			<p><?php esc_html_e( 'Import a list of words as terms of a taxonomy using this tool.', 'simple-taxonomy-refreshed' ); ?></p>
 			<ul style="margin-left:1em; list-style-type:disc"><li><?php esc_html_e( 'Enter one term per line.', 'simple-taxonomy-refreshed' ); ?></li>
 			<li><?php esc_html_e( 'Existing terms can be entered using either the Term Name or its Slug.', 'simple-taxonomy-refreshed' ); ?></li>

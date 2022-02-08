@@ -38,6 +38,7 @@ class SimpleTaxonomyRefreshed_Client {
 		add_action( 'rest_api_init', array( __CLASS__, 'rest_api_init' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'init' ), 1 );
 		add_action( 'init', array( __CLASS__, 'init' ), 1 );
+		add_action( 'init', array( __CLASS__, 'init_2' ), 99999 );
 		add_action( 'admin_init', array( __CLASS__, 'admin_init' ) );
 
 		add_filter( 'the_excerpt', array( __CLASS__, 'the_excerpt' ), 10, 1 );
@@ -128,17 +129,18 @@ class SimpleTaxonomyRefreshed_Client {
 			};
 		}
 
+		// Repeat for Externals. Note, that the external taxonomy may not yet be registered.
 		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
 			foreach ( (array) $options['externals'] as $key => $args ) {
-				$taxonomy = get_taxonomy( $key );
+				if ( isset( $args['st_cb_type'] ) && $args['st_cb_type'] > 0 ) {
+					$taxonomy = get_taxonomy( $key );
 
-				// Update callback if term count callback wanted.
-				if ( '' === $taxonomy->update_count_callback && isset( $args['st_cb_type'] ) && $args['st_cb_type'] > 0 ) {
-					if ( 'new' === $count_method ) {
-						$terms_count = true;
-					} else {
-						global $wp_taxonomies;
-						$wp_taxonomies[ $key ]->update_count_callback = array( __CLASS__, 'term_count_cb_sel' );
+					// Update callback if term count callback wanted.
+					// If not yet registered, go via init_2 to update.
+					if ( ! isset( $taxonomy ) || '' === $taxonomy->update_count_callback ) {
+						if ( 'new' === $count_method ) {
+							$terms_count = true;
+						}
 					}
 				}
 			};
@@ -153,6 +155,40 @@ class SimpleTaxonomyRefreshed_Client {
 		if ( $terms_count ) {
 			// filters the post statuses to implement the taxonomy counts.
 			add_filter( 'update_post_term_count_statuses', array( __CLASS__, 'review_count_statuses' ), 30, 2 );
+		}
+	}
+
+	/**
+	 * Process count for old moethod for external plugin taxonomies.
+	 *
+	 * @return void
+	 */
+	public static function init_2() {
+		// determine whether to invoke old or new count method.
+		global $wp_version;
+		$vers = strpos( $wp_version, '-' );
+		$vers = $vers ? substr( $wp_version, 0, $vers ) : $wp_version;
+		if ( version_compare( $vers, '5.7' ) >= 0 ) {
+			// core method introduced with version 5.7.
+			return;
+		}
+
+		// Only concerned for old method, i.e. version < 5.7.
+		$options = get_option( OPTION_STAXO );
+
+		// Set update method if using default.
+		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
+			foreach ( (array) $options['externals'] as $key => $args ) {
+				if ( isset( $args['st_cb_type'] ) && $args['st_cb_type'] > 0 ) {
+					$taxonomy = get_taxonomy( $key );
+
+					// Update callback if term count callback wanted.
+					if ( '' === $taxonomy->update_count_callback ) {
+						global $wp_taxonomies;
+						$wp_taxonomies[ $key ]->update_count_callback = array( __CLASS__, 'term_count_cb_sel' );
+					}
+				}
+			};
 		}
 	}
 

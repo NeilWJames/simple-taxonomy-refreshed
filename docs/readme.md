@@ -4,8 +4,8 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 * Contributors: nwjames, momo360modena
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
-* Stable tag: 2.0.0
-* Tested up to: 5.8.2
+* Stable tag: 2.1.0
+* Tested up to: 5.9.0
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -77,6 +77,11 @@ You should review the parameters to ensure that your needs are correctly set.
 See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 ## Changelog
+
+* Version 2.1.0
+	* NEW: Taxonomy widget upgraded and extended to be able to be invoked as a block.
+	* FIX: Some a11y issues addressed.
+	* FIX: Term Counts for non_WP External Taxonomies may not work.
 
 * Version 2.0.0
 	* NEW: Taxonomy labels that are default values are not saved with options.

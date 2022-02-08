@@ -2,9 +2,9 @@
 
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
-Tested up to: 5.8.2
+Tested up to: 5.9.0
 Requires PHP: 5.6
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -57,6 +57,11 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 2.1.0
+	* NEW: Taxonomy widget upgraded and extended to be able to be invoked as a block.
+	* FIX: Some a11y issues addressed.
+	* FIX: Term Counts for non_WP External Taxonomies may not work.
 
 * Version 2.0.0
 	* NEW: Taxonomy labels that are default values are not saved with options.

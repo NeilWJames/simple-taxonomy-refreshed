@@ -672,7 +672,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		<div class="wrap">
 			<h2><?php esc_html_e( 'External Taxonomies', 'simple-taxonomy-refreshed' ); ?></h2>
 
-			<h2 class="screen-reader-text"><?php esc_html_e( 'Other taxonomy list', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h2 class="screen-reader-text"><?php esc_html_e( 'External Taxonomies list', 'simple-taxonomy-refreshed' ); ?></h2>
 
 			<div id="col-container">
 				<table class="widefat tag fixed" cellspacing="0">
@@ -957,7 +957,7 @@ class SimpleTaxonomyRefreshed_Admin {
 							<button type="button" class="tablinks active" onclick="openTab(event, 'mainopts')"><?php esc_html_e( 'Main Options', 'simple-taxonomy-refreshed' ); ?></button>
 							<button type="button" class="tablinks" onclick="openTab(event, 'visibility')"><?php esc_html_e( 'Visibility', 'simple-taxonomy-refreshed' ); ?></button>
 							<button type="button" class="tablinks" onclick="openTab(event, 'labels')"><?php esc_html_e( 'Labels', 'simple-taxonomy-refreshed' ); ?></button>
-							<button type="button" class="tablinks" onclick="openTab(event, 'rewrite')"><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" class="tablinks" onclick="openTab(event, 'rewriteURL')"><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-refreshed' ); ?></button>
 							<button type="button" class="tablinks" onclick="openTab(event, 'permissions')"><?php esc_html_e( 'Permissions', 'simple-taxonomy-refreshed' ); ?></button>
 							<button type="button" class="tablinks" onclick="openTab(event, 'rest')"><?php esc_html_e( 'REST', 'simple-taxonomy-refreshed' ); ?></button>
 							<button type="button" class="tablinks" onclick="openTab(event, 'other')"><?php esc_html_e( 'Other', 'simple-taxonomy-refreshed' ); ?></button>
@@ -1327,7 +1327,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="rewrite" class="meta-box-sortabless tabcontent">
+					<div id="rewriteURL" class="meta-box-sortabless tabcontent">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">

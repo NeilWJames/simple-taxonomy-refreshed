@@ -336,7 +336,8 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 		foreach ( $children as $p => $row ) {
 			$dis = ( in_array( (int) $row['term_id'], $term_ids, true ) ? 'disabled' : '' );
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo $indent . '<span class="components-checkbox-control__input-container"><input type="' . $type . '" name="term' . $arr . '" value="' . esc_html( $row['term_id'] ) . '" ' . $dis . '/> ' . esc_html( $row['name'] ) . '</span><br />';
+			echo $indent . '<span class="components-checkbox-control__input-container"><input type="' . $type . '" role="' . $type . '" name="term' . $arr . '" id="tax' . esc_attr( $row['term_id'] ) . '" value="' . esc_attr( $row['term_id'] ) . '" ' . $dis . '/>';
+			echo '<label for="tax_' . esc_attr( $row['term_id'] ) . '" >' . esc_html( $row['name'] ) . '</label></span><br />';
 			self::list_taxonomy_children( $taxonomy, $row['term_id'], $level + 1, $type, $term_ids );
 		}
 	}
@@ -353,12 +354,19 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 		// find the term and its parents.
 		$term_ids = array( (int) $term_id );
 		$term_idp = (int) $term_id;
-		while ( isset( $term_idp ) && get_term( $term_idp )->parent > 0 ) {
-			$term_idp   = get_term( $term_idp )->parent;
+		while ( $term_idp > 0 ) {
 			$term_ids[] = (int) $term_idp;
+			$term_obj   = get_term( $term_idp );
+			$term_idp   = ( $term_obj instanceof WP_Term ? $term_obj->parent : 0 );
 		}
 		ob_start();
+		if ( 'checkbox' === $type ) {
+			$output = '<div role="group" >';
+		} else {
+			$output = '<div role="radiogroup" >';
+		}
 		self::list_taxonomy_children( $taxonomy, 0, 0, $type, $term_ids );
+		$output .= '</div>';
 		return ob_get_clean();
 	}
 
@@ -387,18 +395,27 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 			ARRAY_A
 		);
 
-		$arr = ( 'checkbox' === $type ? '[]' : '' );
-		$i   = 0;
+		if ( 'checkbox' === $type ) {
+			$arr     = '[]';
+			$output .= '<div role="group" >';
+		} else {
+			$arr     = '';
+			$output .= '<div role="radiogroup" >';
+		}
+
+		$i = 0;
 		foreach ( $all_terms as $p => $row ) {
 			$dis = ( (int) $row['term_id'] === $term_id ? 'disabled' : '' );
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			$output .= '<span class="components-checkbox-control__input-container"><input type="' . $type . '" name="term' . $arr . '" value="' . $row['term_id'] . '" ' . $dis . '/> ' . esc_html( $row['name'] ) . '</span><br />';
+			$output .= '<span class="components-checkbox-control__input-container"><input type="' . $type . '" role="' . $type . '" name="term' . $arr . '" id="tax_' . $row['term_id'] . '" value="' . $row['term_id'] . '" ' . $dis . '/> ';
+			$output .= '<label for="tax_' . $row['term_id'] . '" >' . esc_html( $row['name'] ) . '</label></span><br />';
 			$i++;
 		}
 		if ( 0 === $i ) {
 			// user has no taxonomies possible to change.
 			wp_die( esc_html__( 'Sorry. There are no terms in this taxonomy.', 'simple-taxonomy-refreshed' ) );
 		}
+		$output .= '</div>';
 
 		return $output;
 	}
@@ -411,7 +428,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 		settings_errors( 'simple-taxonomy-refreshed' );
 		?>
 		<div class="wrap">
-			<h2 class="title"><?php esc_html_e( 'Terms Merge', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h1 class="title"><?php esc_html_e( 'Terms Merge', 'simple-taxonomy-refreshed' ); ?></h1>
 			<p id="p1" style="font-weight:bold"><?php esc_html_e( 'First select the taxonomy whose terms you wish to merge.', 'simple-taxonomy-refreshed' ); ?></p>
 			<p id="p2"><?php esc_html_e( 'It will retrieve all its terms and you first select the Destination term.', 'simple-taxonomy-refreshed' ); ?></p>
 			<p id="p3"><?php esc_html_e( 'Then you select one or more Source terms to be merged into the Destination term.', 'simple-taxonomy-refreshed' ); ?></p>
@@ -420,31 +437,33 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 			<form id = "merge" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MERGE_SLUG ) ); ?>" method="post">
 				<div id="tax_terms">
-				<p>
-					<label for="taxonomy"><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></label>
-					<br />
-					<fieldset>
-						<?php
-						// build a list of taxonomies that can be processed.
-						$taxos = array();
-						global $wp_taxonomies;
-						foreach ( $wp_taxonomies as $taxo ) {
-							if ( $taxo->public && ( current_user_can( 'manage_options' ) || current_user_can( $taxo->capabilities->manage_terms ) ) ) {
-								$taxos[ $taxo->labels->name ] = $taxo->name;
-							}
-							if ( empty( $taxos ) ) {
-								// user has no taxonomies possible to change.
-								wp_die( esc_html__( 'Sorry. You do not have the necessary permissions to change any taxonomies.', 'simple-taxonomy-refreshed' ) );
-							}
+				<p><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></p>
+				<fieldset>
+					<div role="radiogroup">
+					<?php
+					// build a list of taxonomies that can be processed.
+					$taxos = array();
+					global $wp_taxonomies;
+					foreach ( $wp_taxonomies as $taxo ) {
+						if ( $taxo->public && ( current_user_can( 'manage_options' ) || current_user_can( $taxo->capabilities->manage_terms ) ) ) {
+							$taxos[ $taxo->labels->name ] = $taxo->name;
 						}
-						// sort the list and output.
-						ksort( $taxos );
-						foreach ( $taxos as $taxo => $value ) {
-								// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-								echo '<input type="radio" name="taxonomy" class="taxonomy" value="' . $value . '" onclick="str_t(\'' . $value . '\')" > ' . esc_html( $taxo ) . '<br />';
+						if ( empty( $taxos ) ) {
+							// user has no taxonomies possible to change.
+							wp_die( esc_html__( 'Sorry. You do not have the necessary permissions to change any taxonomies.', 'simple-taxonomy-refreshed' ) );
 						}
-						?>
-					</fieldset>
+					}
+					// sort the list and output.
+					ksort( $taxos );
+					foreach ( $taxos as $taxo => $value ) {
+							// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped
+							echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . $value . '" value="' . $value . '" onclick="str_t(\'' . $value . '\')" >';
+							echo '<label for="' . $value . '" >' . esc_html( $taxo ) . '</label><br />';
+							// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
+					}
+					?>
+					</div>
+				</fieldset>
 				</p>
 				<p><?php esc_html_e( 'Note: Standard WordPress Term caches will be cleared during the Rename process. However other caches may exist and cause some confusion until timed out.', 'simple-taxonomy-refreshed' ); ?></p>
 				<input type="hidden" name="phase" id="phase" value="one" />

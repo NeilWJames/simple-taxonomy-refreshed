@@ -176,7 +176,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 
 		</style>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Taxonomy List Ordering', 'simple-taxonomy-refreshed' ); ?></h2>
+			<h1><?php esc_html_e( 'Taxonomy List Ordering', 'simple-taxonomy-refreshed' ); ?></h1>
 			<p><?php esc_html_e( 'Set the order of different Taxonomies within Posts Admin lists', 'simple-taxonomy-refreshed' ); ?></p>
 			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 			<?php
