@@ -58,6 +58,10 @@ function init_staxo_refreshed() {
 	// Call client classes.
 	require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-client.php';
 	require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-widget.php';
+	global $strw;
+	if ( ! $strw ) {
+		$strw = new SimpleTaxonomyRefreshed_Widget();
+	}
 
 	// Client.
 	global $strc, $stra;
@@ -100,7 +104,8 @@ function init_staxo_refreshed() {
  * @author Neil James
  */
 function init_staxo_widget() {
-	register_widget( 'SimpleTaxonomyRefreshed_Widget' );
+	global $strw;
+	register_widget( $strw );
 }
 
 /**
@@ -109,8 +114,8 @@ function init_staxo_widget() {
  * Call with low priority to let taxonomies be registered.
  */
 function staxo_widgets_block_init() {
-	$staxo_widget = new SimpleTaxonomyRefreshed_Widget();
-	$staxo_widget->staxo_widget_block();
+	global $strw;
+	$strw->staxo_widget_block();
 }
 
 /**

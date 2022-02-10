@@ -100,13 +100,6 @@ registerBlockType( 'simple-taxonomy-refreshed/cloud-widget', {
 			opts.push( { label: staxo_data[key], value: key } );
 		}
 		
-		reset(attributes.taxonomy);
-
-		function reset_excludes(tax) {
-			if ('' == tax) return;
-			alert(tax);
-		}
-
     //Display block preview and UI
 		return createElement('div', {},
 			[
@@ -251,6 +244,26 @@ registerBlockType( 'simple-taxonomy-refreshed/cloud-widget', {
 	},
 	save(){
 		return null; //save has to exist. This all we need.
+	},
+	transforms: {
+		from: [
+			{
+				type: 'block',
+				blocks: [ 'core/legacy-widget' ],
+				isMatch: ( { idBase, instance } ) => {
+					if ( ! instance?.raw ) {
+						// Can't transform if raw instance is not shown in REST API.
+						return false;
+					}
+					return idBase === 'staxonomy';
+				},
+				transform: ( { instance } ) => {
+					return createBlock( 'simple-taxonomy-refreshed/cloud-widget', {
+						name: instance.raw.name,
+					} );
+				},
+			},
+		]
 	},
 } );
 }

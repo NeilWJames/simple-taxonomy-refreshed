@@ -33,6 +33,13 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	);
 
 	/**
+	 * Display the widget�s instance in the REST API )Legacy method).
+	 *
+	 * @var boolean $show_instance_in_rest Let RESR method work.
+	 */
+	public $show_instance_in_rest = true;
+
+	/**
 	 * Constructor
 	 *
 	 * @return void
@@ -42,13 +49,30 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			'staxonomy',
 			__( 'Simple Taxonomy Widget', 'simple-taxonomy-refreshed' ),
 			array(
-				'classname'   => 'simpletaxonomyrefreshed-widget',
-				'description' => __( 'An advanced tag cloud or list for your custom taxonomy!', 'simple-taxonomy-refreshed' ),
+				'classname'             => 'simpletaxonomyrefreshed-widget',
+				'description'           => __( 'An advanced tag cloud or list for your custom taxonomy!', 'simple-taxonomy-refreshed' ),
+				'show_instance_in_rest' => true,
+
 			)
 		);
 
 		// can't i18n outside of a function.
 		self::$defaults['title'] = __( 'Advanced Taxonomy Cloud', 'simple-taxonomy-refreshed' );
+
+		// hide this widget from the Legacy Widget block.
+		add_filter( 'widget_types_to_hide_from_legacy_widget_block', array( __CLASS__, 'hide_staxonomy_widget' ) );
+
+	}
+
+	/**
+	 * Don't expose widget to Legacy Widget block..
+	 *
+	 * @param string[] $widget_types  Widgets to hide.
+	 * @return string[]
+	 */
+	public function hide_staxonomy_widget( $widget_types ) {
+		$widget_types[] = 'staxonomy';
+		return $widget_types;
 	}
 
 	/**
@@ -307,7 +331,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 					'cloud' => __( 'Cloud', 'simple-taxonomy-refreshed' ),
 					'list'  => __( 'List', 'simple-taxonomy-refreshed' ),
 				) as $optval => $option ) {
-					echo '<option ' . esc_attr( selected( $instance['type'], $optval, false ) ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
+					echo '<option ' . esc_attr( selected( $instance['disptype'], $optval, false ) ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
 				}
 				?>
 			</select>
@@ -501,12 +525,14 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 						'type'    => 'number',
 						'default' => 0,
 					),
-//					'excludes'        => array(
-//						'type'  => 'array',
-//						'items' => array(
-//							'type' => 'number',
-//						),
-//					),
+					// phpcs:disable
+					// 'excludes'      => array(
+					// 'type'  => 'array',
+					// 'items' => array(
+					// 'type' => 'number',
+					// ),
+					// ),
+					// phpcs:enable
 					'align'           => array(
 						'type' => 'string',
 					),
@@ -566,7 +592,8 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		$instance['order'] = $instance['ordering'];
 		unset( $instance['ordering'] );
 
-		$output = $this->widget_gen( $args, $instance );
+		global $strw;
+		$output = $strw->widget_gen( $args, $instance );
 		return $output;
 	}
 }
