@@ -129,7 +129,6 @@ registerBlockType( 'simple-taxonomy-refreshed/cloud-widget', {
 									options: opts,
 									onChange: function( val ) {
 										setAttributes( { taxonomy: val } );
-										reset_excludes(val);
 									}
 								}),
 								// Radio control for alignment options. .
