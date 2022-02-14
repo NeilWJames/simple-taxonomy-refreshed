@@ -59,20 +59,6 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		// can't i18n outside of a function.
 		self::$defaults['title'] = __( 'Advanced Taxonomy Cloud', 'simple-taxonomy-refreshed' );
 
-		// hide this widget from the Legacy Widget block.
-		add_filter( 'widget_types_to_hide_from_legacy_widget_block', array( __CLASS__, 'hide_staxonomy_widget' ) );
-
-	}
-
-	/**
-	 * Don't expose widget to Legacy Widget block..
-	 *
-	 * @param string[] $widget_types  Widgets to hide.
-	 * @return string[]
-	 */
-	public function hide_staxonomy_widget( $widget_types ) {
-		$widget_types[] = 'staxonomy';
-		return $widget_types;
 	}
 
 	/**

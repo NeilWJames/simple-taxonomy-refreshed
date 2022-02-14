@@ -16,7 +16,7 @@
  */
 
 /*
-Copyright This Version 2019-22 Neil James (neil@familyjames.com)
+Copyright This Version 2019-21 Neil James (neil@familyjames.com)
 Copyright Original Version 2010-2013 Amaury Balmer (amaury@beapi.fr)
 
 This program is free software; you can redistribute it and/or modify
@@ -92,6 +92,9 @@ function init_staxo_refreshed() {
 	// Widget.
 	add_action( 'widgets_init', 'init_staxo_widget' );
 
+	// hide this widget from the Legacy Widget block.
+	add_filter( 'widget_types_to_hide_from_legacy_widget_block', 'hide_staxonomy_widget' );
+
 	// And its block equivalent.
 	add_action( 'init', 'staxo_widgets_block_init', 99999 );
 
@@ -109,9 +112,23 @@ function init_staxo_widget() {
 }
 
 /**
- * Callback to register the widget block.
+ * Don't expose widget to Legacy Widget block..
+ *
+ * @param string[] $widget_types  Widgets to hide.
+ * @return string[]
+ */
+function hide_staxonomy_widget( $widget_types ) {
+	$widget_types[] = 'staxonomy';
+	return $widget_types;
+}
+
+/**
+ * Register the widget block.
  *
  * Call with low priority to let taxonomies be registered.
+ * Do it outside the WP_Widget.
+ *
+ * @since 3.3.0
  */
 function staxo_widgets_block_init() {
 	global $strw;
