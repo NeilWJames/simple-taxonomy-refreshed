@@ -61,7 +61,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 * Version 2.1.0
 	* NEW: Taxonomy widget upgraded and extended to be able to be invoked as a block.
 	* FIX: Some a11y issues addressed.
-	* FIX: Term Counts for non_WP External Taxonomies may not work.
+	* FIX: Term Counts for non_WP External Taxonomies may not have worked.
 
 * Version 2.0.0
 	* NEW: Taxonomy labels that are default values are not saved with options.
