@@ -16,7 +16,7 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 	 *
 	 * Called for every defined test
 	 */
-	public function setUp() {
+	public function setUp(): void {
 
 		parent::setUp();
 
