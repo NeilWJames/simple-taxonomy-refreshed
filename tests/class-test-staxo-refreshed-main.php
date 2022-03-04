@@ -15,8 +15,10 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 	 * Setup Initial Testing Environment
 	 *
 	 * Called for every defined test
+	 *
+	 * @return void
 	 */
-	public function setUp(): void {
+	public function setUp() {
 
 		parent::setUp();
 
