@@ -1,7 +1,7 @@
 name: Generate POT file
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch
 
 jobs:
   generate-pot:
