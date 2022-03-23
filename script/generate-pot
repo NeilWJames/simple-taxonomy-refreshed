@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+VERSION=$(grep -i "Stable tag:" readme.txt | awk -F' ' '{print $NF}' | tr -d '\r')
+
+wp-pot \
+  --domain simple-taxonomy-refreshed \
+  --dest-file languages/simple-taxonomy-refreshed.pot \
+  --src "simple-taxonomy-refreshed.php,includes/**.php" \
+  --package "simple-taxonomy-refreshed $VERSION" --relative-to "." \
+  --comment-keyword "translators:"
