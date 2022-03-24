@@ -8,6 +8,5 @@ wp-pot \
   --domain simple-taxonomy-refreshed \
   --dest-file languages/simple-taxonomy-refreshed.pot \
   --src "includes/*.php" \ 
-  --package "simple-taxonomy-refreshed $VERSION" \
-  --relative-to "." \
+  --package "simple-taxonomy-refreshed $VERSION" --relative-to "." \
   --comment-keyword "translators:"
