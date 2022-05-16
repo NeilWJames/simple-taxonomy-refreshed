@@ -43,6 +43,7 @@ class SimpleTaxonomyRefreshed_Client {
 
 		add_filter( 'the_excerpt', array( __CLASS__, 'the_excerpt' ), 10, 1 );
 		add_filter( 'the_content', array( __CLASS__, 'the_content' ), 10, 1 );
+		add_shortcode( 'str_post_terms', array( __CLASS__, 'the_terms' ), 10, 1 );
 		add_filter( 'the_category_rss', array( __CLASS__, 'the_category_feed' ), 10, 2 );
 
 		add_action( 'template_redirect', array( __CLASS__, 'template_redirect' ) );
@@ -433,10 +434,11 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @since 1.0.0
 	 *
 	 * @param string $content content of the content or excerpt.
-	 * @param string $type    content or excerpt selector.
+	 * @param string $type    content, excerpt or arbitrary selector.
+	 * @param string $tax     taxonomy slug for arbitrary call (optional)
 	 * @return string
 	 */
-	public static function taxonomy_filter( $content, $type ) {
+	public static function taxonomy_filter( $content, $type, $tax = '' ) {
 		global $post;
 
 		if ( ! isset( $post->post_type ) ) {
@@ -453,9 +455,13 @@ class SimpleTaxonomyRefreshed_Client {
 		}
 
 		foreach ( (array) $options['taxonomies'] as $taxonomy ) {
+			// bypass if we want only a specific taxonomy and this isn't it.
+			if ( '' !== $tax && $tax !== $taxonomy['name'] ) {
+				continue;
+			}
 			// Does the post_type uses this taxonomy.
-			if ( isset( $taxonomy['auto'] ) && ( ! empty( $taxonomy['objects'] ) ) && in_array( $post->post_type, $taxonomy['objects'], true ) ) {
-				if ( 'both' === $taxonomy['auto'] || $type === $taxonomy['auto'] ) {
+			if ( ( 'arbitrary' === $type || isset( $taxonomy['auto'] ) ) && ( ! empty( $taxonomy['objects'] ) ) && in_array( $post->post_type, $taxonomy['objects'], true ) ) {
+				if ( 'both' === $taxonomy['auto'] || $type === $taxonomy['auto'] || 'arbitrary' === $type ) {
 					// Migration case - Not updated yet.
 					if ( ! array_key_exists( 'st_before', $taxonomy ) ) {
 						$taxonomy['st_before'] = '';
@@ -512,6 +518,25 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static function the_excerpt( $content = '' ) {
 		return self::taxonomy_filter( $content, 'excerpt' );
+	}
+
+	/**
+	 * Meta function for call filter taxonomy with arbitrary context.
+	 *
+	 * @since 2.2.0
+	 *
+	 * @param array $atts shortcode attributes (not currently used).
+	 * @return string
+	 */
+	public static function the_terms( $atts ) {
+		$tax = shortcode_atts(
+			array(
+				'tax' => '',
+			),
+			$atts
+		);
+		write_log( 'shortcode called' );
+		return self::taxonomy_filter( '', 'arbitrary', $tax['tax'] );
 	}
 
 	/**
