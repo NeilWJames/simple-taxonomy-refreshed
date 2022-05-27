@@ -604,19 +604,10 @@ class SimpleTaxonomyRefreshed_Client {
 		$taxonomies = self::get_taxonomies();
 		wp_add_inline_script( 'staxo-terms-editor', 'const staxo_own_data = ' . wp_json_encode( $taxonomies ), 'before' );
 
-		$index_css = 'css/staxo-terms-editor-style' . $suffix . '.css';
-		wp_register_style(
-			'staxo-terms-editor-style',
-			plugins_url( $index_css, __DIR__ ),
-			array( 'wp-edit-blocks' ),
-			filemtime( "$dir/$index_css" )
-		);
-
 		register_block_type(
 			'simple-taxonomy-refreshed/post-terms',
 			array(
 				'editor_script'   => 'staxo-terms-editor',
-				'editor_style'    => 'staxo-terms-editor-style',
 				'render_callback' => array( __CLASS__, 'the_terms' ),
 				'attributes'      => array(
 					'tax'             => array(

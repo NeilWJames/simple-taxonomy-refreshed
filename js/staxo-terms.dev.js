@@ -58,7 +58,7 @@ registerBlockType( 'simple-taxonomy-refreshed/post-terms', {
 		const setAttributes =  props.setAttributes;
 
 		var opts = [];
-		opts.push( { label: "None", value: "" } );
+		opts.push( { label: "All Custom", value: "" } );
 		for ( key in staxo_own_data ) {
 			opts.push( { label: staxo_data[key], value: key } );
 		}
