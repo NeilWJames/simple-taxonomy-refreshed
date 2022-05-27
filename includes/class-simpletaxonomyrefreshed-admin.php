@@ -75,6 +75,30 @@ class SimpleTaxonomyRefreshed_Admin {
 			);
 			self::$placeholder = true;
 		}
+
+		$screen = get_current_screen();
+
+		if ( 'toplevel_page_staxo_settings' === $screen->id ) {
+			// enqueue on staxo-settings page only.
+			$dir      = dirname( __DIR__ );
+			$suffix   = ( WP_DEBUG ) ? '.dev' : '';
+			$index_js = 'js/staxo-admin' . $suffix . '.js';
+			wp_enqueue_script(
+				'staxo_admin',
+				plugins_url( $index_js, __DIR__ ),
+				array(),
+				filemtime( "$dir/$index_js" ),
+				true
+			);
+
+			$index_css = 'css/staxo-admin-style' . $suffix . '.css';
+			wp_enqueue_style(
+				'staxo-admin-style',
+				plugins_url( $index_css, __DIR__ ),
+				array(),
+				filemtime( "$dir/$index_css" )
+			);
+		}
 	}
 
 	/**
@@ -369,7 +393,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		// Expect to sanitize the data before calling.
 		// phpcs:disable  WordPress.Security.EscapeOutput
 		?>
-		<tr valign="top">
+		<tr>
 			<th scope="row"><label for="<?php echo $name; ?>"><?php echo $label; ?></label></th>
 			<td>
 				<select name="<?php echo $name; ?>" id="<?php echo $name; ?>">
@@ -400,7 +424,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		// Sanitize the data before calling.
 		// phpcs:disable  WordPress.Security.EscapeOutput
 		?>
-		<tr valign="top">
+		<tr>
 			<th scope="row"><label for="<?php echo $name; ?>"><?php echo $label; ?></label></th>
 			<td>
 				<input name="<?php echo $name; ?>" type="text" id="<?php echo $name; ?>" value="<?php echo esc_attr( $taxonomy[ $name ] ); ?>" class="regular-text" />
@@ -425,7 +449,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		// Expect to sanitize the data before calling.
 		// phpcs:disable  WordPress.Security.EscapeOutput
 		?>
-		<tr valign="top">
+		<tr>
 			<th scope="row"><label for="labels-<?php echo $name; ?>"><?php echo $label; ?></label></th>
 			<td>
 				<input name="labels[<?php echo $name; ?>]" type="text" id="labels-<?php echo $name; ?>" value="<?php echo esc_attr( $taxonomy['labels'][ $name ] ); ?>" class="regular-text" />
@@ -453,7 +477,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		// Sanitize the data before calling.
 		// phpcs:disable  WordPress.Security.EscapeOutput
 		?>
-		<tr valign="top">
+		<tr>
 			<th scope="row"><label for="<?php echo $name; ?>"><?php echo $label; ?></label></th>
 			<td>
 				<input name="capabilities[<?php echo $name; ?>]" type="text" id="<?php echo $name; ?>" value="<?php echo esc_attr( $taxonomy['capabilities'][ $name ] ); ?>" class="regular-text" />
@@ -462,6 +486,23 @@ class SimpleTaxonomyRefreshed_Admin {
 		</tr>
 		<?php
 		// phpcs:enable  WordPress.Security.EscapeOutput
+	}
+
+
+	/**
+	 * Helper function to display the post status checkboxes.
+	 *
+	 * @param string $status_name  post_status parameter name.
+	 * @param bool   $status_sel   is status selected.
+	 * @param string $status_label label of the status.
+	 * @return void
+	 */
+	private static function option_check_status( $status_name, $status_sel, $status_label ) {
+		echo '<label class="inline">';
+		echo '<input type="checkbox" id="' . esc_attr( $status_name ) . '" name="' . esc_attr( $status_name );
+		echo '" role="checkbox" aria-checked="' . ( $status_sel ? 'true' : 'false' ) . '" tabindex="0" ' . checked( true, $status_sel, false );
+		echo ' onclick="ariaChk(event)" />';
+		echo esc_html( $status_label ) . '</label><br/>';
 	}
 
 
@@ -554,6 +595,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				$tax_obj                              = get_taxonomy( $tax_name );
 				$taxonomy['labels']                   = (array) $tax_obj->labels;
 				$taxonomy['objects']                  = (array) $tax_obj->object_type;
+				$taxonomy['hierarchical']             = $tax_obj->hierarchical;
 				$taxonomy['st_update_count_callback'] = $tax_obj->update_count_callback;
 			}
 			self::page_form( $taxonomy, false );
@@ -579,8 +621,8 @@ class SimpleTaxonomyRefreshed_Admin {
 				</p>
 			</div>
 
-			<div id="col-container">
-				<table class="widefat tag fixed" cellspacing="0">
+			<div id="col-container-custom">
+				<table class="wp-list-table widefat tag fixed striped table-view-list" cellspacing="0">
 					<thead>
 						<tr>
 							<th scope="col" id="labell" class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-refreshed' ); ?></th>
@@ -604,34 +646,35 @@ class SimpleTaxonomyRefreshed_Admin {
 						</tr>
 					</tfoot>
 
-					<tbody id="the-list" class="list:taxonomies">
+					<tbody id="the-list-custom" class="list:taxonomies">
 						<?php
 						if ( false === $current_options || empty( $current_options['taxonomies'] ) ) {
 							echo '<tr><td colspan="3">' . esc_html__( 'No custom taxonomy.', 'simple-taxonomy-refreshed' ) . '</td></tr>';
 						} else {
 							$class = 'alternate';
 							$i     = 0;
-							foreach ( (array) $current_options['taxonomies'] as $_t_name => $_t ) :
+							foreach ( (array) $current_options['taxonomies'] as $_t_name => $_t ) {
 								$i++;
 								$class = ( 'alternate' === $class ) ? '' : 'alternate';
+								$lname = $_t['labels']['name'];
 								// phpcs:disable  WordPress.Security.EscapeOutput
 								// translators: %s is the taxonomy name.
-								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), $_t['labels']['name'] ) );
+								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), $lname ) );
 								// translators: %s is the taxonomy name.
-								$del_msg = esc_js( sprintf( __( "You are about to delete this taxonomy '%s'\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-refreshed' ), $_t['labels']['name'] ) );
+								$del_msg = esc_js( sprintf( __( "You are about to delete this taxonomy '%s'\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-refreshed' ), $lname ) );
 								// translators: %s is the taxonomy name.
-								$dfl_msg = esc_js( sprintf( __( "You are about to delete and flush this taxonomy '%s' and all relations.\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-refreshed' ), $_t['labels']['name'] ) );
+								$dfl_msg = esc_js( sprintf( __( "You are about to delete and flush this taxonomy '%s' and all relations.\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-refreshed' ), $lname ) );
 								// phpcs:enable  WordPress.Security.EscapeOutput
 								?>
 								<tr id="taxonomy-<?php echo esc_attr( $i ); ?>" class="<?php esc_attr( $class ); ?>">
-									<td class="name column-name">
-										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php esc_attr( $edit_msg ); ?>"><?php echo esc_html( stripslashes( $_t['labels']['name'] ) ); ?></a></strong>
+									<td class="name column-name has-row-actions column-primary page-title">
+										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php esc_attr( $edit_msg ); ?>" aria-label="<?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php echo esc_html( stripslashes( $lname ) ); ?></a></strong>
 										<br />
 										<div class="row-actions">
-											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>"><?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?></a> | </span>
-											<span class="export"><a class="export_php-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=export_php&amp;taxonomy_name=' . esc_attr( $_t_name ), 'staxo_export_php-' . $_t_name ) ); ?>"><?php esc_html_e( 'Export PHP', 'simple-taxonomy-refreshed' ); ?></a> | </span>
-											<span class="delete"><a class="delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=delete&amp;taxonomy_name=' . $_t_name, 'staxo_delete_' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $del_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Delete', 'simple-taxonomy-refreshed' ); ?></a> | </span>
-											<span class="delete"><a class="flush-delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=flush-delete&amp;taxonomy_name=' . $_t_name, 'staxo_flush_delete-' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $dfl_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Flush & Delete', 'simple-taxonomy-refreshed' ); ?></a></span>
+											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" aria-label="<?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<span class="export"><a class="export_php-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=export_php&amp;taxonomy_name=' . esc_attr( $_t_name ), 'staxo_export_php-' . $_t_name ) ); ?>" aria-label="<?php esc_html_e( 'Export PHP', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php esc_html_e( 'Export PHP', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<span class="delete"><a class="delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=delete&amp;taxonomy_name=' . $_t_name, 'staxo_delete_' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $del_msg ); ?>' ) ) { return true;}return false;" aria-label="<?php esc_html_e( 'Delete', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php esc_html_e( 'Delete', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<span class="delete"><a class="flush-delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=flush-delete&amp;taxonomy_name=' . $_t_name, 'staxo_flush_delete-' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $dfl_msg ); ?>' ) ) { return true;}return false;" aria-label="<?php esc_html_e( 'Flush & Delete', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php esc_html_e( 'Flush & Delete', 'simple-taxonomy-refreshed' ); ?></a></span>
 										</div>
 									</td>
 									<td><?php echo esc_html( $_t['name'] ); ?></td>
@@ -658,7 +701,7 @@ class SimpleTaxonomyRefreshed_Admin {
 									<td><?php echo esc_html( self::get_true_false( ( isset( $_t['show_in_rest'] ) ? $_t['show_in_rest'] : 1 ) ) ); ?></td>
 								</tr>
 								<?php
-							endforeach;
+							}
 						}
 						?>
 					</tbody>
@@ -674,8 +717,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 			<h2 class="screen-reader-text"><?php esc_html_e( 'External Taxonomies list', 'simple-taxonomy-refreshed' ); ?></h2>
 
-			<div id="col-container">
-				<table class="widefat tag fixed" cellspacing="0">
+			<div id="col-container-external">
+				<table class="wp-list-table widefat tag fixed striped table-view-list" cellspacing="0">
 					<thead>
 						<tr>
 							<th scope="col" id="labell" class="manage-column column-name"><?php esc_html_e( 'Label', 'simple-taxonomy-refreshed' ); ?></th>
@@ -695,7 +738,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						</tr>
 					</tfoot>
 
-					<tbody id="the-list" class="list:taxonomies">
+					<tbody id="the-list-external" class="list:taxonomies">
 						<?php
 						global $wp_taxonomies;
 
@@ -711,22 +754,23 @@ class SimpleTaxonomyRefreshed_Admin {
 						} else {
 							$class = 'alternate';
 							$i     = 0;
-							foreach ( (array) $others as $_t_name => $_t ) :
+							foreach ( (array) $others as $_t_name => $_t ) {
 								$i++;
 								$class = ( 'alternate' === $class ) ? '' : 'alternate';
+								$lname = $_t->labels->name;
 								// phpcs:disable  WordPress.Security.EscapeOutput
 								// translators: %s is the taxonomy name.
-								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), $_t->labels->name ) );
+								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), $lname ) );
 								// phpcs:enable  WordPress.Security.EscapeOutput
 								?>
-								<tr id="taxonomy-<?php echo esc_attr( $i ); ?>" class="<?php esc_attr( $class ); ?>">
-									<td class="name column-name">
-										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php esc_attr( $edit_msg ); ?>"><?php echo esc_html( stripslashes( $_t->labels->name ) ); ?></a></strong>
+								<tr id="external-<?php echo esc_attr( $i ); ?>" class="<?php esc_attr( $class ); ?>">
+									<td class="name column-name has-row-actions column-primary page-title">
+										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php esc_attr( $edit_msg ); ?>" aria-label="<?php esc_html_e( 'Extra Functions', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php echo esc_html( stripslashes( $lname ) ); ?></a></strong>
 										<br />
 										<div class="row-actions">
-											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>"><?php esc_html_e( 'Extra Functions', 'simple-taxonomy-refreshed' ); ?></a> | </span>
+											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" aria-label="<?php esc_html_e( 'Extra Functions', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php esc_html_e( 'Extra Functions', 'simple-taxonomy-refreshed' ); ?></a></span>
 											<?php if ( isset( $current_options['externals'] ) && array_key_exists( $_t_name, $current_options['externals'] ) ) { ?>
-											<span class="delete"><a class="delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=delete&amp;taxonomy_name=' . $_t_name, 'staxo_delete_' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $del_msg ); ?>' ) ) { return true;}return false;"><?php esc_html_e( 'Delete Extra Functions', 'simple-taxonomy-refreshed' ); ?></a></span>
+											<span class="delete"> | <a class="delete-taxonomy" href="<?php echo esc_url( wp_nonce_url( esc_url( $admin_url ) . '&amp;action=delete&amp;taxonomy_name=' . $_t_name, 'staxo_delete_' . esc_attr( $_t_name ) ) ); ?>" onclick="if ( confirm( '<?php echo esc_html( $del_msg ); ?>' ) ) { return true;}return false;" aria-label="<?php esc_html_e( 'Delete Extra Functions', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php esc_html_e( 'Delete Extra Functions', 'simple-taxonomy-refreshed' ); ?></a></span>
 											<?php } ?>
 										</div>
 									</td>
@@ -751,7 +795,7 @@ class SimpleTaxonomyRefreshed_Admin {
 									<td><?php echo esc_html( self::get_true_false( (int) $_t->show_in_rest ) ); ?></td>
 								</tr>
 								<?php
-							endforeach;
+							}
 						}
 						?>
 					</tbody>
@@ -898,45 +942,6 @@ class SimpleTaxonomyRefreshed_Admin {
 		$taxonomy['st_graphql_plural']  = ( isset( $taxonomy['graphql_plural'] ) ? $taxonomy['graphql_plural'] : '' );
 		?>
 
-		<style>
-		/* Style the tab */
-		.tab {
-			overflow: hidden;
-			border: 1px solid #ccc;
-			background-color: #f1f1f1;
-		}
-
-		/* Style the buttons inside the tab */
-		.tab button {
-			background-color: inherit;
-			float: left;
-			border: none;
-			outline: none;
-			cursor: pointer;
-			padding: 12px 16px;
-			transition: 0.3s;
-			font-size: 15px;
-		}
-
-		/* Change background color of buttons on hover */
-		.tab button:hover {
-			background-color: #ccc;
-		}
-
-		/* Create an active/current tablink class */
-		.tab button.active {
-			background-color: #ddd;
-		}
-
-		/* Style the tab content */
-		.tabcontent {
-			display: none;
-			padding: 6px 12px;
-			border: 1px solid #ccc;
-			border-top: none;
-		}
-		</style>
-
 		<form id="addtag" method="post" action="<?php echo esc_url( $admin_url ); ?>">
 			<input type="hidden" name="action" value="<?php echo esc_html( $_action ); ?>" />
 			<?php wp_nonce_field( $nonce_field ); ?>
@@ -952,32 +957,32 @@ class SimpleTaxonomyRefreshed_Admin {
 
 			<div id="poststuff" class="metabox-holder">
 				<div id="post-body-content">
-					<div class="tab">
+					<div role="tablist">
 						<?php if ( $custom ) { ?>
-							<button type="button" class="tablinks active" onclick="openTab(event, 'mainopts')"><?php esc_html_e( 'Main Options', 'simple-taxonomy-refreshed' ); ?></button>
-							<button type="button" class="tablinks" onclick="openTab(event, 'visibility')"><?php esc_html_e( 'Visibility', 'simple-taxonomy-refreshed' ); ?></button>
-							<button type="button" class="tablinks" onclick="openTab(event, 'labels')"><?php esc_html_e( 'Labels', 'simple-taxonomy-refreshed' ); ?></button>
-							<button type="button" class="tablinks" onclick="openTab(event, 'rewriteURL')"><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-refreshed' ); ?></button>
-							<button type="button" class="tablinks" onclick="openTab(event, 'permissions')"><?php esc_html_e( 'Permissions', 'simple-taxonomy-refreshed' ); ?></button>
-							<button type="button" class="tablinks" onclick="openTab(event, 'rest')"><?php esc_html_e( 'REST', 'simple-taxonomy-refreshed' ); ?></button>
-							<button type="button" class="tablinks" onclick="openTab(event, 'other')"><?php esc_html_e( 'Other', 'simple-taxonomy-refreshed' ); ?></button>
-							<button type="button" class="tablinks" onclick="openTab(event, 'wpgraphql')"><?php esc_html_e( 'WPGraphQL', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" role="tab" aria-controls="mainopts" aria-selected="true"><?php esc_html_e( 'Main Options', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" role="tab" aria-controls="visibility"><?php esc_html_e( 'Visibility', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" role="tab" aria-controls="labels"><?php esc_html_e( 'Labels', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" role="tab" aria-controls="rewriteURL"><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" role="tab" aria-controls="permissions"><?php esc_html_e( 'Permissions', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" role="tab" aria-controls="rest"><?php esc_html_e( 'REST', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" role="tab" aria-controls="other"><?php esc_html_e( 'Other', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" role="tab" aria-controls="wpgraphql"><?php esc_html_e( 'WPGraphQL', 'simple-taxonomy-refreshed' ); ?></button>
 						<?php } else { ?>
-							<button type="button" class="tablinks active" onclick="openTab(event, 'wpgraphql')"><?php esc_html_e( 'WPGraphQL', 'simple-taxonomy-refreshed' ); ?></button>
+							<button type="button" role="tab" aria-controls="wpgraphql" aria-selected="true"><?php esc_html_e( 'WPGraphQL', 'simple-taxonomy-refreshed' ); ?></button>
 						<?php } ?>
-						<button type="button" class="tablinks" onclick="openTab(event, 'adm_filter')"><?php esc_html_e( 'Admin List Filter', 'simple-taxonomy-refreshed' ); ?></button>
-						<button type="button" class="tablinks" onclick="openTab(event, 'callback')"><?php esc_html_e( 'Term Count', 'simple-taxonomy-refreshed' ); ?></button>
-						<button type="button" class="tablinks" onclick="openTab(event, 'countt')"><?php esc_html_e( 'Term Control', 'simple-taxonomy-refreshed' ); ?></button>
+						<button type="button" role="tab" aria-controls="adm_filter"><?php esc_html_e( 'Admin List Filter', 'simple-taxonomy-refreshed' ); ?></button>
+						<button type="button" role="tab" aria-controls="callback"><?php esc_html_e( 'Term Count', 'simple-taxonomy-refreshed' ); ?></button>
+						<button type="button" role="tab" aria-controls="countt"><?php esc_html_e( 'Term Control', 'simple-taxonomy-refreshed' ); ?></button>
 					</div>
 
 					<?php if ( $custom ) { ?>
-					<div id="mainopts" class="meta-box-sortabless tabcontent" style="display: block;">
+					<div id="mainopts" class="meta-box-sortabless" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Main Options', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
-									<tr valign="top">
+									<tr">
 										<th scope="row"><label for="name"><?php esc_html_e( 'Name (slug)', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<input name="name" type="text" id="name" onchange="checkNameSet(event)" value="<?php echo esc_attr( $taxonomy['name'] ); ?>" class="regular-text"
@@ -995,7 +1000,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											</span>
 										</td>
 									</tr>
-									<tr valign="top">
+									<tr>
 										<th scope="row"><label for="hierarchical"><?php esc_html_e( 'Hierarchical ?', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<select name="hierarchical" id="hierarchical">
@@ -1010,9 +1015,9 @@ class SimpleTaxonomyRefreshed_Admin {
 											<span class="description"><?php esc_html_e( "The default hierarchical in WordPress are categories. Default post tags WP aren't hierarchical.", 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
-									<tr valign="top">
-										<th scope="row"><label><?php esc_html_e( 'Post types', 'simple-taxonomy-refreshed' ); ?></label></th>
-										<td>
+									<tr>
+										<th scope="row"><label id="post_types"><?php esc_html_e( 'Post types', 'simple-taxonomy-refreshed' ); ?></label></th>
+										<td><div role="group" aria-labelledby="post_types" aria-describedby="post_types_sel">
 											<?php
 											if ( true === $edit && is_array( $taxonomy['objects'] ) ) {
 												$objects = $taxonomy['objects'];
@@ -1021,18 +1026,20 @@ class SimpleTaxonomyRefreshed_Admin {
 											}
 											$i = 0;
 											foreach ( self::get_object_types() as $type ) {
+												$show = in_array( $type->name, $objects, true );
 												echo '<label class="inline">';
-												echo '<input type="checkbox" ' . checked( true, in_array( $type->name, $objects, true ), false );
+												echo '<input type="checkbox" role="checkbox" aria-checked="' . ( $show ? 'true' : 'false' );
+												echo '" tabindex="0" ' . checked( true, $show, false );
 												echo ' onclick="linkAdm(event, ' . esc_attr( $i ) . ')"';
 												echo ' name="objects[]" value="' . esc_attr( $type->name ) . '" />';
 												echo esc_attr( $type->label ) . '</label>' . "\n";
 												$i++;
 											}
 											?>
-											<span class="description"><?php esc_html_e( 'You can add this taxonomy to builtin or custom post types.', 'simple-taxonomy-refreshed' ); ?></span>
+											</div><span class="description" id="post_types_sel"><?php esc_html_e( 'Select which builtin or custom post types will use this taxonomy.', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
-									<tr valign="top">
+									<tr>
 										<th scope="row"><label for="auto"><?php esc_html_e( 'Display Terms with Posts', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<select name="auto" id="auto">
@@ -1072,7 +1079,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="visibility" class="meta-box-sortabless tabcontent">
+					<div id="visibility" class="meta-box-sortabless is-hidden" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Visibility', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
@@ -1139,7 +1146,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="labels" class="meta-box-sortabless tabcontent">
+					<div id="labels" class="meta-box-sortabless is-hidden" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Labels Wording', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
@@ -1327,7 +1334,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="rewriteURL" class="meta-box-sortabless tabcontent">
+					<div id="rewriteURL" class="meta-box-sortabless is-hidden" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Rewrite URL', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
@@ -1358,7 +1365,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											esc_html__( 'Either hierarchical rewrite tag or not.', 'simple-taxonomy-refreshed' )
 										);
 									?>
-									<tr valign="top">
+									<tr>
 										<th scope="row"><label for="st_ep_mask_s"><?php esc_html_e( 'EP_MASK', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<select name="st_ep_mask_s[]" id="st_ep_mask_s" multiple size="6">
@@ -1388,7 +1395,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="permissions" class="meta-box-sortabless tabcontent">
+					<div id="permissions" class="meta-box-sortabless is-hidden" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Permissions', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
@@ -1424,7 +1431,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="rest" class="meta-box-sortabless tabcontent">
+					<div id="rest" class="meta-box-sortabless is-hidden" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'REST Functionality', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
@@ -1455,7 +1462,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="other" class="meta-box-sortabless tabcontent">
+					<div id="other" class="meta-box-sortabless is-hidden" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Other Options', 'simple-taxonomy-refreshed' ); ?></span></h3>
 							<div class="inside">
@@ -1522,11 +1529,12 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="wpgraphql" class="meta-box-sortabless tabcontent">
+					<div id="wpgraphql" class="meta-box-sortabless is-hidden" role="tabpanel">
 					<?php } else { ?>
-					<div id="wpgraphql" class="meta-box-sortabless tabcontent" style="display: block;">
-					<input type="hidden" name="name" value="<?php echo esc_attr( $taxonomy['name'] ); ?>" />
-					<input type="hidden" name="st_update_count_callback" id="st_update_count_callback" value="<?php echo esc_attr( $taxonomy['st_update_count_callback'] ); ?>" />
+					<div id="wpgraphql" class="meta-box-sortabless" role="tabpanel">
+					<input type="hidden" id="name" name="name" value="<?php echo esc_attr( $taxonomy['name'] ); ?>" />
+					<input type="hidden" id="hierarchical" name="hierarchical" value="<?php echo esc_attr( $taxonomy['hierarchical'] ); ?>" />
+					<input type="hidden" id="st_update_count_callback" name="st_update_count_callback" value="<?php echo esc_attr( $taxonomy['st_update_count_callback'] ); ?>" />
 					<?php } ?>
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'WPGraphQL Support', 'simple-taxonomy-refreshed' ); ?></span></h3>
@@ -1562,7 +1570,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="adm_filter" class="meta-box-sortabless tabcontent">
+					<div id="adm_filter" class="meta-box-sortabless is-hidden" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Admin List Filter', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
@@ -1575,9 +1583,9 @@ class SimpleTaxonomyRefreshed_Admin {
 									<?php } else { ?>
 										<p><strong><?php esc_html_e( 'Attention. You can use this function to define a duplicate filter if it already exists', 'simple-taxonomy-refreshed' ); ?></strong></p>
 									<?php } ?>
-									<tr valign="top">
+									<tr>
 										<th scope="row"><label><?php esc_html_e( 'Post types', 'simple-taxonomy-refreshed' ); ?></label></th>
-										<td>
+										<td><div role="group" aria-labelledby="post_types" aria-describedby="post_types_adm">
 											<?php
 											if ( true === $edit ) {
 												$objects = $taxonomy['st_adm_types'];
@@ -1590,8 +1598,10 @@ class SimpleTaxonomyRefreshed_Admin {
 												if ( ! $custom && ! in_array( $type->name, (array) $taxonomy['objects'], true ) ) {
 													continue;
 												}
+												$show = in_array( $type->name, (array) $objects, true );
 												echo '<label class="inline">';
-												echo '<input id="admlist' . esc_attr( $i ) . '" type="checkbox" ' . checked( true, in_array( $type->name, (array) $objects, true ), false );
+												echo '<input id="admlist' . esc_attr( $i ) . '" type="checkbox" role="checkbox" aria-checked="' . ( $show ? 'true' : 'false' );
+												echo '" tabindex="0" onclick="ariaChk(event)" ' . checked( true, $show, false );
 												if ( ! in_array( $type->name, (array) $taxonomy['objects'], true ) ) {
 													echo ' disabled';
 												}
@@ -1600,7 +1610,7 @@ class SimpleTaxonomyRefreshed_Admin {
 												$i++;
 											}
 											?>
-											<span class="description"><?php esc_html_e( 'You can add this taxonomy as a filter field on the admin list screen for builtin or custom post types linked to this taxonomy.', 'simple-taxonomy-refreshed' ); ?></span>
+											<span class="description" id="post_types_adm"><?php esc_html_e( 'You can add this taxonomy as a filter field on the admin list screen for selected builtin or custom post types linked to this taxonomy.', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
 									<?php
@@ -1640,86 +1650,102 @@ class SimpleTaxonomyRefreshed_Admin {
 						</div>
 					</div>
 
-					<div id="callback" class="meta-box-sortabless tabcontent">
+					<div id="callback" class="meta-box-sortabless is-hidden" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Term Count', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
 							<div class="inside">
-								<div id="count_tab_0" style="display: <?php echo ( empty( $taxonomy['st_update_count_callback'] ) ? 'none;' : 'block;' ); ?>">
-								<table  class="form-table" style="clear:none;">
+								<span id="count_tab_0" <?php echo ( empty( $taxonomy['st_update_count_callback'] ) ? 'class="is-hidden"' : '' ); ?>>
 									<p><?php esc_html_e( 'A function has been defined for calculating term counts. This function is therefore not available.', 'simple-taxonomy-refreshed' ); ?></p>
+								<table  class="form-table" style="clear:none;">
 								</table>
-								</div>
-								<div id="count_tab_1" style="display: <?php echo ( empty( $taxonomy['st_update_count_callback'] ) ? 'block;' : 'none;' ); ?>">
+								</span>
+								<span id="count_tab_1" <?php echo ( empty( $taxonomy['st_update_count_callback'] ) ? '' : 'class="is-hidden"' ); ?>>
 								<table class="form-table" style="clear:none;">
-									<p><?php esc_html_e( 'Term counts are normally based on Published posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
-									<tr valign="top">
-										<th scope="row"><label><?php esc_html_e( 'Count Options', 'simple-taxonomy-refreshed' ); ?></label></th>
-										<td>
+									<p id="cb_descr"><?php esc_html_e( 'Term counts are normally based on Published posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
+									<tr>
+										<th scope="row"><label id="cb_label"><?php esc_html_e( 'Count Options', 'simple-taxonomy-refreshed' ); ?></label></th>
+										<td><div id="cb_type" role="radiogroup" aria-labelledby="cb_label" aria-describedby="cb_descr">
 											<fieldset>
-											<input type="radio" id="cb_std" name="st_cb_type" <?php checked( 0, $taxonomy['st_cb_type'], true ); ?> value="0" onclick="hideSel(event, 0)"><label for="cb_std"><?php esc_html_e( 'Standard (Publish)', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="radio" id="cb_any" name="st_cb_type" <?php checked( 1, $taxonomy['st_cb_type'], true ); ?> value="1" onclick="hideSel(event, 1)"><label for="cb_any"><?php esc_html_e( 'Any (Except Trash)', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="radio" id="cb_sel" name="st_cb_type" <?php checked( 2, $taxonomy['st_cb_type'], true ); ?> value="2" onclick="hideSel(event, 2)"><label for="cb_sel"><?php esc_html_e( 'Selection', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<label><input type="radio" id="cb_std" name="st_cb_type" <?php checked( 0, $taxonomy['st_cb_type'], true ); ?> value="0" onclick="hideSel(event, 0)"><?php esc_html_e( 'Standard (Publish)', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<label><input type="radio" id="cb_any" name="st_cb_type" <?php checked( 1, $taxonomy['st_cb_type'], true ); ?> value="1" onclick="hideSel(event, 1)"><?php esc_html_e( 'Any (Except Trash)', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<label><input type="radio" id="cb_sel" name="st_cb_type" <?php checked( 2, $taxonomy['st_cb_type'], true ); ?> value="2" onclick="hideSel(event, 2)"><?php esc_html_e( 'Selection', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											</fieldset>
+										</div></td>
+									</tr>
+								</table>
+								<span id="count_sel_0" <?php echo ( 2 === (int) $taxonomy['st_cb_type'] ? 'class="is-hidden"' : '' ); ?>">
+									<p><?php esc_html_e( 'Additional parameters not shown as they are not applicable.', 'simple-taxonomy-refreshed' ); ?></p>
+								</span>
+								<span id="count_sel_1" <?php echo ( 2 === (int) $taxonomy['st_cb_type'] ? '' : 'class="is-hidden"' ); ?>">
+								<table class="form-table" style="clear:none;">
+									<tr>
+										<th scope="row"><label id="post_status"><?php esc_html_e( 'Status Selection', 'simple-taxonomy-refreshed' ); ?></label></th>
+										<td>
+											<div role="group" aria-labelledby="post_status" aria-describedby="post_status_sel">
+											<fieldset>
+											<?php
+											// Use WordPress translations for statuses.
+											self::option_check_status( 'st_cb_pub', (bool) $taxonomy['st_cb_pub'], __( 'Publish' ) );
+											self::option_check_status( 'st_cb_fut', (bool) $taxonomy['st_cb_fut'], __( 'Future' ) );
+											self::option_check_status( 'st_cb_dft', (bool) $taxonomy['st_cb_dft'], __( 'Draft' ) );
+											self::option_check_status( 'st_cb_pnd', (bool) $taxonomy['st_cb_pnd'], __( 'Pending' ) );
+											self::option_check_status( 'st_cb_prv', (bool) $taxonomy['st_cb_prv'], __( 'Private' ) );
+											self::option_check_status( 'st_cb_tsh', (bool) $taxonomy['st_cb_tsh'], __( 'Trash' ) );
+											?>
+											</fieldset>
+											</div>
+											<span class="description" id="post_status_sel"><?php esc_html_e( 'Choose the set of Statuses to be included in Term counts.', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
-									<tr valign="top">
-										<th scope="row"><label><?php esc_html_e( 'Status Selection', 'simple-taxonomy-refreshed' ); ?></label></th>
-											<td>
-											<div id="count_sel" style="display: <?php echo ( 2 === (int) $taxonomy['st_cb_type'] ? 'block;' : 'none;' ); ?>">
-											<fieldset>
-											<input type="checkbox" id="st_cb_pub" name="st_cb_pub" <?php checked( true, (bool) $taxonomy['st_cb_pub'], true ); ?>><label for="st_cb_pub"><?php esc_html_e( 'Publish', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="checkbox" id="st_cb_fut" name="st_cb_fut" <?php checked( true, (bool) $taxonomy['st_cb_fut'], true ); ?>><label for="st_cb_fut"><?php esc_html_e( 'Future', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="checkbox" id="st_cb_dft" name="st_cb_dft" <?php checked( true, (bool) $taxonomy['st_cb_dft'], true ); ?>><label for="st_cb_dft"><?php esc_html_e( 'Draft', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="checkbox" id="st_cb_pnd" name="st_cb_pnd" <?php checked( true, (bool) $taxonomy['st_cb_pnd'], true ); ?>><label for="st_cb_pnd"><?php esc_html_e( 'Pending', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="checkbox" id="st_cb_prv" name="st_cb_prv" <?php checked( true, (bool) $taxonomy['st_cb_prv'], true ); ?>><label for="st_cb_prv"><?php esc_html_e( 'Private', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="checkbox" id="st_cb_tsh" name="st_cb_tsh" <?php checked( true, (bool) $taxonomy['st_cb_tsh'], true ); ?>><label for="st_cb_tsh"><?php esc_html_e( 'Trash', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											</fieldset>
-											<span class="description"><?php esc_html_e( 'Choose the set of Statuses to be included in Term counts.', 'simple-taxonomy-refreshed' ); ?></span>
-											</div>
-											</td>
-									</tr>
 								</table>
-								</div>
+								</span>
+								</span>
 							</div>
 						</div>
 					</div>
 
-					<div id="countt" class="meta-box-sortabless tabcontent">
+					<div id="countt" class="meta-box-sortabless is-hidden" role="tabpanel">
 						<div class="postbox">
 							<h3 class="hndle"><span><?php esc_html_e( 'Term Control', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
-									<p><?php esc_html_e( 'Term controls are to be applied on posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
-									<tr valign="top">
-										<th scope="row"><label><?php esc_html_e( 'Post status', 'simple-taxonomy-refreshed' ); ?></label></th>
-										<td>
+									<p id="cc_descr"><?php esc_html_e( 'Term controls are to be applied on posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
+									<tr>
+										<th scope="row"><label id="cc_label"><?php esc_html_e( 'Post status', 'simple-taxonomy-refreshed' ); ?></label></th>
+										<td><div id="cc_type" role="radiogroup" aria-labelledby="cc_label" aria-describedby="cc_descr">
 											<fieldset>
-											<input type="radio" id="cc_off" name="st_cc_type" <?php checked( 0, $taxonomy['st_cc_type'], true ); ?> value="0" ><label for="cc_off"><?php esc_html_e( 'No control applied', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="radio" id="cc_pub" name="st_cc_type" <?php checked( 1, $taxonomy['st_cc_type'], true ); ?> value="1" ><label for="cc_pub"><?php esc_html_e( 'Published only', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="radio" id="cc_any" name="st_cc_type" <?php checked( 2, $taxonomy['st_cc_type'], true ); ?> value="2" ><label for="cc_any"><?php esc_html_e( 'Any (Except Trash)', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<label><input type="radio" id="cc_off" name="st_cc_type" role="radio" <?php checked( 0, $taxonomy['st_cc_type'], true ); ?> value="0" onclick="ccSel(event, 0)"><?php esc_html_e( 'No control applied', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<label><input type="radio" id="cc_pub" name="st_cc_type" role="radio" <?php checked( 1, $taxonomy['st_cc_type'], true ); ?> value="1" onclick="ccSel(event, 1)"><?php esc_html_e( 'Published only', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<label><input type="radio" id="cc_any" name="st_cc_type" role="radio" <?php checked( 2, $taxonomy['st_cc_type'], true ); ?> value="2" onclick="ccSel(event, 2)"><?php esc_html_e( 'Any (Except Trash)', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											</fieldset>
 											<span class="description"><?php esc_html_e( 'Choose  the statuses of posts to apply the control.', 'simple-taxonomy-refreshed' ); ?></span>
-										</td>
+										</div></td>
 									</tr>
-									<tr valign="top">
-										<th scope="row"><label><?php esc_html_e( 'How Control is applied', 'simple-taxonomy-refreshed' ); ?></label></th>
-										<td>
+								</table>
+								<span id="control_tab_0" <?php echo ( empty( $taxonomy['st_cc_type'] ) ? '' : 'class="is-hidden"' ); ?>>
+								<p><?php esc_html_e( 'Additional parameters not shown as they are not applicable.', 'simple-taxonomy-refreshed' ); ?></p>
+								</span>
+								<span id="control_tab_1" <?php echo ( empty( $taxonomy['st_cc_type'] ) ? 'class="is-hidden"' : '' ); ?>>
+								<table class="form-table" style="clear:none;">
+									<tr>
+										<th scope="row"><label id="cch_label"><?php esc_html_e( 'How Control is applied', 'simple-taxonomy-refreshed' ); ?></label></th>
+										<td><div id="cc_hard" role="radiogroup" aria-labelledby="cch_label" aria-describedby="cch_descr">
 											<fieldset>
-											<input type="radio" id="cc_pos" name="st_cc_hard" <?php checked( 0, $taxonomy['st_cc_hard'], true ); ?> value="0" ><label for="cc_pos"><?php esc_html_e( 'When user cannot change terms give notification message but allow changes (notification at start of edit)', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="radio" id="cc_sft" name="st_cc_hard" <?php checked( 1, $taxonomy['st_cc_hard'], true ); ?> value="1" ><label for="cc_sft"><?php esc_html_e( 'When the post is saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											<input type="radio" id="cc_hrd" name="st_cc_hard" <?php checked( 2, $taxonomy['st_cc_hard'], true ); ?> value="2" ><label for="cc_hrd"><?php esc_html_e( 'As terms are changed and when the post is saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<label><input type="radio" id="cc_pos" name="st_cc_hard" role="radio" <?php checked( 0, $taxonomy['st_cc_hard'], true ); ?> value="0" onclick="cchSel(event, 0)"><?php esc_html_e( 'When user cannot change terms give notification message but allow changes (notification at start of edit)', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<label><input type="radio" id="cc_sft" name="st_cc_hard" role="radio" <?php checked( 1, $taxonomy['st_cc_hard'], true ); ?> value="1" onclick="cchSel(event, 1)"><?php esc_html_e( 'When the post is saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
+											<label><input type="radio" id="cc_hrd" name="st_cc_hard" role="radio" <?php checked( 2, $taxonomy['st_cc_hard'], true ); ?> value="2" onclick="cchSel(event, 2)"><?php esc_html_e( 'As terms are changed and when the post is saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											</fieldset>
-											<span class="description">
+											</div><span id="cch_descr" class="description">
 											<p><?php esc_html_e( 'Choose the control level to be applied.', 'simple-taxonomy-refreshed' ); ?></p>
 											<p><?php esc_html_e( 'Notification option allows a user who can edit the post but cannot change the terms attached to make other updates.', 'simple-taxonomy-refreshed' ); ?></p>
 											<p><?php esc_html_e( 'Other options will block the user from making updates if the number of terms are not within required limits.', 'simple-taxonomy-refreshed' ); ?></p></p>
-											<p><?php esc_html_e( 'NOTE. The option to apply the control as terms are entered is a Work in Progress.', 'simple-taxonomy-refreshed' ); ?></p></span>
+											<p><?php esc_html_e( 'NOTE. The option to apply the control as terms are entered is a Work in Progress.', 'simple-taxonomy-refreshed' ); ?></p>
 											<p><?php esc_html_e( 'Specifically issues may occur with Block Editor post types and their notifications.', 'simple-taxonomy-refreshed' ); ?></p></span>
-									</td>
+										</td>
 									</tr>
-									<tr valign="top">
+									<tr>
 										<th scope="row"><label><?php esc_html_e( 'Minimum Control', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 										<?php
@@ -1732,14 +1758,14 @@ class SimpleTaxonomyRefreshed_Admin {
 										?>
 										</td>
 									</tr>
-									<tr valign="top">
+									<tr>
 										<th scope="row"><label for="st_cc_min"><?php esc_html_e( 'Minimum number of Terms', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 										<input name="st_cc_min" type="number" id="st_cc_min" onchange="checkMinMax(event)" value="<?php echo esc_attr( $taxonomy['st_cc_min'] ); ?>" class="regular-number" min="0" />
 										<span class="description"><?php esc_html_e( 'Select the minimum number of terms that can be attached to a post.', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
-									<tr valign="top">
+									<tr>
 										<th scope="row"><label><?php esc_html_e( 'Maximum Control', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 										<?php
@@ -1752,7 +1778,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										?>
 										</td>
 									</tr>
-									<tr valign="top">
+									<tr>
 										<th scope="row"><label for="st_cc_max"><?php esc_html_e( 'Maximum number of Terms', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 										<input name="st_cc_max" type="number" id="st_cc_max" onchange="checkMinMax(event)" value="<?php echo esc_attr( $taxonomy['st_cc_max'] ); ?>" class="regular-number"  min="0" />
@@ -1760,6 +1786,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										</td>
 									</tr>
 								</table>
+								</span>
 							</div>
 						</div>
 					</div>
@@ -1767,114 +1794,22 @@ class SimpleTaxonomyRefreshed_Admin {
 			</div>
 
 			<p class="submit" style="padding:0 0 1.5em;">
-				<input type="submit" class="button-primary" name="submit" id="submit" value="<?php echo esc_attr( $submit_val ); ?>"
+				<button type="submit" class="button-primary" name="submit" id="submit" role="button" tabindex="0"
 				<?php
 				if ( false === $edit ) {
 					echo ' disabled';
 				}
+				echo '>' . esc_attr( $submit_val );
 				?>
-				/>
+				</button>
 			</p>
 		</form>
-
 		<script type="text/javascript">
-		function openTab(evt, tabName) {
-			var i, tabcontent, tablinks;
-			tabcontent = document.getElementsByClassName("tabcontent");
-			for (i = 0; i < tabcontent.length; i++) {
-				tabcontent[i].style.display = "none";
-			}
-			tablinks = document.getElementsByClassName("tablinks");
-			for (i = 0; i < tablinks.length; i++) {
-				tablinks[i].className = tablinks[i].className.replace(" active", "");
-			}
-			document.getElementById(tabName).style.display = "block";
-			if (tabName == "adm_filter") {
-				var i = document.getElementById("hierarchical").value;
-				document.getElementById("st_adm_hier").disabled = ( i == 0 );
-				document.getElementById("st_adm_depth").disabled = ( i == 0 );
-			}
-			evt.currentTarget.className += " active";
-			evt.stopPropagation();
-		}
-		function checkNameSet(evt) {
-			document.getElementById("submit").disabled = ( evt.currentTarget.value.length === 0 );
-			evt.stopPropagation();
-		}
-		function linkAdm(evt, objNo) {
-			document.getElementById("admlist" + objNo).disabled = ( evt.currentTarget.checked === false );
-			if (evt.currentTarget.checked === false) {
-				document.getElementById("admlist" + objNo).checked = false;
-			}
-			evt.stopPropagation();
-		}
-		function linkH(evt, objNo) {
-			document.getElementById("st_adm_hier").disabled = (objNo === 0);
-			document.getElementById("st_adm_depth").disabled = (objNo === 0);
-			if (objNo === 0) {
-				document.getElementById("st_adm_hier").value = 0;
-				document.getElementById("st_adm_depth").value = 0;
-			}
-			evt.stopPropagation();
-		}
-		function hideCnt(evt) {
-			var tab_visible = (document.getElementById("st_update_count_callback").value.length == 0);
-			if (tab_visible) {
-				document.getElementById("count_tab_0").style.display = "none";
-				document.getElementById("count_tab_1").style.display = "block";
-			} else {
-				document.getElementById("count_tab_0").style.display = "block";
-				document.getElementById("count_tab_1").style.display = "none";
-				document.getElementById("cb_sel").checked = false;
-				document.getElementById("cb_any").checked = false;
-				document.getElementById("cb_std").checked = true;
-				hideSel(evt, 0);
-			}
-			evt.stopPropagation();
-		}
-		function hideSel(evt, objNo) {
-			if (objNo === 2) {
-				document.getElementById("count_sel").style.display = "block";
-			} else {
-				document.getElementById("count_sel").style.display = "none";
-			}
-			evt.stopPropagation();
-		}
-		function switchMinMax(evt) {
-			var umin = (document.getElementById("st_cc_umin").value == 0);
-			var umax = (document.getElementById("st_cc_umax").value == 0);
-			document.getElementById("st_cc_min").disabled = umin;
-			document.getElementById("st_cc_max").disabled = umax;
-			evt.stopPropagation();
-		}
-		function checkMinMax(evt) {
-			var minv = document.getElementById("st_cc_min").value;
-			var maxv = document.getElementById("st_cc_max").value;
-			if (minv > maxv && evt.currentTarget.id === "st_cc_min") {
-				document.getElementById("st_cc_max").value = minv;
-			}
-			if (minv > maxv && evt.currentTarget.id === "st_cc_max") {
-				document.getElementById("st_cc_min").value = maxv;
-			}
-			evt.stopPropagation();
-		}
-		document.addEventListener('DOMContentLoaded', function(evt) {
-			switchMinMax(evt);
-			document.getElementById("st_cc_umin").addEventListener('change', event => {
-				switchMinMax(evt);
+			document.addEventListener('DOMContentLoaded', function(evt) {
+				hideSel(evt, <?php echo esc_attr( $taxonomy['st_cb_type'] ); ?>)
+				ccSel(evt, <?php echo esc_attr( $taxonomy['st_cc_type'] ); ?>)
+				cchSel(evt, <?php echo esc_attr( $taxonomy['st_cc_hard'] ); ?>)
 			});
-			document.getElementById("st_cc_umax").addEventListener('change', event => {
-				switchMinMax(evt);
-			});
-			document.getElementById("st_update_count_callback").addEventListener('change', event => {
-				hideCnt(evt);
-			});
-			document.getElementById("st_update_count_callback").addEventListener("keydown",function(e){
-				if(e.keyCode == 32){
-					e.preventDefault();
-				}
-			})
-		});
 		</script>
 		<?php
 	}
@@ -2281,6 +2216,16 @@ class SimpleTaxonomyRefreshed_Admin {
 			}
 		}
 
+		// remove some possible inconsistencies.
+		if ( 2 !== (int) $taxonomy['st_cb_type'] ) {
+			$taxonomy['st_cb_pub'] = 0;
+			$taxonomy['st_cb_fut'] = 0;
+			$taxonomy['st_cb_dft'] = 0;
+			$taxonomy['st_cb_pnd'] = 0;
+			$taxonomy['st_cb_prv'] = 0;
+			$taxonomy['st_cb_tsh'] = 0;
+		}
+
 		$current_options['taxonomies'][ $staxo ] = $taxonomy;
 
 		update_option( OPTION_STAXO, $current_options );
@@ -2326,6 +2271,16 @@ class SimpleTaxonomyRefreshed_Admin {
 		unset( $taxonomy['objects'] );
 		unset( $taxonomy['st_ep_mask'] );
 		unset( $taxonomy['st_update_count_callback'] );
+
+		// remove some possible inconsistencies.
+		if ( 2 !== (int) $taxonomy['st_cb_type'] ) {
+			$taxonomy['st_cb_pub'] = 0;
+			$taxonomy['st_cb_fut'] = 0;
+			$taxonomy['st_cb_dft'] = 0;
+			$taxonomy['st_cb_pnd'] = 0;
+			$taxonomy['st_cb_prv'] = 0;
+			$taxonomy['st_cb_tsh'] = 0;
+		}
 
 		$current_options['externals'][ $staxo ] = $taxonomy;
 
@@ -2570,7 +2525,7 @@ class SimpleTaxonomyRefreshed_Admin {
 							?>
 							<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-max"><p>
 							<?php
-							echo esc_html( $text_1 . '</p><p>' . $text_2 . '</p><p>' . $text_3 );
+							echo esc_html( $text_1 . '  ' . $text_2 . '  ' . $text_3 );
 							?>
 							</p></div>
 							<?php
@@ -2635,6 +2590,7 @@ class SimpleTaxonomyRefreshed_Admin {
 					// avoid updating hidden one.
 					if ( item.value > 0 && item.type !== "radio" ) {
 						item.type = "radio";
+						item.setAttribute('role', 'radio');
 						item.addEventListener('click', event => {
 							adj_<?php echo $taxf; ?>(item.value);
 						});
@@ -2669,11 +2625,13 @@ class SimpleTaxonomyRefreshed_Admin {
 				radio_<?php echo $taxf; ?>();
 
 				var pop = document.getElementById("<?php echo $taxn; ?>-pop");
+				pop.setAttribute('role', 'radiogroup');
 				inp = pop.getElementsByTagName("input");
 				for (const item of inp) {
 					// avoid updating hidden one.
 					if ( item.value > 0 ) {
 						item.type = "radio";
+						item.setAttribute('role', 'radio');
 						tag  = item.id;
 						stag = tag.replace("popular-", "");
 						attr = document.getElementById(stag);
@@ -2697,6 +2655,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 				// Select the node that will be observed for mutations
 				const targetNode = document.getElementById("<?php echo $taxn; ?>-all");
+				targetNode.setAttribute('role', 'radiogroup');
 
 				// Options for the observer (which mutations to observe)
 				const config = { childList: true, subtree: true };

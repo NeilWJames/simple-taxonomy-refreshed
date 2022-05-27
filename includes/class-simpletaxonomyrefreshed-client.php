@@ -39,6 +39,7 @@ class SimpleTaxonomyRefreshed_Client {
 		add_action( 'rest_api_init', array( __CLASS__, 'init' ), 1 );
 		add_action( 'init', array( __CLASS__, 'init' ), 1 );
 		add_action( 'init', array( __CLASS__, 'init_2' ), 99999 );
+		add_action( 'init', array( __CLASS__, 'staxo_terms_block' ), 99999 );
 		add_action( 'admin_init', array( __CLASS__, 'admin_init' ) );
 
 		add_filter( 'the_excerpt', array( __CLASS__, 'the_excerpt' ), 10, 1 );
@@ -435,7 +436,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 *
 	 * @param string $content content of the content or excerpt.
 	 * @param string $type    content, excerpt or arbitrary selector.
-	 * @param string $tax     taxonomy slug for arbitrary call (optional)
+	 * @param string $tax     taxonomy slug for arbitrary call (optional).
 	 * @return string
 	 */
 	public static function taxonomy_filter( $content, $type, $tax = '' ) {
@@ -445,14 +446,14 @@ class SimpleTaxonomyRefreshed_Client {
 			return $content;
 		}
 
-		$output = '';
-
 		$options = get_option( OPTION_STAXO );
 		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
 			null; // Drop through.
 		} else {
 			return $content;
 		}
+
+		$output = '';
 
 		foreach ( (array) $options['taxonomies'] as $taxonomy ) {
 			// bypass if we want only a specific taxonomy and this isn't it.
@@ -535,8 +536,121 @@ class SimpleTaxonomyRefreshed_Client {
 			),
 			$atts
 		);
-		write_log( 'shortcode called' );
 		return self::taxonomy_filter( '', 'arbitrary', $tax['tax'] );
+	}
+
+
+	/**
+	 * Get taxonomy names for selection (use cache).
+	 *
+	 * @return Array Taxonomy names for documents
+	 * @since 2.2.0
+	 */
+	public static function get_taxonomies() {
+		$taxonomies = wp_cache_get( 'staxo_own_taxos' );
+
+		if ( false === $taxonomies ) {
+			$taxonomies = array();
+			// build and create cache entry.
+			$options = get_option( OPTION_STAXO );
+			if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+				foreach ( (array) $options['taxonomies'] as $taxonomy ) {
+					if ( (bool) $taxonomy['public'] ) {
+						$taxonomies[ $taxonomy['name'] ] = ( empty( $taxonomy['labels']['name'] ) ? $taxonomy['name'] : $taxonomy['labels']['name'] );
+					}
+				}
+
+				asort( $taxonomies );
+			}
+
+			wp_cache_set( 'staxo_own_taxos', $taxonomies, '', ( WP_DEBUG ? 10 : 120 ) );
+		}
+
+		return $taxonomies;
+	}
+
+	/**
+	 * Register terms block.
+	 *
+	 * @since 2.2.0
+	 */
+	public static function staxo_terms_block() {
+		if ( ! function_exists( 'register_block_type' ) ) {
+			// Gutenberg is not active, e.g. Old WP version installed.
+			return;
+		}
+
+		$dir      = dirname( __DIR__ );
+		$suffix   = ( WP_DEBUG ) ? '.dev' : '';
+		$index_js = 'js/staxo-terms' . $suffix . '.js';
+		wp_register_script(
+			'staxo-terms-editor',
+			plugins_url( $index_js, __DIR__ ),
+			array(
+				'wp-blocks',
+				'wp-element',
+				'wp-block-editor',
+				'wp-components',
+				'wp-server-side-render',
+				'wp-i18n',
+			),
+			filemtime( "$dir/$index_js" ),
+			true
+		);
+
+		// Add supplementary script for additional information.
+		// Ensure taxonomies are set.
+
+		$taxonomies = self::get_taxonomies();
+		wp_add_inline_script( 'staxo-terms-editor', 'const staxo_own_data = ' . wp_json_encode( $taxonomies ), 'before' );
+
+		$index_css = 'css/staxo-terms-editor-style' . $suffix . '.css';
+		wp_register_style(
+			'staxo-terms-editor-style',
+			plugins_url( $index_css, __DIR__ ),
+			array( 'wp-edit-blocks' ),
+			filemtime( "$dir/$index_css" )
+		);
+
+		register_block_type(
+			'simple-taxonomy-refreshed/post-terms',
+			array(
+				'editor_script'   => 'staxo-terms-editor',
+				'editor_style'    => 'staxo-terms-editor-style',
+				'render_callback' => array( __CLASS__, 'the_terms' ),
+				'attributes'      => array(
+					'tax'             => array(
+						'type' => 'string',
+					),
+					'align'           => array(
+						'type' => 'string',
+					),
+					'backgroundColor' => array(
+						'type' => 'string',
+					),
+					'linkColor'       => array(
+						'type' => 'string',
+					),
+					'textColor'       => array(
+						'type' => 'string',
+					),
+					'gradient'        => array(
+						'type' => 'string',
+					),
+					'fontSize'        => array(
+						'type' => 'string',
+					),
+					'style'           => array(
+						'type' => 'object',
+					),
+				),
+			)
+		);
+
+		// set translations.
+		if ( function_exists( 'wp_set_script_translations' ) ) {
+			wp_set_script_translations( 'staxo-terms-editor', 'simple_taxonomy-refreshed' );
+		}
 	}
 
 	/**

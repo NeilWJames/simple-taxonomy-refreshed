@@ -189,9 +189,13 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			if ( false === $terms ) {
 				echo '<p>' . esc_html__( 'No terms available for this taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>';
 			} else {
-				echo '<ul class="staxo-terms-list">' . "\n";
+				echo '<ul class="staxo-terms-list" role="grid">' . "\n";
 				foreach ( (array) $terms as $term ) {
-					echo '<li><a href="' . esc_url( get_term_link( $term, $current_taxonomy ) ) . '">' . esc_html( $term->name ) . '</a>' . "\n";
+					// Translators: Use WP test_domain so no need to translate.
+					$formatted_count = sprintf( translate_nooped_plural( _n_noop( '%s item', '%s items' ), $term->count ), number_format_i18n( $term->count ) );
+					echo '<li role="row"><a href="' . esc_url( get_term_link( $term, $current_taxonomy ) )
+					. '" role="link" aria-label="' . esc_html( $term->name ) . ' (' . esc_attr( $formatted_count ) . ')">'
+					. esc_html( $term->name ) . '</a>';
 					if ( $instance['showcount'] ) {
 						echo esc_html( ' (' . $term->count . ')' );
 					}
@@ -399,7 +403,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	 * Get taxonomy names for selection (use cache).
 	 *
 	 * @return Array Taxonomy names for documents
-	 * @since 3.3.0
+	 * @since 2.1.0
 	 */
 	public function get_taxonomies() {
 		$taxonomies = wp_cache_get( 'staxo_taxonomies' );
@@ -423,7 +427,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	/**
 	 * Register widget block.
 	 *
-	 * @since 3.3.0
+	 * @since 2.1.0
 	 */
 	public function staxo_widget_block() {
 		if ( ! function_exists( 'register_block_type' ) ) {
@@ -454,12 +458,12 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		$taxonomies = $this->get_taxonomies();
 		wp_add_inline_script( 'staxo-widget-editor', 'const staxo_data = ' . wp_json_encode( $taxonomies ), 'before' );
 
-		$index_css = 'css/staxo-widget-editor-style.css';
+		$index_css = 'css/staxo-widget-editor-style' . $suffix . '.css';
 		wp_register_style(
 			'staxo-widget-editor-style',
 			plugins_url( $index_css, __DIR__ ),
 			array( 'wp-edit-blocks' ),
-			filemtime( plugin_dir_path( "$dir/$index_css" ) )
+			filemtime( "$dir/$index_css" )
 		);
 
 		register_block_type(
@@ -470,10 +474,12 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 				'render_callback' => array( $this, 'staxo_widget_display' ),
 				'attributes'      => array(
 					'title'           => array(
-						'type' => 'string',
+						'type'    => 'string',
+						'default' => 'Advanced Taxonomy Cloud',
 					),
 					'taxonomy'        => array(
-						'type' => 'string',
+						'type'    => 'string',
+						'default' => 'post_tag',
 					),
 					'disptype'        => array(
 						'type'    => 'string',
@@ -550,13 +556,12 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		}
 	}
 
-
 	/**
 	 * Render widget block server side.
 	 *
 	 * @param array  $atts     block attributes coming from block.
 	 * @param string $content  Optional. Block content. Default empty string.
-	 * @since 3.3.0
+	 * @since 2.1.0
 	 */
 	public function staxo_widget_display( $atts, $content = '' ) {
 		// Create the two parameter sets.

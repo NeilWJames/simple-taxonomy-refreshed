@@ -9,13 +9,16 @@ const { useSelect } = wp.data; //data functions
 registerBlockType( 'simple-taxonomy-refreshed/cloud-widget', {
 	title: __( 'Taxonomy Cloud', 'simple-taxonomy-refreshed' ), // Block title.
 	description: __( 'Display a Taxonomy Cloud.', 'simple-taxonomy-refreshed' ),
+	category: 'widgets',
 	icon: 'admin-page',
 	attributes:  {
 		title : {
-			type : 'string'
+			type : 'string',
+			default : 'Advanced Taxonomy Cloud'
 		},
 		taxonomy : {
-			type : 'string'
+			type : 'string',
+			default : 'post_tag'
 		},
 		disptype : {
 			type : 'string',
