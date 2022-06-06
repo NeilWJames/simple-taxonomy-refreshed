@@ -44,7 +44,7 @@ class SimpleTaxonomyRefreshed_Client {
 
 		add_filter( 'the_excerpt', array( __CLASS__, 'the_excerpt' ), 10, 1 );
 		add_filter( 'the_content', array( __CLASS__, 'the_content' ), 10, 1 );
-		add_shortcode( 'str_post_terms', array( __CLASS__, 'the_terms' ), 10, 1 );
+		add_shortcode( 'staxo_post_terms', array( __CLASS__, 'the_terms' ), 10, 1 );
 		add_filter( 'the_category_rss', array( __CLASS__, 'the_category_feed' ), 10, 2 );
 
 		add_action( 'template_redirect', array( __CLASS__, 'template_redirect' ) );

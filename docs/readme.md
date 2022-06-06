@@ -19,7 +19,7 @@ This plugin started as a functional conversion from [Simple Taxonomy](https://wo
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 
-It provides a widget that you can use to display a "taxonomy cloud" or a list of all the terms; it allows you to show the taxonomy contents at the end of posts and excerpts as well.
+It provides a widget that you can use to display a "taxonomy cloud" or a list of all the terms; it allows you to show the taxonomy contents at the end of posts and excerpts as well. To increase flexibility, a shortcode and block has been provided to output these terms wherever desired.
 
 You can also export the Taxonomy definition to include it directly in your own code.
 
@@ -80,7 +80,7 @@ See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 * Version 2.2.0
 	* NEW: Accessibility changes made to administration screen.
-	* NEW: Shortcode and Block for displaying Terms attached to post.
+	* NEW: Shortcode `staxo_post_terms` and Block for displaying Terms attached to post.
 
 * Version 2.1.0
 	* NEW: Taxonomy widget upgraded and extended to be able to be invoked as a block.

@@ -23,6 +23,8 @@ The name **must** be completed in order to add the taxonomy.
 
 The last fields *Display Terms with Posts* is not related to WordPress standard functionality. It allows you to request that the taxonomy terms are added to posts are displayed with the post content and/or excerpt. When used, the list of terms can be prefixed and suffixed by the user-defined Before and After texts.
 
+These fields may also be output directly using a shortcode `staxo_post_terms` or a block editor block `simple-taxonomy-refreshed/post-terms`. These will by default add the terms for all custom taxonomies (using the before and after text). If only one taxonomy is required, then add a parameter `tax='taxonomy_slug'`.
+
 ## External Main
 
 ![Main Panel](../images/ExternalExtraOpts.png)

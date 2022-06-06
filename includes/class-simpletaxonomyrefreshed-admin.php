@@ -3235,7 +3235,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	public static function is_block_editor() {
 		if ( is_null( self::$use_block_editor ) ) {
 			$screen = get_current_screen();
-			if ( method_exists( $screen, 'is_block_editor' ) ) {
+			if ( ( ! is_null( $screen ) ) && method_exists( $screen, 'is_block_editor' ) ) {
 				self::$use_block_editor = $screen->is_block_editor();
 			} elseif ( function_exists( 'use_block_editor_for_post' ) ) {
 				global $post;
