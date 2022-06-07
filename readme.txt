@@ -61,6 +61,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 * Version 2.2.0
 	* NEW: Accessibility changes made to administration screen.
 	* NEW: Shortcode `staxo_post_terms` and Block for displaying Terms attached to post.
+	* NEW: Some common css and js code moved from inline to separate files.
 
 * Version 2.1.0
 	* NEW: Taxonomy widget upgraded and extended to be able to be invoked as a block.
