@@ -6,7 +6,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2022-06-06 21:58+0000\n"
+"POT-Creation-Date: 2022-06-07 11:16+0000\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-KeywordsList: __;_e;_ex:1,2c;_n:1,2;_n_noop:1,2;_nx:1,2,4c;_nx_noop:1,2,3c;_x:1,2c;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c\n"
 "X-Poedit-SearchPath-0: .\n"
@@ -162,7 +162,7 @@ msgstr ""
 msgid "Copy To"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin-conversion.php:261, includes/class-simpletaxonomyrefreshed-admin.php:628, includes/class-simpletaxonomyrefreshed-admin.php:639, includes/class-simpletaxonomyrefreshed-admin.php:724, includes/class-simpletaxonomyrefreshed-admin.php:733
+#: includes/class-simpletaxonomyrefreshed-admin-conversion.php:261, includes/class-simpletaxonomyrefreshed-admin.php:629, includes/class-simpletaxonomyrefreshed-admin.php:640, includes/class-simpletaxonomyrefreshed-admin.php:725, includes/class-simpletaxonomyrefreshed-admin.php:734
 msgid "Label"
 msgstr ""
 
@@ -170,7 +170,7 @@ msgstr ""
 msgid "Slug"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin-conversion.php:263, includes/class-simpletaxonomyrefreshed-admin.php:631, includes/class-simpletaxonomyrefreshed-admin.php:642, includes/class-simpletaxonomyrefreshed-admin.php:727, includes/class-simpletaxonomyrefreshed-admin.php:736
+#: includes/class-simpletaxonomyrefreshed-admin-conversion.php:263, includes/class-simpletaxonomyrefreshed-admin.php:632, includes/class-simpletaxonomyrefreshed-admin.php:643, includes/class-simpletaxonomyrefreshed-admin.php:728, includes/class-simpletaxonomyrefreshed-admin.php:737
 msgid "Hierarchical"
 msgstr ""
 
@@ -646,7 +646,7 @@ msgstr ""
 msgid "Because you need to explicitly switch on use of rewrite, this will only be shown if it is switched on."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:201, includes/class-simpletaxonomyrefreshed-admin.php:607
+#: includes/class-simpletaxonomyrefreshed-admin.php:201, includes/class-simpletaxonomyrefreshed-admin.php:608
 msgid "Custom Taxonomies"
 msgstr ""
 
@@ -723,967 +723,975 @@ msgid "By default the terms do not appear with the post. The options at the bott
 msgstr ""
 
 #: includes/class-simpletaxonomyrefreshed-admin.php:240
+msgid "For greater control on positioning, you can also display these terms with a shortcode <code>staxo_post_terms</code> or plugin block <code>post_terms</code>."
+msgstr ""
+
+#: includes/class-simpletaxonomyrefreshed-admin.php:241
 msgid "When done, simply click <code>Add Taxonomy</code> or <code>Update Taxonomy</code> at the bottom to save your changes"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:241, includes/class-simpletaxonomyrefreshed-admin.php:971, includes/class-simpletaxonomyrefreshed-admin.php:969
+#: includes/class-simpletaxonomyrefreshed-admin.php:242, includes/class-simpletaxonomyrefreshed-admin.php:972, includes/class-simpletaxonomyrefreshed-admin.php:970
 msgid "WPGraphQL"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:242, includes/class-simpletaxonomyrefreshed-admin.php:246, includes/class-simpletaxonomyrefreshed-admin.php:251, includes/class-simpletaxonomyrefreshed-admin.php:256
+#: includes/class-simpletaxonomyrefreshed-admin.php:243, includes/class-simpletaxonomyrefreshed-admin.php:247, includes/class-simpletaxonomyrefreshed-admin.php:252, includes/class-simpletaxonomyrefreshed-admin.php:257
 msgid "Extra taxonomy-related functionality."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:243
+#: includes/class-simpletaxonomyrefreshed-admin.php:244
 msgid "These parameters are for sites that have implemented WPGraphQL; and are not relevant if the plugin is not installed."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:244
+#: includes/class-simpletaxonomyrefreshed-admin.php:245
 msgid "They are provided in the spirit of supporting no-coding. There is no requirement for this plugin."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:245, includes/class-simpletaxonomyrefreshed-admin.php:973, includes/class-simpletaxonomyrefreshed-admin.php:1575
+#: includes/class-simpletaxonomyrefreshed-admin.php:246, includes/class-simpletaxonomyrefreshed-admin.php:974, includes/class-simpletaxonomyrefreshed-admin.php:1578
 msgid "Admin List Filter"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:247
+#: includes/class-simpletaxonomyrefreshed-admin.php:248
 msgid "The admin screen for post types can optionally have a dropdown filter to select posts using the taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:248
+#: includes/class-simpletaxonomyrefreshed-admin.php:249
 msgid "This tab allows the taxonomy parameters to be entered appropriately for your use."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:249
+#: includes/class-simpletaxonomyrefreshed-admin.php:250
 msgid "This provides appropriate subset of parmeters the standard WordPress functionality (wp_dropdown_categories)."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:250, includes/class-simpletaxonomyrefreshed-admin.php:974, includes/class-simpletaxonomyrefreshed-admin.php:1655
+#: includes/class-simpletaxonomyrefreshed-admin.php:251, includes/class-simpletaxonomyrefreshed-admin.php:975, includes/class-simpletaxonomyrefreshed-admin.php:1658
 msgid "Term Count"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:252
+#: includes/class-simpletaxonomyrefreshed-admin.php:253
 msgid "Standard WordPress functionality provides a count of the posts using a term on the Taxonomy Terms page - and this count is for only Published posts."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:253
+#: includes/class-simpletaxonomyrefreshed-admin.php:254
 msgid "You may want this count to include posts with other statuses. You can set this behaviour on this tab."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:254
+#: includes/class-simpletaxonomyrefreshed-admin.php:255
 msgid "If you have additional non-standard post_statuses that you wish to be included, this can be done, but it will require coding and use of the filter 'staxo_term_count_statuses'."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:255, includes/class-simpletaxonomyrefreshed-admin.php:975, includes/class-simpletaxonomyrefreshed-admin.php:1710
+#: includes/class-simpletaxonomyrefreshed-admin.php:256, includes/class-simpletaxonomyrefreshed-admin.php:976, includes/class-simpletaxonomyrefreshed-admin.php:1713
 msgid "Term Control"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:257
+#: includes/class-simpletaxonomyrefreshed-admin.php:258
 msgid "Standard WordPress functionality provides no limits on the number of terms that can be attached to a post."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:258
+#: includes/class-simpletaxonomyrefreshed-admin.php:259
 msgid "This functionality provides this control. Using this tab, upper and lower bounds may be set for either Published posts or all posts."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:259
+#: includes/class-simpletaxonomyrefreshed-admin.php:260
 msgid "The tests will be applied at save post time (soft);  or also when the terms are added or removed (hard)."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:260
+#: includes/class-simpletaxonomyrefreshed-admin.php:261
 msgid "Thus a user who can edit a post may not be able to add or remove terms but can be notified of the issue and make other updates."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:290
+#: includes/class-simpletaxonomyrefreshed-admin.php:291
 msgid "Github Project page"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:291
+#: includes/class-simpletaxonomyrefreshed-admin.php:292
 msgid "WP Support Forum"
 msgstr ""
 
 #. translators: %s is the taxonomy label name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:323, includes/class-simpletaxonomyrefreshed-admin.php:331
+#: includes/class-simpletaxonomyrefreshed-admin.php:324, includes/class-simpletaxonomyrefreshed-admin.php:332
 msgid "Your post needs to have more terms for the taxonomy - %s entered."
 msgstr ""
 
 #. translators: %s is the taxonomy label name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:327, includes/class-simpletaxonomyrefreshed-admin.php:334
+#: includes/class-simpletaxonomyrefreshed-admin.php:328, includes/class-simpletaxonomyrefreshed-admin.php:335
 msgid "Your post needs to have less terms for taxonomy - %s."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:341
+#: includes/class-simpletaxonomyrefreshed-admin.php:342
 msgid "Your update has been cancelled and stored data remains unchanged."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:342
+#: includes/class-simpletaxonomyrefreshed-admin.php:343
 msgid "Your browser may hold an updated version, but it is currently invalid."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:365
+#: includes/class-simpletaxonomyrefreshed-admin.php:366
 msgid "Add Custom Taxonomy"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:362
+#: includes/class-simpletaxonomyrefreshed-admin.php:363
 msgid "External Taxonomy : %s"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:359
+#: includes/class-simpletaxonomyrefreshed-admin.php:360
 msgid "Custom Taxonomy : %s"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:373
+#: includes/class-simpletaxonomyrefreshed-admin.php:374
 msgid "Add/Modify taxonomy"
 msgstr ""
 
 #. translators: %1$s is the taxonomy slug name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:527
+#: includes/class-simpletaxonomyrefreshed-admin.php:528
 msgid "Taxonomy \"%1$s\" and relations deleted successfully !"
 msgstr ""
 
 #. translators: %1$s is the taxonomy slug name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:531
+#: includes/class-simpletaxonomyrefreshed-admin.php:532
 msgid "Taxonomy \"%1$s\" deleted successfully !"
 msgstr ""
 
 #. translators: %1$s is the taxonomy slug name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:535
+#: includes/class-simpletaxonomyrefreshed-admin.php:536
 msgid "Taxonomy \"%1$s\" added successfully !"
 msgstr ""
 
 #. translators: %1$s is the taxonomy slug name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:539
+#: includes/class-simpletaxonomyrefreshed-admin.php:540
 msgid "Taxonomy \"%1$s\" updated successfully !"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:609
+#: includes/class-simpletaxonomyrefreshed-admin.php:610
 msgid "Add New"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:613
+#: includes/class-simpletaxonomyrefreshed-admin.php:614
 msgid "Custom taxonomy list"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:619
+#: includes/class-simpletaxonomyrefreshed-admin.php:620
 msgid "<strong>Warning :</strong> Flush & Delete a taxonomy will also delete all terms of the taxonomy and all object relations."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:629, includes/class-simpletaxonomyrefreshed-admin.php:640, includes/class-simpletaxonomyrefreshed-admin.php:725, includes/class-simpletaxonomyrefreshed-admin.php:734
+#: includes/class-simpletaxonomyrefreshed-admin.php:630, includes/class-simpletaxonomyrefreshed-admin.php:641, includes/class-simpletaxonomyrefreshed-admin.php:726, includes/class-simpletaxonomyrefreshed-admin.php:735
 msgid "Name"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:630, includes/class-simpletaxonomyrefreshed-admin.php:641, includes/class-simpletaxonomyrefreshed-admin.php:726, includes/class-simpletaxonomyrefreshed-admin.php:735
+#: includes/class-simpletaxonomyrefreshed-admin.php:631, includes/class-simpletaxonomyrefreshed-admin.php:642, includes/class-simpletaxonomyrefreshed-admin.php:727, includes/class-simpletaxonomyrefreshed-admin.php:736
 msgid "Post Types"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:632, includes/class-simpletaxonomyrefreshed-admin.php:643
+#: includes/class-simpletaxonomyrefreshed-admin.php:633, includes/class-simpletaxonomyrefreshed-admin.php:644
 msgid "Rewrite"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:633, includes/class-simpletaxonomyrefreshed-admin.php:644
+#: includes/class-simpletaxonomyrefreshed-admin.php:634, includes/class-simpletaxonomyrefreshed-admin.php:645
 msgid "Public"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:634, includes/class-simpletaxonomyrefreshed-admin.php:645, includes/class-simpletaxonomyrefreshed-admin.php:728, includes/class-simpletaxonomyrefreshed-admin.php:737
+#: includes/class-simpletaxonomyrefreshed-admin.php:635, includes/class-simpletaxonomyrefreshed-admin.php:646, includes/class-simpletaxonomyrefreshed-admin.php:729, includes/class-simpletaxonomyrefreshed-admin.php:738
 msgid "Block Editor"
 msgstr ""
 
 #. translators: %s is the taxonomy name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:662, includes/class-simpletaxonomyrefreshed-admin.php:763
+#: includes/class-simpletaxonomyrefreshed-admin.php:663, includes/class-simpletaxonomyrefreshed-admin.php:764
 msgid "Edit the taxonomy '%s'"
 msgstr ""
 
 #. translators: %s is the taxonomy name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:664
+#: includes/class-simpletaxonomyrefreshed-admin.php:665
 msgid ""
 "You are about to delete this taxonomy '%s'\n"
 "  'Cancel' to stop, 'OK' to delete."
 msgstr ""
 
 #. translators: %s is the taxonomy name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:666
+#: includes/class-simpletaxonomyrefreshed-admin.php:667
 msgid ""
 "You are about to delete and flush this taxonomy '%s' and all relations.\n"
 "  'Cancel' to stop, 'OK' to delete."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:671, includes/class-simpletaxonomyrefreshed-admin.php:674, includes/class-simpletaxonomyrefreshed-admin.php:674
+#: includes/class-simpletaxonomyrefreshed-admin.php:672, includes/class-simpletaxonomyrefreshed-admin.php:675, includes/class-simpletaxonomyrefreshed-admin.php:675
 msgid "Modify"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:675, includes/class-simpletaxonomyrefreshed-admin.php:675
+#: includes/class-simpletaxonomyrefreshed-admin.php:676, includes/class-simpletaxonomyrefreshed-admin.php:676
 msgid "Export PHP"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:676, includes/class-simpletaxonomyrefreshed-admin.php:676
+#: includes/class-simpletaxonomyrefreshed-admin.php:677, includes/class-simpletaxonomyrefreshed-admin.php:677
 msgid "Delete"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:677, includes/class-simpletaxonomyrefreshed-admin.php:677
+#: includes/class-simpletaxonomyrefreshed-admin.php:678, includes/class-simpletaxonomyrefreshed-admin.php:678
 msgid "Flush & Delete"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:652
+#: includes/class-simpletaxonomyrefreshed-admin.php:653
 msgid "No custom taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:716
+#: includes/class-simpletaxonomyrefreshed-admin.php:717
 msgid "External Taxonomies"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:718
+#: includes/class-simpletaxonomyrefreshed-admin.php:719
 msgid "External Taxonomies list"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:768, includes/class-simpletaxonomyrefreshed-admin.php:771, includes/class-simpletaxonomyrefreshed-admin.php:771
+#: includes/class-simpletaxonomyrefreshed-admin.php:769, includes/class-simpletaxonomyrefreshed-admin.php:772, includes/class-simpletaxonomyrefreshed-admin.php:772
 msgid "Extra Functions"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:773, includes/class-simpletaxonomyrefreshed-admin.php:773
+#: includes/class-simpletaxonomyrefreshed-admin.php:774, includes/class-simpletaxonomyrefreshed-admin.php:774
 msgid "Delete Extra Functions"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:753
+#: includes/class-simpletaxonomyrefreshed-admin.php:754
 msgid "No external taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:837
+#: includes/class-simpletaxonomyrefreshed-admin.php:838
 msgid "Update taxonomy"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:828
+#: includes/class-simpletaxonomyrefreshed-admin.php:829
 msgid "Add taxonomy"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:949
+#: includes/class-simpletaxonomyrefreshed-admin.php:950
 msgid "Click on the tabs to see all the options and facilities available."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:954
+#: includes/class-simpletaxonomyrefreshed-admin.php:955
 msgid "The taxonomy is defined outside this plugin. These inputs are for integrating the taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:955
+#: includes/class-simpletaxonomyrefreshed-admin.php:956
 msgid "Note that these functionalities may already be defined for the taxonomy. Please check before defining then here."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:952
+#: includes/class-simpletaxonomyrefreshed-admin.php:953
 msgid "The taxonomy definition options are spread across 7 tabs. The remaining 4 are for integrating the taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:962, includes/class-simpletaxonomyrefreshed-admin.php:981
+#: includes/class-simpletaxonomyrefreshed-admin.php:963, includes/class-simpletaxonomyrefreshed-admin.php:982
 msgid "Main Options"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:963, includes/class-simpletaxonomyrefreshed-admin.php:1084
+#: includes/class-simpletaxonomyrefreshed-admin.php:964, includes/class-simpletaxonomyrefreshed-admin.php:1087
 msgid "Visibility"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:964
+#: includes/class-simpletaxonomyrefreshed-admin.php:965
 msgid "Labels"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:965, includes/class-simpletaxonomyrefreshed-admin.php:1339
+#: includes/class-simpletaxonomyrefreshed-admin.php:966, includes/class-simpletaxonomyrefreshed-admin.php:1342
 msgid "Rewrite URL"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:966, includes/class-simpletaxonomyrefreshed-admin.php:1400
+#: includes/class-simpletaxonomyrefreshed-admin.php:967, includes/class-simpletaxonomyrefreshed-admin.php:1403
 msgid "Permissions"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:967
+#: includes/class-simpletaxonomyrefreshed-admin.php:968
 msgid "REST"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:968
+#: includes/class-simpletaxonomyrefreshed-admin.php:969
 msgid "Other"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:986
+#: includes/class-simpletaxonomyrefreshed-admin.php:987
 msgid "Name (slug)"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:998
+#: includes/class-simpletaxonomyrefreshed-admin.php:999
 msgid "<strong>Name</strong> is used on DB and to register taxonomy. (Lowercase alphanumeric and _ characters only)"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1004, includes/class-simpletaxonomyrefreshed-admin.php:1364, includes/class-simpletaxonomyrefreshed-admin.php:1620
+#: includes/class-simpletaxonomyrefreshed-admin.php:1005, includes/class-simpletaxonomyrefreshed-admin.php:1367, includes/class-simpletaxonomyrefreshed-admin.php:1623
 msgid "Hierarchical ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1015
+#: includes/class-simpletaxonomyrefreshed-admin.php:1016
 msgid "The default hierarchical in WordPress are categories. Default post tags WP aren't hierarchical."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1019, includes/class-simpletaxonomyrefreshed-admin.php:1587
+#: includes/class-simpletaxonomyrefreshed-admin.php:1020, includes/class-simpletaxonomyrefreshed-admin.php:1590
 msgid "Post types"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1039
+#: includes/class-simpletaxonomyrefreshed-admin.php:1040
 msgid "Select which builtin or custom post types will use this taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1043, includes/class-simpletaxonomyrefreshed-admin.php:2003
+#: includes/class-simpletaxonomyrefreshed-admin.php:1044, includes/class-simpletaxonomyrefreshed-admin.php:2003
 msgid "Display Terms with Posts"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1052
+#: includes/class-simpletaxonomyrefreshed-admin.php:1053
 msgid "Option to display the terms on the Post page with associated data"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1059, includes/class-simpletaxonomyrefreshed-admin.php:2005
+#: includes/class-simpletaxonomyrefreshed-admin.php:1060, includes/class-simpletaxonomyrefreshed-admin.php:2005
 msgid "Display Terms Before text"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1060
+#: includes/class-simpletaxonomyrefreshed-admin.php:1061
 msgid "This text will be used before the Post terms display list"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1061
+#: includes/class-simpletaxonomyrefreshed-admin.php:1062
 msgid "The text will be trimmed and a single space output after this."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1066, includes/class-simpletaxonomyrefreshed-admin.php:2006
+#: includes/class-simpletaxonomyrefreshed-admin.php:1063, includes/class-simpletaxonomyrefreshed-admin.php:1071
+msgid "Will also ve used with the shortcode and post_terms block."
+msgstr ""
+
+#: includes/class-simpletaxonomyrefreshed-admin.php:1068, includes/class-simpletaxonomyrefreshed-admin.php:2006
 msgid "Display Terms After text"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1067
+#: includes/class-simpletaxonomyrefreshed-admin.php:1069
 msgid "This text will be used after the Post terms display list"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1068
+#: includes/class-simpletaxonomyrefreshed-admin.php:1070
 msgid "The text will be trimmed and a single space output before this."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1073
+#: includes/class-simpletaxonomyrefreshed-admin.php:1076
 msgid "Show in feeds ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1074
+#: includes/class-simpletaxonomyrefreshed-admin.php:1077
 msgid "Whether taxonomy tems will be shown in post feeds"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1091
+#: includes/class-simpletaxonomyrefreshed-admin.php:1094
 msgid "Public ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1092
+#: includes/class-simpletaxonomyrefreshed-admin.php:1095
 msgid "Whether taxonomy queries can be performed from the front page."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1097
+#: includes/class-simpletaxonomyrefreshed-admin.php:1100
 msgid "Publicly Queryable ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1098
+#: includes/class-simpletaxonomyrefreshed-admin.php:1101
 msgid "Whether the taxonomy is publicly queryable."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1103
+#: includes/class-simpletaxonomyrefreshed-admin.php:1106
 msgid "Display on admin ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1104
+#: includes/class-simpletaxonomyrefreshed-admin.php:1107
 msgid "Whether to generate and allow a UI for managing terms in this taxonomy in the admin."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1109
+#: includes/class-simpletaxonomyrefreshed-admin.php:1112
 msgid "Show in Menu ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1110
+#: includes/class-simpletaxonomyrefreshed-admin.php:1113
 msgid "Whether to show the taxonomy in the admin menu. If true, the taxonomy is shown as a submenu of the object type menu. If false, no menu is shown."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1115
+#: includes/class-simpletaxonomyrefreshed-admin.php:1118
 msgid "Show in nav menu ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1116
+#: includes/class-simpletaxonomyrefreshed-admin.php:1119
 msgid "Makes this taxonomy available for selection in navigation menus."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1121
+#: includes/class-simpletaxonomyrefreshed-admin.php:1124
 msgid "Show in tag cloud widget ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1122
+#: includes/class-simpletaxonomyrefreshed-admin.php:1125
 msgid "Put this setting to true for display this taxonomy on settings of tag cloud widget."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1127
+#: includes/class-simpletaxonomyrefreshed-admin.php:1130
 msgid "Display in Quick Edit panel ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1128
+#: includes/class-simpletaxonomyrefreshed-admin.php:1131
 msgid "Whether to show the taxonomy in the quick/bulk edit panel."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1133
+#: includes/class-simpletaxonomyrefreshed-admin.php:1136
 msgid "Display a column on admin lists ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1134
+#: includes/class-simpletaxonomyrefreshed-admin.php:1137
 msgid "Whether to display a column for the taxonomy on its post type admin listing screens."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1139
+#: includes/class-simpletaxonomyrefreshed-admin.php:1142
 msgid "Show in REST ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1140
+#: includes/class-simpletaxonomyrefreshed-admin.php:1143
 msgid "Whether to include the taxonomy in the REST API and Block Editor."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1144
+#: includes/class-simpletaxonomyrefreshed-admin.php:1147
 msgid "Show in REST needs to be set to TRUE for the taxonomy to appear in the Block Editor."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1151
+#: includes/class-simpletaxonomyrefreshed-admin.php:1154
 msgid "Labels Wording"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1159
+#: includes/class-simpletaxonomyrefreshed-admin.php:1162
 msgid "Name (label)"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1160
+#: includes/class-simpletaxonomyrefreshed-admin.php:1163
 msgid "This will be used as the taxonomy label."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1165
+#: includes/class-simpletaxonomyrefreshed-admin.php:1168
 msgid "Name Field Description"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1166
+#: includes/class-simpletaxonomyrefreshed-admin.php:1169
 msgid "The description of the name field."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1171
+#: includes/class-simpletaxonomyrefreshed-admin.php:1174
 msgid "Menu Name"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1172
+#: includes/class-simpletaxonomyrefreshed-admin.php:1175
 msgid "If not set this will default to the taxonomy label."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1177
+#: includes/class-simpletaxonomyrefreshed-admin.php:1180
 msgid "Singular Name"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1183
+#: includes/class-simpletaxonomyrefreshed-admin.php:1186
 msgid "Search Terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1189
+#: includes/class-simpletaxonomyrefreshed-admin.php:1192
 msgid "Popular Terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1195
+#: includes/class-simpletaxonomyrefreshed-admin.php:1198
 msgid "All Terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1201
+#: includes/class-simpletaxonomyrefreshed-admin.php:1204
 msgid "Parent Term"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1207
+#: includes/class-simpletaxonomyrefreshed-admin.php:1210
 msgid "Parent Term:"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1208
+#: includes/class-simpletaxonomyrefreshed-admin.php:1211
 msgid "Parent Term with colon"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1213
+#: includes/class-simpletaxonomyrefreshed-admin.php:1216
 msgid "Parent Term Field Description"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1214
+#: includes/class-simpletaxonomyrefreshed-admin.php:1217
 msgid "These Description texts will appear in the term item entry screen."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1220
+#: includes/class-simpletaxonomyrefreshed-admin.php:1223
 msgid "Slug Field Description"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1226
+#: includes/class-simpletaxonomyrefreshed-admin.php:1229
 msgid "Descriptiom Field Description"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1232
+#: includes/class-simpletaxonomyrefreshed-admin.php:1235
 msgid "Edit Term"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1238
+#: includes/class-simpletaxonomyrefreshed-admin.php:1241
 msgid "View Term"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1244
+#: includes/class-simpletaxonomyrefreshed-admin.php:1247
 msgid "Update Term"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1250
+#: includes/class-simpletaxonomyrefreshed-admin.php:1253
 msgid "Add New Term"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1256
+#: includes/class-simpletaxonomyrefreshed-admin.php:1259
 msgid "New Term Name"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1262
+#: includes/class-simpletaxonomyrefreshed-admin.php:1265
 msgid "Separate terms with commas"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1268
+#: includes/class-simpletaxonomyrefreshed-admin.php:1271
 msgid "Add or remove terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1274
+#: includes/class-simpletaxonomyrefreshed-admin.php:1277
 msgid "Choose from the most used terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1280
+#: includes/class-simpletaxonomyrefreshed-admin.php:1283
 msgid "No terms found"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1286
+#: includes/class-simpletaxonomyrefreshed-admin.php:1289
 msgid "No terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1292
+#: includes/class-simpletaxonomyrefreshed-admin.php:1295
 msgid "Items list navigation"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1298
+#: includes/class-simpletaxonomyrefreshed-admin.php:1301
 msgid "Items list"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1304
+#: includes/class-simpletaxonomyrefreshed-admin.php:1307
 msgid "Most used"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1310
+#: includes/class-simpletaxonomyrefreshed-admin.php:1313
 msgid "Label displayed after a term has been updated"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1316
+#: includes/class-simpletaxonomyrefreshed-admin.php:1319
 msgid "Related filter"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1317
+#: includes/class-simpletaxonomyrefreshed-admin.php:1320
 msgid "The related filter is displayed at the top of list tables, but only for hierarchical taxonomies"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1322
+#: includes/class-simpletaxonomyrefreshed-admin.php:1325
 msgid "Title for a navigation link block variation."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1323, includes/class-simpletaxonomyrefreshed-admin.php:1329
+#: includes/class-simpletaxonomyrefreshed-admin.php:1326, includes/class-simpletaxonomyrefreshed-admin.php:1332
 msgid "Used in the block editor."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1328
+#: includes/class-simpletaxonomyrefreshed-admin.php:1331
 msgid "Description for a navigation link block"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1346
+#: includes/class-simpletaxonomyrefreshed-admin.php:1349
 msgid "Rewrite ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1347
+#: includes/class-simpletaxonomyrefreshed-admin.php:1350
 msgid "Rewriting allows to build nice URL for your new custom taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1352
+#: includes/class-simpletaxonomyrefreshed-admin.php:1355
 msgid "Rewrite Slug"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1353
+#: includes/class-simpletaxonomyrefreshed-admin.php:1356
 msgid "Customize the permastruct slug."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1358
+#: includes/class-simpletaxonomyrefreshed-admin.php:1361
 msgid "With Front ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1359
+#: includes/class-simpletaxonomyrefreshed-admin.php:1362
 msgid "Should the permastruct be prepended with WP_Rewrite::$front."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1365
+#: includes/class-simpletaxonomyrefreshed-admin.php:1368
 msgid "Either hierarchical rewrite tag or not."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1369
+#: includes/class-simpletaxonomyrefreshed-admin.php:1372
 msgid "EP_MASK"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1373
+#: includes/class-simpletaxonomyrefreshed-admin.php:1376
 msgid "EP_NONE"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1374
+#: includes/class-simpletaxonomyrefreshed-admin.php:1377
 msgid "EP_PERMALINK"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1375
+#: includes/class-simpletaxonomyrefreshed-admin.php:1378
 msgid "EP_ATTACHMENT"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1376
+#: includes/class-simpletaxonomyrefreshed-admin.php:1379
 msgid "EP_DATE"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1377
+#: includes/class-simpletaxonomyrefreshed-admin.php:1380
 msgid "EP_YEAR"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1378
+#: includes/class-simpletaxonomyrefreshed-admin.php:1381
 msgid "EP_MONTH"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1379
+#: includes/class-simpletaxonomyrefreshed-admin.php:1382
 msgid "EP_DAY"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1380
+#: includes/class-simpletaxonomyrefreshed-admin.php:1383
 msgid "EP_ROOT"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1381
+#: includes/class-simpletaxonomyrefreshed-admin.php:1384
 msgid "EP_COMMENTS"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1382
+#: includes/class-simpletaxonomyrefreshed-admin.php:1385
 msgid "EP_SEARCH"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1383
+#: includes/class-simpletaxonomyrefreshed-admin.php:1386
 msgid "EP_CATEGORIES"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1384
+#: includes/class-simpletaxonomyrefreshed-admin.php:1387
 msgid "EP_TAGS"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1385
+#: includes/class-simpletaxonomyrefreshed-admin.php:1388
 msgid "EP_AUTHORS"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1386
+#: includes/class-simpletaxonomyrefreshed-admin.php:1389
 msgid "EP_PAGES"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1389
+#: includes/class-simpletaxonomyrefreshed-admin.php:1392
 msgid "Assign an endpoint mask."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1390
+#: includes/class-simpletaxonomyrefreshed-admin.php:1393
 msgid "N.B. Use CTRL or Mac Cmd to select multiple entries."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1407
+#: includes/class-simpletaxonomyrefreshed-admin.php:1410
 msgid "Manage terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1408
+#: includes/class-simpletaxonomyrefreshed-admin.php:1411
 msgid "Ability to view terms in the administration. Defaults to 'manage_categories'."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1413
+#: includes/class-simpletaxonomyrefreshed-admin.php:1416
 msgid "Edit terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1414
+#: includes/class-simpletaxonomyrefreshed-admin.php:1417
 msgid "Grants the ability to edit and create terms. Defaults to 'manage_categories'"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1419
+#: includes/class-simpletaxonomyrefreshed-admin.php:1422
 msgid "Delete terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1420
+#: includes/class-simpletaxonomyrefreshed-admin.php:1423
 msgid "Gives permission to delete terms from the taxonomy. Defaults to 'manage_categories'."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1425
+#: includes/class-simpletaxonomyrefreshed-admin.php:1428
 msgid "Assign terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1426
+#: includes/class-simpletaxonomyrefreshed-admin.php:1429
 msgid "Capability for assigning terms in the new/edit post screen. Defaults to 'edit_terms'."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1436
+#: includes/class-simpletaxonomyrefreshed-admin.php:1439
 msgid "REST Functionality"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1438
+#: includes/class-simpletaxonomyrefreshed-admin.php:1441
 msgid "These values should only be set when specific processing is required."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1444
+#: includes/class-simpletaxonomyrefreshed-admin.php:1447
 msgid "REST Base"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1445
+#: includes/class-simpletaxonomyrefreshed-admin.php:1448
 msgid "To change the base url of REST API route."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1450
+#: includes/class-simpletaxonomyrefreshed-admin.php:1453
 msgid "REST Namespace"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1451
+#: includes/class-simpletaxonomyrefreshed-admin.php:1454
 msgid "Defaults to '/wp/v2'."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1456
+#: includes/class-simpletaxonomyrefreshed-admin.php:1459
 msgid "REST Controller Class"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1457
+#: includes/class-simpletaxonomyrefreshed-admin.php:1460
 msgid "REST API Controller class name. Default is 'WP_REST_Terms_Controller'."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1467
+#: includes/class-simpletaxonomyrefreshed-admin.php:1470
 msgid "Other Options"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1474
+#: includes/class-simpletaxonomyrefreshed-admin.php:1477
 msgid "Query var"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1475
+#: includes/class-simpletaxonomyrefreshed-admin.php:1478
 msgid "<strong>Query var</strong> is used for build URLs of taxonomy. If this value is empty, WordPress will use the taxonomy slug for build URL."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1480
+#: includes/class-simpletaxonomyrefreshed-admin.php:1483
 msgid "Update Count Callback"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1481
+#: includes/class-simpletaxonomyrefreshed-admin.php:1484
 msgid "Works much like a hook, in that it will be called when the count is updated."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1482
+#: includes/class-simpletaxonomyrefreshed-admin.php:1485
 msgid "Set to the text false to not display the metabox."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1487
+#: includes/class-simpletaxonomyrefreshed-admin.php:1490
 msgid "Meta Box Callback"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1488
+#: includes/class-simpletaxonomyrefreshed-admin.php:1491
 msgid "Provide a callback function for the meta box display."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1493
+#: includes/class-simpletaxonomyrefreshed-admin.php:1496
 msgid "Meta Box Sanitize Callback"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1494
+#: includes/class-simpletaxonomyrefreshed-admin.php:1497
 msgid "Callback function for sanitizing taxonomy data saved from a meta box."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1499
+#: includes/class-simpletaxonomyrefreshed-admin.php:1502
 msgid "Sort ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1500
+#: includes/class-simpletaxonomyrefreshed-admin.php:1503
 msgid "Whether this taxonomy should remember the order in which terms are added to objects."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1505
+#: includes/class-simpletaxonomyrefreshed-admin.php:1508
 msgid "Args - Taxonomy Items Sort Query"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1506
+#: includes/class-simpletaxonomyrefreshed-admin.php:1509
 msgid "Array giving query to order the taxonomy items attached to objects."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1511
+#: includes/class-simpletaxonomyrefreshed-admin.php:1514
 msgid "Default Term Name"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1512
+#: includes/class-simpletaxonomyrefreshed-admin.php:1515
 msgid "Default term name to apply to attach to objects."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1517
+#: includes/class-simpletaxonomyrefreshed-admin.php:1520
 msgid "Default Term Slug"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1518
+#: includes/class-simpletaxonomyrefreshed-admin.php:1521
 msgid "Default term slug for the default term."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1523
+#: includes/class-simpletaxonomyrefreshed-admin.php:1526
 msgid "Default Term Description"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1524
+#: includes/class-simpletaxonomyrefreshed-admin.php:1527
 msgid "Default term description for the default term."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1540
+#: includes/class-simpletaxonomyrefreshed-admin.php:1543
 msgid "WPGraphQL Support"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1547
+#: includes/class-simpletaxonomyrefreshed-admin.php:1550
 msgid "Show in WPGraphQL ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1548
+#: includes/class-simpletaxonomyrefreshed-admin.php:1551
 msgid "Whether this taxonomy is registered for WPGraphQL usage."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1552
+#: includes/class-simpletaxonomyrefreshed-admin.php:1555
 msgid "Following parameters are only needed if taxonomy is shown in WPGraphQL"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1558
+#: includes/class-simpletaxonomyrefreshed-admin.php:1561
 msgid "Graph QL Single Name"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1559
+#: includes/class-simpletaxonomyrefreshed-admin.php:1562
 msgid "Taxonomy Singular Name for WPGraphQL in camel case with no punctuation or spaces."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1564
+#: includes/class-simpletaxonomyrefreshed-admin.php:1567
 msgid "Graph QL Plural Name"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1565
+#: includes/class-simpletaxonomyrefreshed-admin.php:1568
 msgid "Taxonomy Plural Name for WPGraphQL in camel case with no punctuation or spaces."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1579
+#: includes/class-simpletaxonomyrefreshed-admin.php:1582
 msgid "Taxonomy needs to be allocated to Post Types and Publicly Queryable."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1580
+#: includes/class-simpletaxonomyrefreshed-admin.php:1583
 msgid "Advisable to have a column on the admin list screen."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1584
+#: includes/class-simpletaxonomyrefreshed-admin.php:1587
 msgid "Attention. You can use this function to define a duplicate filter if it already exists"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1582
+#: includes/class-simpletaxonomyrefreshed-admin.php:1585
 msgid "(See Visibility tab for these parameters.)"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1613
+#: includes/class-simpletaxonomyrefreshed-admin.php:1616
 msgid "You can add this taxonomy as a filter field on the admin list screen for selected builtin or custom post types linked to this taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1621
+#: includes/class-simpletaxonomyrefreshed-admin.php:1624
 msgid "Hierarchical dropdown. Only relevant for hierarchical taxonomies."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1626
+#: includes/class-simpletaxonomyrefreshed-admin.php:1629
 msgid "Hierarchy Depth"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1627
+#: includes/class-simpletaxonomyrefreshed-admin.php:1630
 msgid "Hierarchical dropdown depth. Only relevant for hierarchical taxonomies."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1632
+#: includes/class-simpletaxonomyrefreshed-admin.php:1635
 msgid "Show Count ?"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1633
+#: includes/class-simpletaxonomyrefreshed-admin.php:1636
 msgid "Whether to include post counts. Default false"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1638
+#: includes/class-simpletaxonomyrefreshed-admin.php:1641
 msgid "Hide Empty"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1639
+#: includes/class-simpletaxonomyrefreshed-admin.php:1642
 msgid "True to hide element if Term count is zero."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1644
+#: includes/class-simpletaxonomyrefreshed-admin.php:1647
 msgid "Hide if Empty"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1645
+#: includes/class-simpletaxonomyrefreshed-admin.php:1648
 msgid "True to skip generating markup if no terms are found. Default false"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1659
+#: includes/class-simpletaxonomyrefreshed-admin.php:1662
 msgid "A function has been defined for calculating term counts. This function is therefore not available."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1665
+#: includes/class-simpletaxonomyrefreshed-admin.php:1668
 msgid "Term counts are normally based on Published posts. This option provides some no-coding configuration."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1667
+#: includes/class-simpletaxonomyrefreshed-admin.php:1670
 msgid "Count Options"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1670
+#: includes/class-simpletaxonomyrefreshed-admin.php:1673
 msgid "Standard (Publish)"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1671, includes/class-simpletaxonomyrefreshed-admin.php:1721
+#: includes/class-simpletaxonomyrefreshed-admin.php:1674, includes/class-simpletaxonomyrefreshed-admin.php:1723
 msgid "Any (Except Trash)"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1672
+#: includes/class-simpletaxonomyrefreshed-admin.php:1675
 msgid "Selection"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1678, includes/class-simpletaxonomyrefreshed-admin.php:1728
+#: includes/class-simpletaxonomyrefreshed-admin.php:1681, includes/class-simpletaxonomyrefreshed-admin.php:1730
 msgid "Additional parameters not shown as they are not applicable."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1683
+#: includes/class-simpletaxonomyrefreshed-admin.php:1686
 msgid "Status Selection"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1698
+#: includes/class-simpletaxonomyrefreshed-admin.php:1701
 msgid "Choose the set of Statuses to be included in Term counts."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1714
+#: includes/class-simpletaxonomyrefreshed-admin.php:1717
 msgid "Term controls are to be applied on posts. This option provides some no-coding configuration."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1716
+#: includes/class-simpletaxonomyrefreshed-admin.php:1719
 msgid "Post status"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1719
+#: includes/class-simpletaxonomyrefreshed-admin.php:1721
 msgid "No control applied"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1720
+#: includes/class-simpletaxonomyrefreshed-admin.php:1722
 msgid "Published only"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1723
+#: includes/class-simpletaxonomyrefreshed-admin.php:1725
 msgid "Choose  the statuses of posts to apply the control."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1733
+#: includes/class-simpletaxonomyrefreshed-admin.php:1735
 msgid "How Control is applied"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1736
+#: includes/class-simpletaxonomyrefreshed-admin.php:1737
 msgid "When user cannot change terms give notification message but allow changes (notification at start of edit)"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1737
+#: includes/class-simpletaxonomyrefreshed-admin.php:1738
 msgid "When the post is saved"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1738
+#: includes/class-simpletaxonomyrefreshed-admin.php:1739
 msgid "As terms are changed and when the post is saved"
 msgstr ""
 
