@@ -234,11 +234,9 @@ function ccSel(evt, objNo) {
 	}
 	for (var i = 0; i < cc_types.length; i++) {
 		cc_types[i].setAttribute('tabindex', '-1');
-		cc_types[i].setAttribute('aria-selected', 'false');
 		cc_types[i].removeAttribute('checked');
 	}
 	cc_types[objNo].setAttribute('tabindex', '0');
-	cc_types[objNo].setAttribute('aria-selected', 'true');
 	cc_types[objNo].setAttribute('checked', 'checked');
 	evt.stopPropagation();
 }
@@ -246,11 +244,9 @@ function ccSel(evt, objNo) {
 function cchSel(evt, objNo) {
 	for (var i = 0; i < cc_hards.length; i++) {
 		cc_hards[i].setAttribute('tabindex', '-1');
-		cc_hards[i].setAttribute('aria-selected', 'false');
 		cc_hards[i].removeAttribute('checked');
 	}
 	cc_hards[objNo].setAttribute('tabindex', '0');
-    cc_hards[objNo].setAttribute('aria-selected', 'true');
 	cc_hards[objNo].setAttribute('checked', 'checked');
 	evt.stopPropagation();
 }

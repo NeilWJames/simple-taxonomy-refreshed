@@ -237,6 +237,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				__( 'You need to enter the Name (slug), whether it is Hierarchical or not and the post type(s) it will be linked to on the Main Options tab and the Name (label) on the Labels tab. Most of the others can be left as their default value - expect possibly the labels.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'WP 5.5 brings the possibility to add a default term for all objects defined from the taxonomy. This may be entered on the Other tab. The slug and description can also be entered here and used to create the term.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'By default the terms do not appear with the post. The options at the bottom of the Main Options screen allow you to output the attached terms with the post content and/or excerpt information.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'For greater control on positioning, you can also display these terms with a shortcode <code>staxo_post_terms</code> or plugin block <code>post_terms</code>.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'When done, simply click <code>Add Taxonomy</code> or <code>Update Taxonomy</code> at the bottom to save your changes', 'simple-taxonomy-refreshed' ) . '</p>',
 			__( 'WPGraphQL', 'simple-taxonomy-refreshed' ) =>
 				'<p>' . __( 'Extra taxonomy-related functionality.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
@@ -1058,14 +1059,16 @@ class SimpleTaxonomyRefreshed_Admin {
 											'st_before',
 											esc_html__( 'Display Terms Before text', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'This text will be used before the Post terms display list', 'simple-taxonomy-refreshed' ) . '<br/>' .
-											esc_html__( 'The text will be trimmed and a single space output after this.', 'simple-taxonomy-refreshed' )
+											esc_html__( 'The text will be trimmed and a single space output after this.', 'simple-taxonomy-refreshed' ) . '<br/>' .
+											esc_html__( 'Will also ve used with the shortcode and post_terms block.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
 											'st_after',
 											esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'This text will be used after the Post terms display list', 'simple-taxonomy-refreshed' ) . '<br/>' .
-											esc_html__( 'The text will be trimmed and a single space output before this.', 'simple-taxonomy-refreshed' )
+											esc_html__( 'The text will be trimmed and a single space output before this.', 'simple-taxonomy-refreshed' ) . '<br/>' .
+											esc_html__( 'Will also ve used with the shortcode and post_terms block.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
@@ -1714,14 +1717,13 @@ class SimpleTaxonomyRefreshed_Admin {
 									<p id="cc_descr"><?php esc_html_e( 'Term controls are to be applied on posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
 									<tr>
 										<th scope="row"><label id="cc_label"><?php esc_html_e( 'Post status', 'simple-taxonomy-refreshed' ); ?></label></th>
-										<td><div id="cc_type" role="radiogroup" aria-labelledby="cc_label" aria-describedby="cc_descr">
-											<fieldset>
+										<td><fieldset><div id="cc_type" role="radiogroup" aria-labelledby="cc_label" aria-describedby="cc_descr">
 											<label><input type="radio" id="cc_off" name="st_cc_type" role="radio" <?php checked( 0, $taxonomy['st_cc_type'], true ); ?> value="0" onclick="ccSel(event, 0)"><?php esc_html_e( 'No control applied', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											<label><input type="radio" id="cc_pub" name="st_cc_type" role="radio" <?php checked( 1, $taxonomy['st_cc_type'], true ); ?> value="1" onclick="ccSel(event, 1)"><?php esc_html_e( 'Published only', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											<label><input type="radio" id="cc_any" name="st_cc_type" role="radio" <?php checked( 2, $taxonomy['st_cc_type'], true ); ?> value="2" onclick="ccSel(event, 2)"><?php esc_html_e( 'Any (Except Trash)', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											</fieldset>
+											</div></fieldset>
 											<span class="description"><?php esc_html_e( 'Choose  the statuses of posts to apply the control.', 'simple-taxonomy-refreshed' ); ?></span>
-										</div></td>
+										</td>
 									</tr>
 								</table>
 								<span id="control_tab_0" <?php echo ( empty( $taxonomy['st_cc_type'] ) ? '' : 'class="is-hidden"' ); ?>>
@@ -1731,13 +1733,11 @@ class SimpleTaxonomyRefreshed_Admin {
 								<table class="form-table" style="clear:none;">
 									<tr>
 										<th scope="row"><label id="cch_label"><?php esc_html_e( 'How Control is applied', 'simple-taxonomy-refreshed' ); ?></label></th>
-										<td><div id="cc_hard" role="radiogroup" aria-labelledby="cch_label" aria-describedby="cch_descr">
-											<fieldset>
+										<td><fieldset><div id="cc_hard" role="radiogroup" aria-labelledby="cch_label" aria-describedby="cch_descr">
 											<label><input type="radio" id="cc_pos" name="st_cc_hard" role="radio" <?php checked( 0, $taxonomy['st_cc_hard'], true ); ?> value="0" onclick="cchSel(event, 0)"><?php esc_html_e( 'When user cannot change terms give notification message but allow changes (notification at start of edit)', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											<label><input type="radio" id="cc_sft" name="st_cc_hard" role="radio" <?php checked( 1, $taxonomy['st_cc_hard'], true ); ?> value="1" onclick="cchSel(event, 1)"><?php esc_html_e( 'When the post is saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
 											<label><input type="radio" id="cc_hrd" name="st_cc_hard" role="radio" <?php checked( 2, $taxonomy['st_cc_hard'], true ); ?> value="2" onclick="cchSel(event, 2)"><?php esc_html_e( 'As terms are changed and when the post is saved', 'simple-taxonomy-refreshed' ); ?></label><br/>
-											</fieldset>
-											</div><span id="cch_descr" class="description">
+											</div></fieldset><span id="cch_descr" class="description">
 											<p><?php esc_html_e( 'Choose the control level to be applied.', 'simple-taxonomy-refreshed' ); ?></p>
 											<p><?php esc_html_e( 'Notification option allows a user who can edit the post but cannot change the terms attached to make other updates.', 'simple-taxonomy-refreshed' ); ?></p>
 											<p><?php esc_html_e( 'Other options will block the user from making updates if the number of terms are not within required limits.', 'simple-taxonomy-refreshed' ); ?></p></p>
