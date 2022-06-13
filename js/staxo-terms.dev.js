@@ -102,7 +102,7 @@ registerBlockType( 'simple-taxonomy-refreshed/post-terms', {
 				type: 'block',
 				blocks: ['core/shortcode'],
 				isMatch: function( {text} ) {
-					return /^\[?str_post_terms\b\s*/.test(text);
+					return /^\[?staxo_post_terms\b\s*/.test(text);
 				},
 				transform: ( { text } ) => {
 					// default.
@@ -147,7 +147,7 @@ registerBlockType( 'simple-taxonomy-refreshed/post-terms', {
 					} else {
 						sel = " tax=" + attributes.tax;
 					}
-				var content = "[str_post_terms" + sel + "]";
+				var content = "[staxo_post_terms" + sel + "]";
 					return createBlock( 'core/shortcode', {
 						text : content
 					} );
