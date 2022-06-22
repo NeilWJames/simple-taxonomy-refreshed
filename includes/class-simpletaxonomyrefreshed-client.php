@@ -547,7 +547,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @since 2.2.0
 	 */
 	public static function get_taxonomies() {
-		$taxonomies = wp_cache_get( 'staxo_own_taxos' );
+		$taxonomies = wp_cache_get( 'staxo_own_taxos', '' );
 
 		if ( false === $taxonomies ) {
 			$taxonomies = array();
@@ -563,7 +563,7 @@ class SimpleTaxonomyRefreshed_Client {
 				asort( $taxonomies );
 			}
 
-			wp_cache_set( 'staxo_own_taxos', $taxonomies, '', ( WP_DEBUG ? 10 : 120 ) );
+			wp_cache_set( 'staxo_own_taxos', $taxonomies );
 		}
 
 		return $taxonomies;

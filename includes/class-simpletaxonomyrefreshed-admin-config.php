@@ -51,8 +51,12 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 	public static function add_menu() {
 		add_submenu_page( SimpleTaxonomyRefreshed_Admin::ADMIN_SLUG, __( 'Configuration Export/Import', 'simple-taxonomy-refreshed' ), __( 'Configuration Export/Import', 'simple-taxonomy-refreshed' ), 'manage_options', self::CONFIG_SLUG, array( __CLASS__, 'page_config' ) );
 
+		$hook_suffix = 'taxonomies_page_' . self::CONFIG_SLUG;
 		// help text.
-		add_action( 'load-taxonomies_page_' . self::CONFIG_SLUG, array( __CLASS__, 'add_help_tab' ) );
+		add_action( 'load-' . $hook_suffix, array( __CLASS__, 'add_help_tab' ) );
+
+		// ensure sortable libraries.
+		add_action( 'admin_print_scripts-' . $hook_suffix, array( __CLASS__, 'add_js_libs' ) );
 	}
 
 	/**
@@ -62,8 +66,24 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 	 */
 	public static function check_importexport() {
 		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['action'] ) && self::EXP_FILE_SLUG === $_GET['action'] ) {
+		if ( isset( $_POST['action'] ) && self::EXP_FILE_SLUG === $_POST['action'] ) {
 			check_admin_referer( self::EXP_FILE_SLUG );
+
+			// remove any spurious buffered output.
+			while ( ob_get_level() ) {
+				ob_end_clean();
+			}
+
+			// is a reordering of taxionomies wanted?
+			$options = get_option( OPTION_STAXO );
+			if ( isset( $_POST['taxo_list_arr'] ) && ! empty( $_POST['taxo_list_arr'] ) ) {
+				$taxos = json_decode( sanitize_text_field( wp_unslash( $_POST['taxo_list_arr'] ) ), true );
+				$ntaxo = array();
+				foreach ( $taxos as $tax ) {
+					$ntaxo[ $tax ] = $options['taxonomies'][ $tax ];
+				}
+				$options['taxonomies'] = $ntaxo;
+			}
 
 			// No cache.
 			header( 'Expires: ' . gmdate( 'D, d M Y H:i:s', time() + ( 24 * 60 * 60 ) ) . ' GMT' );
@@ -83,39 +103,46 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 			// phpcs:ignore
 			header( 'Content-Disposition: attachment; filename=staxo-config-' . date( 'ymdHisT' ) . '.json;' );
 			// phpcs:ignore  WordPress.Security.EscapeOutput
-			die( 'SIMPLETAXONOMYREFRESHED' . wp_json_encode( get_option( OPTION_STAXO ) ) );
-		} elseif ( isset( $_POST[ self::IMP_FILE_SLUG ] ) && isset( $_FILES['config_file'] ) ) {  // phpcs:ignore  WordPress.Security.NonceVerification.Recommended
+			die( 'SIMPLETAXONOMYREFRESHED' . wp_json_encode( $options ) );
+		}
+
+		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_POST[ self::IMP_FILE_SLUG ] ) && isset( $_FILES['config_file'] ) ) {
 			check_admin_referer( self::IMP_FILE_SLUG );
 
 			// phpcs:ignore
 			if ( $_FILES['config_file']['error'] > 0 ) {
 				add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'An error occured during the config file upload. Please fix your server configuration and retry.', 'simple-taxonomy-refreshed' ), 'error' );
+				return;
+			}
+
+			// phpcs:ignore
+			$config_file = file_get_contents( $_FILES['config_file']['tmp_name'] );
+			if ( 'SIMPLETAXONOMYREFRESHED' !== substr( $config_file, 0, strlen( 'SIMPLETAXONOMYREFRESHED' ) ) ) {
+				add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
 			} else {
-				// phpcs:ignore
-				$config_file = file_get_contents( $_FILES['config_file']['tmp_name'] );
-				if ( 'SIMPLETAXONOMYREFRESHED' !== substr( $config_file, 0, strlen( 'SIMPLETAXONOMYREFRESHED' ) ) ) {
+				$config_file = json_decode( substr( $config_file, strlen( 'SIMPLETAXONOMYREFRESHED' ) ), true );
+				if ( ! is_array( $config_file ) ) {
 					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
-				} else {
-					$config_file = json_decode( substr( $config_file, strlen( 'SIMPLETAXONOMYREFRESHED' ) ), true );
-					if ( ! is_array( $config_file ) ) {
-						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
-					} elseif ( isset( $config_file['taxonomies'] ) || isset( $config_file['list_order'] ) || isset( $config_file['externals'] ) ) {
-						// looks as though it is OK so load it.
-						// clear cache (need to do first as values could be different).
-						$options = get_option( OPTION_STAXO );
-						if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-							foreach ( (array) $options['taxonomies'] as $taxonomy => $tax_data ) {
-								wp_cache_delete( 'staxo_sel_' . $taxonomy );
-							}
+				} elseif ( isset( $config_file['taxonomies'] ) || isset( $config_file['list_order'] ) || isset( $config_file['externals'] ) ) {
+					// looks as though it is OK so load it.
+					// clear caches (need to do first as values could be different).
+					$options = get_option( OPTION_STAXO );
+					if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+						foreach ( (array) $options['taxonomies'] as $taxonomy => $tax_data ) {
+							wp_cache_delete( 'staxo_sel_' . $taxonomy );
 						}
-						update_option( OPTION_STAXO, $config_file );
-						SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache();
-						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'OK. Configuration is restored.', 'simple-taxonomy-refreshed' ), 'updated' );
-						// Change of file may provoke a change of rewrite rules, so trigger it via transient data.
-						set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
-					} else {
-						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
+						wp_cache_delete( 'staxo_own_taxos' );
 					}
+					wp_cache_delete( 'staxo_taxonomies' );
+					wp_cache_delete( 'staxo_orderings' );
+					update_option( OPTION_STAXO, $config_file );
+					SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache();
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'OK. Configuration is restored.', 'simple-taxonomy-refreshed' ), 'updated' );
+					// Change of file may provoke a change of rewrite rules, so trigger it via transient data.
+					set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
+				} else {
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
 				}
 			}
 		}
@@ -135,7 +162,16 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 			if ( false === $options || empty( $options ) ) {
 				echo '<p>' . esc_html__( 'No configuration exists to export.', 'simple-taxonomy-refreshed' ) . '</p>';
 			} else {
-				echo '<a class="button" href="' . esc_url( wp_nonce_url( 'admin.php?page=' . self::CONFIG_SLUG . '&amp;action=' . self::EXP_FILE_SLUG, self::EXP_FILE_SLUG ) ) . '">' . esc_html__( 'Export config file', 'simple-taxonomy-refreshed' ) . '</a>';
+				?>
+				<form action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::CONFIG_SLUG ) ); ?>" method="post">
+				<?php self::process_taxos( $options ); ?>
+				<p class="submit">
+					<input type="hidden" name="action" value="<?php echo esc_html( self::EXP_FILE_SLUG ); ?>" />
+					<?php wp_nonce_field( self::EXP_FILE_SLUG ); ?>
+					<input type="submit" name="<?php echo esc_html( self::EXP_FILE_SLUG ); ?>" id="<?php echo esc_html( self::EXP_FILE_SLUG ); ?>" value="<?php esc_html_e( 'Export config file', 'simple-taxonomy-refreshed' ); ?>" class="button-primary" />
+				</p>
+				</form>
+				<?php
 			}
 			?>
 			<p>&nbsp;</p>
@@ -162,6 +198,85 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 		<?php
 	}
 
+	/**
+	 * Adds custom taxonomies sort list.
+	 *
+	 * @since 2.3
+	 * @param array $options taxonomy option.
+	 * @return void
+	 */
+	private static function process_taxos( $options ) {
+		if ( ! isset( $options['taxonomies'] ) ) {
+			echo '<p>' . esc_html__( 'No custom taxonomies to export.', 'simple-taxonomy-refreshed' ) . '</p>';
+			return;
+		}
+		if ( 1 === count( $options['taxonomies'] ) ) {
+			echo '<p>' . esc_html__( 'Only one custom taxonomy defined. No reorder possible on export.', 'simple-taxonomy-refreshed' ) . '</p>';
+			return;
+		}
+		// Stuff can be reordered.
+		?>
+		<style  type="text/css">
+		/* Style the draggable list items */
+		.sort-li {
+			border: 1px solid #ccc;
+			margin: 20px 5px;
+			padding: 10px 20px;
+		}
+
+		.ui-sortable-placeholder {
+			border: 1px solid #ccc;
+			margin: 5px 5px;
+			padding: 15px 20px;
+			background-color: #ddd;
+		}
+
+		</style>
+		<?php
+		echo '<p>' . esc_html__( 'You can reorder the custom taxonomies defined on export.', 'simple-taxonomy-refreshed' ) . '</p>';
+		echo '<p>' . esc_html__( 'On re-importing, they will be displayed in the order of the exported file.', 'simple-taxonomy-refreshed' ) . '</p>';
+		echo '<p>' . esc_html__( 'Drag the entries to create the required order.', 'simple-taxonomy-refreshed' ) . '</p>';
+		echo '<div id="taxo_list_box" class="meta-box-sortabless">';
+		echo '<div class="postbox">';
+		echo '<div class="inside"><ul id="taxo_list">';
+		foreach ( $options['taxonomies'] as $li ) {
+			echo '<li class="sort-li">' . esc_html( $li['name'] ) . '</li>';
+		}
+		echo '</ul></div></div></div>';
+		?>
+		<input type="hidden" name="taxo_list_arr" id="taxo_list_arr" value="" />
+		<script type="text/javascript">
+		function setSortable() {
+			jQuery( "#taxo_list" ).sortable({
+				placeholder : "ui-sortable-placeholder",
+				update : function(event, ui) {
+					set_array = new Array();
+					var set = document.getElementById("taxo_list").getElementsByClassName("sort-li");
+					for (const elt of set)  {
+						set_array.push(elt.innerText);
+					};
+					document.getElementById( "taxo_list_arr" ).value = JSON.stringify(set_array);
+				}
+			});
+		}
+
+		document.addEventListener('DOMContentLoaded', function(evt) {
+			setSortable();
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Adds js libraries for sorting.
+	 *
+	 * @since 2.0.0
+	 * @return void
+	 */
+	public static function add_js_libs() {
+		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.NoExplicitVersion
+		wp_enqueue_script( 'jquery-ui-sortable', '', array( 'jquery-ui-core', 'jquery' ), false, true );
+	}
 	/**
 	 * Adds help tabs to help tab API.
 	 *

@@ -2166,6 +2166,9 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		update_option( OPTION_STAXO, $current_options );
 
+		// Force cache refresh.
+		wp_cache_delete( 'staxo_own_taxos', '' );
+
 		global $strc;
 		$cntl_post_types = $strc::refresh_term_cntl_cache();
 
@@ -2230,6 +2233,9 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		update_option( OPTION_STAXO, $current_options );
 
+		// Force cache refresh.
+		wp_cache_delete( 'staxo_own_taxos', '' );
+
 		global $strc;
 		$cntl_post_types = $strc::refresh_term_cntl_cache();
 
@@ -2286,6 +2292,9 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		update_option( OPTION_STAXO, $current_options );
 
+		// Force cache refresh.
+		wp_cache_delete( 'staxo_own_taxos', '' );
+
 		global $strc;
 		$cntl_post_types = $strc::refresh_term_cntl_cache();
 
@@ -2335,6 +2344,9 @@ class SimpleTaxonomyRefreshed_Admin {
 		}
 
 		update_option( OPTION_STAXO, $current_options );
+
+		// Force cache refresh.
+		wp_cache_delete( 'staxo_own_taxos', '' );
 
 		global $strc;
 		$cntl_post_types = $strc::refresh_term_cntl_cache();

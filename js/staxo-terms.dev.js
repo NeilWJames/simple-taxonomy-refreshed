@@ -142,7 +142,7 @@ registerBlockType( 'simple-taxonomy-refreshed/post-terms', {
 				blocks: [ 'core/shortcode' ],
 				transform: ( attributes ) => {
 					var sel = "";
-					if ("" === attributes.tax) {
+					if ("" === attributes.tax || undefined === attributes.tax) {
 						sel = " tax=''";
 					} else {
 						sel = " tax=" + attributes.tax;
