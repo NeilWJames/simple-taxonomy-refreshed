@@ -197,6 +197,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 			<h1><?php esc_html_e( 'Terms Import', 'simple-taxonomy-refreshed' ); ?></h1>
 			<p><?php esc_html_e( 'Import a list of words as terms of a taxonomy using this tool.', 'simple-taxonomy-refreshed' ); ?></p>
 			<ul style="margin-left:1em; list-style-type:disc"><li><?php esc_html_e( 'Enter one term per line.', 'simple-taxonomy-refreshed' ); ?></li>
+			<li><?php esc_html_e( 'You can add terms into a hierarchical taxonomy by entering an existing term to identify where the new terms are to be added.', 'simple-taxonomy-refreshed' ); ?></li>
 			<li><?php esc_html_e( 'Existing terms can be entered using either the Term Name or its Slug.', 'simple-taxonomy-refreshed' ); ?></li>
 			<li><?php esc_html_e( 'Use leading spaces or tabs to denote the level of the Term in the hierarchy relative to its parent.', 'simple-taxonomy-refreshed' ); ?></li></ul>
 			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
@@ -316,8 +317,9 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 				__( 'The simplest option is to enter a list of terms where each one is its name. Its slug will be generated automatically.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'This is entered as a list with no hierarchy. It is appropriate for either non-hierarchical taxonomies or a few entries of a hierarchical one.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'You can also enter entries hierarchically into a hierarchical taxonomy. For this, you need to indent the entries to identify the hierarchy of terms wanted.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'In particular, you may want to add terms into an existing hierarchy. So to identify where the entries are to go, you need to enter the existing term (either name or slug) in the list with no indent - and then to follow it by the sub-tree of terms wanted.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'An implication of this is that it tries to identify if the term entered already exists and does not try to enter it again.', 'simple-taxonomy-refreshed' ) . '</p>',
+				__( 'In particular, you may want to add terms into an existing hierarchy. So to identify where the entries are to go, you need to enter the existing term (either name or slug) in the list with no indent - and then to follow it by the sub-tree of terms to be added.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'An implication of this is that it tries to identify if the term entered already exists and does not try to enter it again.', 'simple-taxonomy-refreshed' ) . '</p>' .
+				__( 'Thus the count of terms added displayed will not be the number of lines present.', 'simple-taxonomy-refreshed' ) . '</p><p>',
 			__( 'Terms migrate', 'simple-taxonomy-refreshed' ) =>
 				'<p>' . __( 'The migrate tool allows you to copy existing terms of a taxonomy to pre-populate this screen for populating a taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>',
 		);

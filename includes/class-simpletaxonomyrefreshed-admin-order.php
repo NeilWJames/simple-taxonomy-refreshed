@@ -122,59 +122,6 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 
 		settings_errors( 'simple-taxonomy-refreshed' );
 		?>
-		<style  type="text/css">
-		/* Style the tab */
-		.tab {
-			overflow: hidden;
-			border: 1px solid #ccc;
-			background-color: #f1f1f1;
-		}
-
-		/* Style the buttons inside the tab */
-		.tab button {
-			background-color: inherit;
-			float: left;
-			border: none;
-			outline: none;
-			cursor: pointer;
-			padding: 12px 16px;
-			transition: 0.3s;
-			font-size: 15px;
-		}
-
-		/* Change background color of buttons on hover */
-		.tab button:hover {
-			background-color: #ccc;
-		}
-
-		/* Create an active/current tablink class */
-		.tab button.active {
-			background-color: #ddd;
-		}
-
-		/* Style the tab content */
-		.tabcontent {
-			display: none;
-			padding: 6px 12px;
-			border: 1px solid #ccc;
-			border-top: none;
-		}
-
-		/* Style the draggable list items */
-		.sort-li {
-			border: 1px solid #ccc;
-			margin: 20px 5px;
-			padding: 10px 20px;
-		}
-
-		.ui-sortable-placeholder {
-			border: 1px solid #ccc;
-			margin: 5px 5px;
-			padding: 15px 20px;
-			background-color: #ddd;
-		}
-
-		</style>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Taxonomy List Ordering', 'simple-taxonomy-refreshed' ); ?></h1>
 			<p><?php esc_html_e( 'Set the order of different Taxonomies within Posts Admin lists', 'simple-taxonomy-refreshed' ); ?></p>
@@ -203,6 +150,39 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 				return;
 			}
 			?>
+			<div id="poststuff" class="metabox-holder">
+			<div id="post-body-content">
+				<?php
+				// create tabs for each post type.
+				echo '<div role="tablist">';
+				$active = 'true';
+				foreach ( $displ_ordering as $post_type => $tax ) {
+					if ( count( $tax ) > 1 ) {
+						echo '<button type="button" role="tab" aria-controls="' . esc_html( $post_type ) . '_pnl" aria-selected="' . esc_html( $active ) . '">' . esc_html( $wp_post_types[ $post_type ]->labels->name ) . '</button>';
+						$active = 'false';
+					}
+				}
+				echo '</div>';
+
+				// create tab panel for each post type.
+				$hidden = '';
+				foreach ( $displ_ordering as $post_type => $tax ) {
+					if ( count( $tax ) > 1 ) {
+						// phpcs:ignore
+						echo '<div id="' . esc_html( $post_type ) . '_pnl" class="meta-box-sortabless' . $hidden . '" role="tabpanel">';
+						$hidden = ' is-hidden';
+						echo '<div class="postbox">';
+						echo '<div class="inside"><ul id="' . esc_html( $post_type ) . '_list">';
+						foreach ( $tax as $li ) {
+							echo '<li class="sort-li" tabindex="0">' . esc_html( $li ) . '</li>';
+						}
+						echo '</ul></div></div></div>';
+					}
+				}
+				?>
+				</div>
+			</div>
+
 			<form action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::ORDER_SLUG ) ); ?>" method="post">
 				<p class="submit">
 					<input type="hidden" name="action" value="<?php echo esc_html( self::ORDER_SLUG ); ?>" />
@@ -215,56 +195,8 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 				}
 				?>
 			</form>
-
-				<div id="poststuff" class="metabox-holder">
-				<div id="post-body-content">
-					<?php
-					// create tabs for each post type.
-					echo '<div class="tab">';
-					$active = ' active';
-					foreach ( $displ_ordering as $post_type => $tax ) {
-						if ( count( $tax ) > 1 ) {
-							echo '<button type="button" class="tablinks' . esc_html( $active ) . '" onclick="openTab(event, \'' . esc_html( $post_type ) . '\')">' . esc_html( $wp_post_types[ $post_type ]->labels->name ) . '</button>';
-							$active = '';
-						}
-					}
-					echo '</div>';
-
-					// create tab content for each post type.
-					$block = ' style="display: block;"';
-					foreach ( $displ_ordering as $post_type => $tax ) {
-						if ( count( $tax ) > 1 ) {
-							// phpcs:ignore
-							echo '<div id="' . esc_html( $post_type ) . '" class="meta-box-sortabless tabcontent"' . $block . '>';
-							$block = '';
-							echo '<div class="postbox">';
-							echo '<div class="inside"><ul id="' . esc_html( $post_type ) . '_list">';
-							foreach ( $tax as $li ) {
-								echo '<li class="sort-li">' . esc_html( $li ) . '</li>';
-							}
-							echo '</ul></div></div></div>';
-						}
-					}
-					?>
-				</div>
-			</div>
 		</div>
 		<script type="text/javascript">
-		function openTab(evt, tabName) {
-			var i, tabcontent, tablinks;
-			tabcontent = document.getElementsByClassName("tabcontent");
-			for (i = 0; i < tabcontent.length; i++) {
-				tabcontent[i].style.display = "none";
-			}
-			tablinks = document.getElementsByClassName("tablinks");
-			for (i = 0; i < tablinks.length; i++) {
-				tablinks[i].className = tablinks[i].className.replace(" active", "");
-			}
-			document.getElementById(tabName).style.display = "block";
-			evt.currentTarget.className += " active";
-			evt.stopPropagation();
-		}
-
 		function setSortable(grp) {
 			jQuery( "#"+grp+"_list" ).sortable({
 				placeholder : "ui-sortable-placeholder",
@@ -281,6 +213,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 		}
 
 		document.addEventListener('DOMContentLoaded', function(evt) {	
+			str_admin_init();
 			<?php
 			foreach ( $displ_ordering as $post_type => $tax ) {
 				echo 'setSortable("' . esc_html( $post_type ) . '");';
@@ -404,5 +337,9 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 	public static function add_js_libs() {
 		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.NoExplicitVersion
 		wp_enqueue_script( 'jquery-ui-sortable', '', array( 'jquery-ui-core', 'jquery' ), false, true );
+
+		// enqueue admin js/css.
+		global $stra;
+		$stra->enqueue_admin_libs();
 	}
 }

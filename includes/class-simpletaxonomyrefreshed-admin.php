@@ -79,26 +79,37 @@ class SimpleTaxonomyRefreshed_Admin {
 		$screen = get_current_screen();
 
 		if ( 'toplevel_page_staxo_settings' === $screen->id ) {
-			// enqueue on staxo-settings page only.
-			$dir      = dirname( __DIR__ );
-			$suffix   = ( WP_DEBUG ) ? '.dev' : '';
-			$index_js = 'js/staxo-admin' . $suffix . '.js';
-			wp_enqueue_script(
-				'staxo_admin',
-				plugins_url( $index_js, __DIR__ ),
-				array(),
-				filemtime( "$dir/$index_js" ),
-				true
-			);
-
-			$index_css = 'css/staxo-admin-style' . $suffix . '.css';
-			wp_enqueue_style(
-				'staxo-admin-style',
-				plugins_url( $index_css, __DIR__ ),
-				array(),
-				filemtime( "$dir/$index_css" )
-			);
+			// Add admin js/css.
+			self::enqueue_admin_libs();
 		}
+	}
+
+	/**
+	 * Call to enqueue the admin js/css.
+	 *
+	 * @since 2.3.0
+	 * @return void
+	 */
+	public function enqueue_admin_libs() {
+		// enqueue on staxo-settings page only.
+		$dir      = dirname( __DIR__ );
+		$suffix   = ( WP_DEBUG ) ? '.dev' : '';
+		$index_js = 'js/staxo-admin' . $suffix . '.js';
+		wp_enqueue_script(
+			'staxo_admin',
+			plugins_url( $index_js, __DIR__ ),
+			array(),
+			filemtime( "$dir/$index_js" ),
+			false
+		);
+
+		$index_css = 'css/staxo-admin-style' . $suffix . '.css';
+		wp_enqueue_style(
+			'staxo-admin-style',
+			plugins_url( $index_css, __DIR__ ),
+			array(),
+			filemtime( "$dir/$index_css" )
+		);
 	}
 
 	/**
@@ -1060,7 +1071,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											esc_html__( 'Display Terms Before text', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'This text will be used before the Post terms display list', 'simple-taxonomy-refreshed' ) . '<br/>' .
 											esc_html__( 'The text will be trimmed and a single space output after this.', 'simple-taxonomy-refreshed' ) . '<br/>' .
-											esc_html__( 'Will also ve used with the shortcode and post_terms block.', 'simple-taxonomy-refreshed' )
+											esc_html__( 'Will also be used with the shortcode and post_terms block.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
 											$taxonomy,
@@ -1068,7 +1079,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'This text will be used after the Post terms display list', 'simple-taxonomy-refreshed' ) . '<br/>' .
 											esc_html__( 'The text will be trimmed and a single space output before this.', 'simple-taxonomy-refreshed' ) . '<br/>' .
-											esc_html__( 'Will also ve used with the shortcode and post_terms block.', 'simple-taxonomy-refreshed' )
+											esc_html__( 'Will also be used with the shortcode and post_terms block.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
@@ -1806,9 +1817,25 @@ class SimpleTaxonomyRefreshed_Admin {
 		</form>
 		<script type="text/javascript">
 			document.addEventListener('DOMContentLoaded', function(evt) {
+				str_admin_init();
 				hideSel(evt, <?php echo esc_attr( $taxonomy['st_cb_type'] ); ?>)
 				ccSel(evt, <?php echo esc_attr( $taxonomy['st_cc_type'] ); ?>)
 				cchSel(evt, <?php echo esc_attr( $taxonomy['st_cc_hard'] ); ?>)
+				switchMinMax(evt);
+				document.getElementById("st_cc_umin").addEventListener('change', event => {
+					switchMinMax(evt);
+				});
+				document.getElementById("st_cc_umax").addEventListener('change', event => {
+					switchMinMax(evt);
+				});
+				document.getElementById("st_update_count_callback").addEventListener('change', event => {
+					hideCnt(evt);
+				});
+				document.getElementById("st_update_count_callback").addEventListener("keydown",function(e){
+					if(e.keyCode == 32){
+						e.preventDefault();
+					}
+				});
 			});
 		</script>
 		<?php

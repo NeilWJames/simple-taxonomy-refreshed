@@ -156,9 +156,10 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Export/Import Configuration', 'simple-taxonomy-refreshed' ); ?></h1>
 			<p>These options allow you to export or import the entire configuration file.</p>
+			<h2><?php esc_html_e( 'Export Configuration', 'simple-taxonomy-refreshed' ); ?></h2>
 			<?php
 			$options = get_option( OPTION_STAXO );
-			// mo export if no configuration.
+			// No export if no configuration.
 			if ( false === $options || empty( $options ) ) {
 				echo '<p>' . esc_html__( 'No configuration exists to export.', 'simple-taxonomy-refreshed' ) . '</p>';
 			} else {
@@ -174,6 +175,7 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 				<?php
 			}
 			?>
+			<h2><?php esc_html_e( 'Import Configuration', 'simple-taxonomy-refreshed' ); ?></h2>
 			<p>&nbsp;</p>
 			<a class="button" href="#" id="toggle-import_form"><?php esc_html_e( 'Import config file', 'simple-taxonomy-refreshed' ); ?></a>
 			<script type="text/javascript">
@@ -214,25 +216,6 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 			echo '<p>' . esc_html__( 'Only one custom taxonomy defined. No reorder possible on export.', 'simple-taxonomy-refreshed' ) . '</p>';
 			return;
 		}
-		// Stuff can be reordered.
-		?>
-		<style  type="text/css">
-		/* Style the draggable list items */
-		.sort-li {
-			border: 1px solid #ccc;
-			margin: 20px 5px;
-			padding: 10px 20px;
-		}
-
-		.ui-sortable-placeholder {
-			border: 1px solid #ccc;
-			margin: 5px 5px;
-			padding: 15px 20px;
-			background-color: #ddd;
-		}
-
-		</style>
-		<?php
 		echo '<p>' . esc_html__( 'You can reorder the custom taxonomies defined on export.', 'simple-taxonomy-refreshed' ) . '</p>';
 		echo '<p>' . esc_html__( 'On re-importing, they will be displayed in the order of the exported file.', 'simple-taxonomy-refreshed' ) . '</p>';
 		echo '<p>' . esc_html__( 'Drag the entries to create the required order.', 'simple-taxonomy-refreshed' ) . '</p>';
@@ -240,7 +223,7 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 		echo '<div class="postbox">';
 		echo '<div class="inside"><ul id="taxo_list">';
 		foreach ( $options['taxonomies'] as $li ) {
-			echo '<li class="sort-li">' . esc_html( $li['name'] ) . '</li>';
+			echo '<li class="sort-li" tabindex="0">' . esc_html( $li['name'] ) . '</li>';
 		}
 		echo '</ul></div></div></div>';
 		?>
@@ -276,6 +259,10 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 	public static function add_js_libs() {
 		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.NoExplicitVersion
 		wp_enqueue_script( 'jquery-ui-sortable', '', array( 'jquery-ui-core', 'jquery' ), false, true );
+
+		// enqueue admin js/css.
+		global $stra;
+		$stra->enqueue_admin_libs();
 	}
 	/**
 	 * Adds help tabs to help tab API.

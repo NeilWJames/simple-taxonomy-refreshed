@@ -1,11 +1,4 @@
 var i, tablist, vertical, panels, tabs, cb_types, cc_types, cc_hards;
-tablist  = document.querySelectorAll('[role="tablist"]');
-vertical = 'getAttribute' in tablist && tablist.getAttribute('aria-orientation') == 'vertical';
-panels   = document.querySelectorAll('[role="tabpanel"]');
-tabs     = document.querySelectorAll('[role="tab"]');
-cb_types = document.getElementsByName('st_cb_type');
-cc_types = document.getElementsByName('st_cc_type');
-cc_hards = document.getElementsByName('st_cc_hard');
 
 // For easy reference
 var keys = {
@@ -21,13 +14,23 @@ var direction = {
 	39: 1,
 };
 
-// Bind listeners
-for (var i = 0; i < tabs.length; ++i) {
-	tabs[i].addEventListener('click', clickEventListener);
-	tabs[i].addEventListener('keydown', keydownEventListener);
-	tabs[i].addEventListener('keyup', keyupEventListener);
-	// Build an array with all tabs (<button>s) in it
-	tabs[i].index = i;
+function str_admin_init() {
+	tablist  = document.querySelectorAll('[role="tablist"]');
+	vertical = 'getAttribute' in tablist && tablist.getAttribute('aria-orientation') == 'vertical';
+	panels   = document.querySelectorAll('[role="tabpanel"]');
+	tabs     = document.querySelectorAll('[role="tab"]');
+	cb_types = document.getElementsByName('st_cb_type');
+	cc_types = document.getElementsByName('st_cc_type');
+	cc_hards = document.getElementsByName('st_cc_hard');
+
+	// Bind listeners
+	for (var i = 0; i < tabs.length; ++i) {
+		tabs[i].addEventListener('click', clickEventListener);
+		tabs[i].addEventListener('keydown', keydownEventListener);
+		tabs[i].addEventListener('keyup', keyupEventListener);
+		// Build an array with all tabs (<button>s) in it
+		tabs[i].index = i;
+	}
 }
 
 // When a tab is clicked, activateTab is fired to activate it
@@ -270,21 +273,3 @@ function checkMinMax(evt) {
 	}
 	evt.stopPropagation();
 }
-
-document.addEventListener('DOMContentLoaded', function(evt) {
-	switchMinMax(evt);
-    document.getElementById("st_cc_umin").addEventListener('change', event => {
-    	switchMinMax(evt);
-	});
-	document.getElementById("st_cc_umax").addEventListener('change', event => {
-		switchMinMax(evt);
-	});
-	document.getElementById("st_update_count_callback").addEventListener('change', event => {
-		hideCnt(evt);
-	});
-	document.getElementById("st_update_count_callback").addEventListener("keydown",function(e){
-		if(e.keyCode == 32){
-			e.preventDefault();
-		}
-	})
-});

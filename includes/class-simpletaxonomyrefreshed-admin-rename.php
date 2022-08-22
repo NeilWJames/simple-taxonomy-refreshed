@@ -214,12 +214,15 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				}
 				$args = SimpleTaxonomyRefreshed_Client::prepare_args( $taxonomy );
 				$objs = array();
+				$oth  = false;
 				if ( empty( $taxonomy['objects'] ) ) {
 					$objs[] = __( 'Used on no Post Type', 'simple-taxonomy-refreshed' );
 				} else {
 					foreach ( $taxonomy['objects'] as $obj ) {
 						if ( isset( $wp_post_types[ $obj ] ) ) {
 							$objs[] = $wp_post_types[ $obj ]->label;
+						} else {
+							$oth = true;
 						}
 					}
 				}
@@ -227,7 +230,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 					'n'         => $i,
 					'label'     => $taxonomy['labels']['name'],
 					'name'      => esc_attr( $taxonomy['name'] ),
-					'objects'   => '"' . implode( ', ', $objs ) . '"',
+					'objects'   => '"' . implode( ', ', $objs ) . ( $oth ? '  ' . __( 'plus currently invalid Post Type(s)', 'simple-taxonomy-refreshed' ) : '' ) . '"',
 					'slug'      => ( ( false === (bool) $args['rewrite'] ) ? '""' : '"' . $args['rewrite']['slug'] . '"' ),
 					'query_var' => '"' . $taxonomy['query_var'] . '"',
 				);
