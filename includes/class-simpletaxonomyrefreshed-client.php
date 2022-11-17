@@ -36,19 +36,6 @@ class SimpleTaxonomyRefreshed_Client {
 	public static $wp_version;
 
 	/**
-	 * Get WP version.
-	 *
-	 * @since 3.0.0
-	 *
-	 * @return void
-	 */
-	private function get_WP_version() {
-		global $wp_version;
-		$vers             = strpos( $wp_version, '-' );
-		self::$wp_version = $vers ? substr( $wp_version, 0, $vers ) : $wp_version;
-	}
-
-	/**
 	 * Constructor
 	 *
 	 * @since 1.0.0
@@ -56,6 +43,11 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @return void
 	 */
 	public function __construct() {
+		// get the wp version - used for version dependent features.
+		global $wp_version;
+		$vers             = strpos( $wp_version, '-' );
+		self::$wp_version = $vers ? substr( $wp_version, 0, $vers ) : $wp_version;
+
 		add_action( 'rest_api_init', array( __CLASS__, 'rest_api_init' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'init' ), 1 );
 		add_action( 'init', array( __CLASS__, 'init' ), 1 );

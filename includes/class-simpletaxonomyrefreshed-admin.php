@@ -2780,7 +2780,7 @@ class SimpleTaxonomyRefreshed_Admin {
 					}
 					wp_add_inline_script(
 						'staxo_client',
-						$parm . 'document.addEventListener("DOMContentLoaded", ' . $funct . ' "' . $tax . '" ));',
+						$parm . 'document.addEventListener("DOMContentLoaded", ' . $funct . ' "' . $tax . '" ));'
 					);
 				}
 			}
