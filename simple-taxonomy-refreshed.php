@@ -6,7 +6,7 @@
  *                    Converted, Standardised and Extended from Simple Taxonomy by Amaury Balmer
  * Version:           3.0.0
  * Requires at least: 4.8
- * Requires PHP:      5.6
+ * Requires PHP:      7.1
  * Author:            Neil James
  * License:           GPL v3
  * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
