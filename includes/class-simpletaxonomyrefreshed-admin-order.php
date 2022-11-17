@@ -48,7 +48,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 	 **/
 	public static function add_menu() {
 		// get data from cache. Cache because we expect to receive an update.
-		$orderings = self::ordering_cache( true );
+		$orderings = self::ordering_cache();
 		if ( $orderings['multiple'] ) {
 			add_submenu_page( SimpleTaxonomyRefreshed_Admin::ADMIN_SLUG, __( 'Taxonomy List Order', 'simple-taxonomy-refreshed' ), __( 'Taxonomy List Order', 'simple-taxonomy-refreshed' ), 'manage_options', self::ORDER_SLUG, array( __CLASS__, 'page_admin_order' ) );
 
@@ -76,7 +76,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			}
 
 			// get data from cache.
-			$orderings      = self::ordering_cache( true );
+			$orderings      = self::ordering_cache();
 			$deflt_ordering = $orderings['default'];
 			$saved_ordering = $orderings['saved'];
 			$displ_ordering = $orderings['display'];
@@ -117,7 +117,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 		global $wp_post_types;
 
 		// get data from cache. Cache because we expect to receive an update.
-		$orderings      = self::ordering_cache( true );
+		$orderings      = self::ordering_cache();
 		$displ_ordering = $orderings['display'];
 
 		settings_errors( 'simple-taxonomy-refreshed' );

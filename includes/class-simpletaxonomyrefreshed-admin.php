@@ -82,6 +82,22 @@ class SimpleTaxonomyRefreshed_Admin {
 			// Add admin js/css.
 			self::enqueue_admin_libs();
 		}
+		// Quick-edit option may be used.
+		if ( 1 === 1 ) {
+			return;
+		}
+		if ( 'edit' === $screen->base ) {
+			// search in taxonomies as may have been changed from parameters.
+			$taxos = get_object_taxonomies( $screen->post_type, 'objects' );
+			foreach ( $taxos as $taxonomy ) {
+				if ( $taxonomy->show_in_quick_edit ) {
+					// Add admin js/css.
+					self::enqueue_admin_libs();
+					// Only once.
+					return;
+				}
+			}
+		}
 	}
 
 	/**
@@ -109,6 +125,37 @@ class SimpleTaxonomyRefreshed_Admin {
 			plugins_url( $index_css, __DIR__ ),
 			array(),
 			filemtime( "$dir/$index_css" )
+		);
+	}
+
+	/**
+	 * Variable to indicate if client js enqueued.
+	 *
+	 * @var boolean
+	 */
+	private static $enqueue_client = false;
+
+	/**
+	 * Call to enqueue the client js.
+	 *
+	 * @since 3.0.0
+	 * @return void
+	 */
+	private static function enqueue_client_libs() {
+		if ( self::$enqueue_client ) {
+			return;
+		}
+		self::$enqueue_client = true;
+		// enqueue on client pages only.
+		$dir      = dirname( __DIR__ );
+		$suffix   = ( WP_DEBUG ) ? '.dev' : '';
+		$index_js = 'js/staxo-client' . $suffix . '.js';
+		wp_enqueue_script(
+			'staxo_client',
+			plugins_url( $index_js, __DIR__ ),
+			array( 'wp-block-editor', 'wp-blocks', 'wp-core-data', 'wp-data', 'wp-dom', 'wp-dom-ready', 'wp-edit-post', 'wp-editor' ),
+			filemtime( "$dir/$index_js" ),
+			false
 		);
 	}
 
@@ -155,7 +202,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			<table>
 				<tbody>
 					<?php
-					foreach ( (array) $options['taxonomies'] as $taxonomy ) :
+					foreach ( (array) $options['taxonomies'] as $taxonomy ) {
 						$taxo = get_taxonomy( $taxonomy['name'] );
 						if ( false === $taxo || is_wp_error( $taxo ) ) {
 							continue;
@@ -165,7 +212,9 @@ class SimpleTaxonomyRefreshed_Admin {
 							<td class="first b b-<?php echo esc_attr( $taxo->name ); ?>"><a href="edit-tags.php?taxonomy=<?php echo esc_attr( $taxo->name ); ?>"><?php echo esc_html( wp_count_terms( $taxo->name ) ); ?></a></td>
 							<td class="t <?php echo esc_attr( $taxo->name ); ?>"><a href="edit-tags.php?taxonomy=<?php echo esc_attr( $taxo->name ); ?>"><?php echo esc_attr( $taxo->labels->name ); ?></a></td>
 						</tr>
-					<?php endforeach; ?>
+						<?php
+					}
+					?>
 				</tbody>
 			</table>
 		</div>
@@ -429,7 +478,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 * @param array  $taxonomy taxonomy array.
 	 * @param string $name     target option name.
 	 * @param string $label    display label.
-	 * @param string $descr    sanitzed description field.
+	 * @param string $descr    sanitized description field.
 	 * @return void
 	 */
 	private static function option_text( &$taxonomy, $name, $label, $descr ) {
@@ -454,7 +503,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 * @param array  $taxonomy taxonomy array.
 	 * @param string $name     target option name.
 	 * @param string $label    display label.
-	 * @param string $descr    sanitzed description field.
+	 * @param string $descr    sanitized description field.
 	 * @return void
 	 */
 	private static function option_label( &$taxonomy, $name, $label, $descr ) {
@@ -482,7 +531,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 * @param array  $taxonomy taxonomy array.
 	 * @param string $name     target option name.
 	 * @param string $label    display label.
-	 * @param string $descr    sanitzed description field.
+	 * @param string $descr    sanitized description field.
 	 * @return void
 	 */
 	private static function option_cap( &$taxonomy, $name, $label, $descr ) {
@@ -909,6 +958,11 @@ class SimpleTaxonomyRefreshed_Admin {
 				$taxonomy['rest_namespace'] = '';
 			}
 
+			// Added 2.4.
+			if ( ! array_key_exists( 'st_sep', $taxonomy ) ) {
+				$taxonomy['st_sep'] = '';
+			}
+
 			// Label menu_name needs to exist to edit (it is removed for registering).
 			if ( ! array_key_exists( 'menu_name', $taxonomy['labels'] ) ) {
 				$taxonomy['labels']['menu_name'] = '';
@@ -994,7 +1048,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
-									<tr">
+									<tr>
 										<th scope="row"><label for="name"><?php esc_html_e( 'Name (slug)', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td>
 											<input name="name" type="text" id="name" onchange="checkNameSet(event)" value="<?php echo esc_attr( $taxonomy['name'] ); ?>" class="regular-text"
@@ -1064,13 +1118,25 @@ class SimpleTaxonomyRefreshed_Admin {
 											<span class="description"><?php esc_html_e( 'Option to display the terms on the Post page with associated data', 'simple-taxonomy-refreshed' ); ?></span>
 										</td>
 									</tr>
+								</table>
+								<span class="description"><p><?php esc_html_e( 'The following three parameters are only needed if taxonomy is displayed', 'simple-taxonomy-refreshed' ); ?></p>
+								<p><?php esc_html_e( 'They can take the form of either simple text or as html data such as list tags. But all three need to be consistent types', 'simple-taxonomy-refreshed' ); ?></p></span>
+								<table class="form-table" style="clear:none;">
 									<?php
 										self::option_text(
 											$taxonomy,
 											'st_before',
 											esc_html__( 'Display Terms Before text', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'This text will be used before the Post terms display list', 'simple-taxonomy-refreshed' ) . '<br/>' .
-											esc_html__( 'The text will be trimmed and a single space output after this.', 'simple-taxonomy-refreshed' ) . '<br/>' .
+											esc_html__( 'Simple text will be trimmed and a single space output after this.', 'simple-taxonomy-refreshed' ) . '<br/>' .
+											esc_html__( 'Will also be used with the shortcode and post_terms block.', 'simple-taxonomy-refreshed' )
+										);
+										self::option_text(
+											$taxonomy,
+											'st_sep',
+											esc_html__( 'Display Terms Separator text', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'This text will be used as the separator between the Post terms in the display list', 'simple-taxonomy-refreshed' ) . '<br/>' .
+											esc_html__( 'By default, it will consist of a comma followed by a space.', 'simple-taxonomy-refreshed' ) . '<br/>' .
 											esc_html__( 'Will also be used with the shortcode and post_terms block.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_text(
@@ -1078,14 +1144,14 @@ class SimpleTaxonomyRefreshed_Admin {
 											'st_after',
 											esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'This text will be used after the Post terms display list', 'simple-taxonomy-refreshed' ) . '<br/>' .
-											esc_html__( 'The text will be trimmed and a single space output before this.', 'simple-taxonomy-refreshed' ) . '<br/>' .
+											esc_html__( 'Simple text will be trimmed and a single space output before this.', 'simple-taxonomy-refreshed' ) . '<br/>' .
 											esc_html__( 'Will also be used with the shortcode and post_terms block.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_yes_no(
 											$taxonomy,
 											'st_feed',
 											esc_html__( 'Show in feeds ?', 'simple-taxonomy-refreshed' ),
-											esc_html__( 'Whether taxonomy tems will be shown in post feeds', 'simple-taxonomy-refreshed' )
+											esc_html__( 'Whether taxonomy terms will be shown in post feeds', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -1857,6 +1923,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 			$action = sanitize_text_field( wp_unslash( $_POST['action'] ) );
 			// Clean values from _POST.
+			$simple   = true;
 			$taxonomy = array();
 			foreach ( SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields() as $field => $default_value ) {
 				if ( 'merge-external' === $action && ! array_key_exists( $field, $_POST ) ) {
@@ -1866,7 +1933,13 @@ class SimpleTaxonomyRefreshed_Admin {
 				// phpcs:ignore  WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput
 				$post_field = ( array_key_exists( $field, $_POST ) ? wp_unslash( $_POST[ $field ] ) : '' );
 				if ( isset( $post_field ) && is_string( $post_field ) ) {// String ?
-					$taxonomy[ $field ] = sanitize_text_field( trim( stripslashes( $post_field ) ) );
+					if ( in_array( $field, array( 'st_before', 'st_sep', 'st_after' ), true ) ) {
+						// can contain html.
+						$taxonomy[ $field ] = wp_kses_post( $post_field );
+						$simple             = false;
+					} else {
+						$taxonomy[ $field ] = sanitize_text_field( trim( stripslashes( $post_field ) ) );
+					}
 				} elseif ( isset( $post_field ) ) {
 					if ( is_array( $post_field ) ) {
 						$taxonomy[ $field ] = array();
@@ -2024,12 +2097,16 @@ class SimpleTaxonomyRefreshed_Admin {
 			if ( ! array_key_exists( 'st_before', $taxo_data ) ) {
 				$taxo_data['st_before'] = '';
 			}
+			if ( ! array_key_exists( 'st_sep', $taxo_data ) ) {
+				$taxo_data['st_sep'] = ', ';
+			}
 			if ( ! array_key_exists( 'st_after', $taxo_data ) ) {
 				$taxo_data['st_after'] = '';
 			}
 			$display  = "\n" . '// ' . esc_html__( 'Display Terms with Posts', 'simple-taxonomy-refreshed' ) . ': ';
 			$display .= ( 'both' === $taxo_data['auto'] ? 'content, excerpt' : $taxo_data['auto'] );
 			$display .= "\n" . '// ' . esc_html__( 'Display Terms Before text', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_before'];
+			$display .= "\n" . '// ' . esc_html__( 'Display Terms Separator', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_sep'];
 			$display .= "\n" . '// ' . esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_after'];
 			$display .= "\n" . '// ' . esc_html__( 'Show Terms in Feeds', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_feed'];
 
@@ -2195,6 +2272,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		// Force cache refresh.
 		wp_cache_delete( 'staxo_own_taxos', '' );
+		wp_cache_delete( 'staxo_orderings' );
 
 		global $strc;
 		$cntl_post_types = $strc::refresh_term_cntl_cache();
@@ -2262,6 +2340,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		// Force cache refresh.
 		wp_cache_delete( 'staxo_own_taxos', '' );
+		wp_cache_delete( 'staxo_orderings' );
 
 		global $strc;
 		$cntl_post_types = $strc::refresh_term_cntl_cache();
@@ -2321,6 +2400,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		// Force cache refresh.
 		wp_cache_delete( 'staxo_own_taxos', '' );
+		wp_cache_delete( 'staxo_orderings' );
 
 		global $strc;
 		$cntl_post_types = $strc::refresh_term_cntl_cache();
@@ -2374,6 +2454,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		// Force cache refresh.
 		wp_cache_delete( 'staxo_own_taxos', '' );
+		wp_cache_delete( 'staxo_orderings' );
 
 		global $strc;
 		$cntl_post_types = $strc::refresh_term_cntl_cache();
@@ -2418,9 +2499,83 @@ class SimpleTaxonomyRefreshed_Admin {
 		global $post, $current_screen;
 
 		// make sure that we're looking at a post.
-		if ( ! isset( $post->ID ) || 'post' !== $current_screen->base ) {
+		if ( isset( $post->ID ) && 'post' === $current_screen->base ) {
+			self::check_posts_outside_limits_post();
 			return;
 		}
+
+		// process edit list screen (may or may not be a specific post).
+		if ( 'edit' === $current_screen->base ) {
+			self::check_posts_outside_limits_edit();
+			return;
+		}
+	}
+
+	/**
+	 * Check the edit screen for too few or too many taxonomy entries.
+	 *
+	 * Also possibly inject change to checkbox to radio.
+	 *
+	 * @since 3.4.0
+	 */
+	private static function check_posts_outside_limits_edit() {
+		global $post, $current_screen;
+
+		// get the post type.
+		$post_type = $current_screen->post_type;
+
+		// find out which checks are needed. Note no specific post available here.
+		global $strc;
+		$cntl_post_types = $strc::refresh_term_cntl_cache( false );
+		if ( isset( $cntl_post_types[ $post_type ] ) ) {
+			// there are controls for this post_type.
+			foreach ( $cntl_post_types[ $post_type ] as $tax => $cntl ) {
+				// get user capabilities.
+				$tax_obj     = get_taxonomy( $tax );
+				$user_manage = current_user_can( $tax_obj->cap->manage_terms );
+				$user_change = current_user_can( $tax_obj->cap->assign_terms );
+
+				// is it available on quick edit.
+				if ( ! $tax_obj->show_in_quick_edit ) {
+					continue;
+				}
+
+				// get the terms and count them.
+				$label = $tax_obj->labels->name;
+
+				// get min/max flags.
+				$min = (int) $cntl['st_cc_min'];
+				$vmn = (bool) $cntl['st_cc_umin'];
+				$max = (int) $cntl['st_cc_max'];
+				$vmx = (bool) $cntl['st_cc_umax'];
+
+				// error on which post statuses.
+				$pstat = (int) $cntl['st_cc_type'];
+
+				// should we change checkbox to a radio button.
+				if ( (bool) $tax_obj->hierarchical && $vmn && 1 === $min && $vmx && 1 === $max ) {
+					self::script_radio_edit( $tax, $label, $pstat );
+					// if set to radio then next test not needed.
+					continue;
+				}
+
+				// should hard limits apply.
+				if ( 2 === (int) $cntl['st_cc_hard'] && $user_change ) {
+					self::hard_term_limits_edit( $tax, $label, $pstat, ( $vmn ? $min : null ), ( $vmx ? $max : null ), (bool) $tax_obj->hierarchical );
+				}
+			}
+		}
+	}
+
+	/**
+	 * Check if an existing post has too few or too many taxonomy entries.
+	 *
+	 * Also possibly inject change to checkbox to radio.
+	 *
+	 * @since 3.4.0
+	 */
+	private static function check_posts_outside_limits_post() {
+		global $post, $current_screen;
 
 		// get the post type.
 		$post_type = $post->post_type;
@@ -2445,6 +2600,14 @@ class SimpleTaxonomyRefreshed_Admin {
 				$user_manage = current_user_can( $tax_obj->cap->manage_terms );
 				$user_change = current_user_can( $tax_obj->cap->assign_terms );
 
+				// determine type of error to report going into process.
+				$stat = (int) $cntl['st_cc_type'];
+				if ( 2 === $stat && $status > 0 || 1 === $stat && 1 === $status ) {
+					$err_msg = 'error';
+				} else {
+					$err_msg = 'warning';
+				}
+
 				// get the terms and count them.
 				$label = $tax_obj->labels->name;
 				$terms = get_the_terms( $post->ID, $tax );
@@ -2460,17 +2623,19 @@ class SimpleTaxonomyRefreshed_Admin {
 				$vmn = (bool) $cntl['st_cc_umin'];
 				$max = (int) $cntl['st_cc_max'];
 				$vmx = (bool) $cntl['st_cc_umax'];
+				// Put out saving error message as current may be erroneous.
 				if ( $status > 0 ) {
+					$err_notice = false;
 					// check minimum if test is needed.
 					if ( $vmn && $num_terms < $min ) {
 						if ( 'add' === $current_screen->action ) {
 							// New document.
-							$err = 'warning';
+							$err = $err_msg;
 							// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-							$text_1 = sprintf( __( 'The number of terms for taxonomy "%1$s" needs to be at least %2$d.', 'simple-taxonomy-refreshed' ), $label, $min );
+							$text_1 = sprintf( __( 'The number of terms for taxonomy (%1$s) needs to be at least %2$d.', 'simple-taxonomy-refreshed' ), $label, $min );
+							$text_3 = '';
 							if ( $user_change ) {
 								$text_2 = __( 'Please review and add additional terms.', 'simple-taxonomy-refreshed' );
-								$text_3 = '';
 							} else {
 								$err    = 'warning';
 								$text_2 = __( 'For information as you cannot add them.', 'simple-taxonomy-refreshed' );
@@ -2479,12 +2644,12 @@ class SimpleTaxonomyRefreshed_Admin {
 								}
 							}
 						} else {
-							$err = 'error';
+							$err = $err_msg;
 							// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-							$text_1 = sprintf( __( 'The number of terms for taxonomy "%1$s" is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $min );
+							$text_1 = sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $min );
+							$text_3 = '';
 							if ( $user_change ) {
 								$text_2 = __( 'Please review and add additional terms before trying to save.', 'simple-taxonomy-refreshed' );
-								$text_3 = '';
 							} else {
 								$err    = 'warning';
 								$text_2 = __( 'For information as you cannot add them.', 'simple-taxonomy-refreshed' );
@@ -2494,29 +2659,33 @@ class SimpleTaxonomyRefreshed_Admin {
 							}
 						}
 						if ( self::is_block_editor() ) {
-							// phpcs:disable Squiz.Strings.DoubleQuoteUsage
-							$script =
-								"( function( wp ) { " . PHP_EOL .
-								"	wp.data.dispatch( 'core/notices' ).createNotice(" . PHP_EOL .
-								"  '" . $err . "'," . PHP_EOL .
-								"  '" . $text_1 . '  ' . $text_2 . '  ' . $text_3 . "'," . PHP_EOL .
-								"  { isDismissible: true, id: 'str_notice_{$tax}' }" . PHP_EOL .
-								" );" . PHP_EOL .
-								"} )( window.wp );" . PHP_EOL .
-								"window.onload = function() {" . PHP_EOL .
-								" var sub = document.getElementsByClassName('edit-post-header__settings');" . PHP_EOL .
-								" if (sub.length > 0) {" . PHP_EOL .
-								"  sub[0].addEventListener('click', event => {" . PHP_EOL .
-								"	  wp.data.dispatch( 'core/notices' ).removeNotice( 'str_notice_{$tax}' );" . PHP_EOL .
-								"  });" . PHP_EOL .
-								" };" . PHP_EOL .
-								"};";
-							// phpcs:enable Squiz.Strings.DoubleQuoteUsage
-							wp_add_inline_script( 'staxo_placeholder', $script, 'after' );
+							// Show in rest needed and hard error will put out message later.
+							if ( $cntl['show_in_rest'] && $cntl['st_cc_hard'] < 2 ) {
+								// phpcs:disable Squiz.Strings.DoubleQuoteUsage
+								$script =
+									"( function( wp ) { " . PHP_EOL .
+									"	wp.data.dispatch( 'core/notices' ).createNotice(" . PHP_EOL .
+									"  '" . $err . "'," . PHP_EOL .
+									"  '" . $text_1 . '  ' . $text_2 . '  ' . $text_3 . "'," . PHP_EOL .
+									"  { isDismissible: true, id: 'str_notice_{$tax}' }" . PHP_EOL .
+									" );" . PHP_EOL .
+									"} )( window.wp );" . PHP_EOL .
+									"window.onload = function() {" . PHP_EOL .
+									" var sub = document.getElementsByClassName('edit-post-header__settings');" . PHP_EOL .
+									" if (sub.length > 0) {" . PHP_EOL .
+									"  sub[0].addEventListener('click', event => {" . PHP_EOL .
+									"	  wp.data.dispatch( 'core/notices' ).removeNotice( 'str_notice_{$tax}' );" . PHP_EOL .
+									"  });" . PHP_EOL .
+									" };" . PHP_EOL .
+									"};";
+								// phpcs:enable Squiz.Strings.DoubleQuoteUsage
+								wp_add_inline_script( 'staxo_placeholder', $script, 'after' );
+							}
 						} else {
+							$err_notice = true;
 							?>
 							<div><p>&nbsp;</p></div>
-							<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-min"><p>
+							<div class="notice notice-<?php echo esc_html( $err ); ?>" id="err-<?php echo esc_html( $tax ); ?>"><p>
 							<?php
 							echo esc_html( $text_1 . '  ' . $text_2 . '  ' . $text_3 );
 							?>
@@ -2527,12 +2696,12 @@ class SimpleTaxonomyRefreshed_Admin {
 
 					// check maximum if test is needed.
 					if ( $vmx && $num_terms > $max ) {
-						$err = 'error';
+						$err = $err_msg;
 						// translators: %1$s is the taxonomy label; %2$d is the required maximum number of terms.
-						$text_1 = sprintf( __( 'The number of terms for taxonomy "%1$s" is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $max );
+						$text_1 = sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $max );
+						$text_3 = '';
 						if ( $user_change ) {
 							$text_2 = __( 'Please review and remove terms before trying to save.', 'simple-taxonomy-refreshed' );
-							$text_3 = '';
 						} else {
 							$err    = 'warning';
 							$text_2 = __( 'For information as you cannot remove them.', 'simple-taxonomy-refreshed' );
@@ -2541,28 +2710,32 @@ class SimpleTaxonomyRefreshed_Admin {
 							}
 						}
 						if ( self::is_block_editor() ) {
-							// phpcs:disable Squiz.Strings.DoubleQuoteUsage
-							$script =
-								'( function( wp ) { ' . PHP_EOL .
-								"	wp.data.dispatch( 'core/notices' ).createNotice(" . PHP_EOL .
-								"  '" . $err . "'," . PHP_EOL .
-								"  '" . $text_1 . '  ' . $text_2 . '  ' . $text_3 . "'," . PHP_EOL .
-								"  { isDismissible: true, id: 'str_notice_{$tax}' }" . PHP_EOL .
-								" );" . PHP_EOL .
-								"} )( window.wp );" . PHP_EOL .
-								"window.onload = function() {" . PHP_EOL .
-								" var sub = document.getElementsByClassName('edit-post-header__settings');" . PHP_EOL .
-								" if (sub.length > 0) {" . PHP_EOL .
-								"  sub[0].addEventListener('click', event => {" . PHP_EOL .
-								"	  wp.data.dispatch( 'core/notices' ).removeNotice( 'str_notice_{$tax}' );" . PHP_EOL .
-								"  });" . PHP_EOL .
-								" };" . PHP_EOL .
-								"};";
-							// phpcs:enable Squiz.Strings.DoubleQuoteUsage
-							wp_add_inline_script( 'staxo_placeholder', $script, 'after' );
+							// Show in rest needed and hard error will put out message later.
+							if ( $cntl['show_in_rest'] && $cntl['st_cc_hard'] < 2 ) {
+								// phpcs:disable Squiz.Strings.DoubleQuoteUsage
+								$script =
+									'( function( wp ) { ' . PHP_EOL .
+									"	wp.data.dispatch( 'core/notices' ).createNotice(" . PHP_EOL .
+									"  '" . $err . "'," . PHP_EOL .
+									"  '" . $text_1 . '  ' . $text_2 . '  ' . $text_3 . "'," . PHP_EOL .
+									"  { isDismissible: true, id: 'str_notice_{$tax}' }" . PHP_EOL .
+									" );" . PHP_EOL .
+									"} )( window.wp );" . PHP_EOL .
+									"window.onload = function() {" . PHP_EOL .
+									" var sub = document.getElementsByClassName('edit-post-header__settings');" . PHP_EOL .
+									" if (sub.length > 0) {" . PHP_EOL .
+									"  sub[0].addEventListener('click', event => {" . PHP_EOL .
+									"	  wp.data.dispatch( 'core/notices' ).removeNotice( 'str_notice_{$tax}' );" . PHP_EOL .
+									"  });" . PHP_EOL .
+									" };" . PHP_EOL .
+									"};";
+								// phpcs:enable Squiz.Strings.DoubleQuoteUsage
+								wp_add_inline_script( 'staxo_placeholder', $script, 'after' );
+							}
 						} else {
+							$err_notice = true;
 							?>
-							<div class="notice notice-error" id="err-<?php echo esc_html( $tax ); ?>-max"><p>
+							<div class="notice notice-<?php echo esc_html( $err ); ?>" id="err-<?php echo esc_html( $tax ); ?>"><p>
 							<?php
 							echo esc_html( $text_1 . '  ' . $text_2 . '  ' . $text_3 );
 							?>
@@ -2570,510 +2743,163 @@ class SimpleTaxonomyRefreshed_Admin {
 							<?php
 						}
 					}
+					// put out hidden error notice in case of error being created.
+					if ( ! $err_notice && ! self::is_block_editor() ) {
+						?>
+						<div class="notice notice-error hidden" id="err-<?php echo esc_html( $tax ); ?>">
+						<p></p></div>
+						<?php
+					}
 				}
 
+				// post status control type.
+				$pstat = (int) $cntl['st_cc_type'];
 				// should we change checkbox to a radio button.
 				// (Not over limit, hierarchical, min and max limits exist and set to 1).
 				if ( $num_terms < 2 && (bool) $tax_obj->hierarchical && $vmn && 1 === $min && $vmx && 1 === $max ) {
-					self::script_radio( $tax );
+					$cntl_type = (int) $cntl['st_cc_hard'];
+					self::script_radio( $tax, $label, $num_terms, $pstat, $cntl_type );
 					// if we converted to radio and there is already one term, then it always is in limits (non-block only).
 					if ( 1 === $num_terms && ! self::is_block_editor() ) {
 						continue;
 					}
 				}
-
 				// should hard limits apply.
 				if ( 2 === (int) $cntl['st_cc_hard'] && $user_change ) {
-					$statuses = (int) $cntl['st_cc_type'];
+					global $post;
+					$stat = $post->post_status;
+					$parm = self::hard_term_limits_push( $tax, $label, $pstat, ( $vmn ? $min : null ), ( $vmx ? $max : null ), $stat );
+					self::enqueue_client_libs();
 					if ( self::is_block_editor() ) {
 						// Block editor is the same. N.B. This should be called elsewhere.
-						self::hard_term_limits_block( $tax, $label, $statuses, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
+						$funct = 'block_limit( window.wp, ';
 					} elseif ( (bool) $tax_obj->hierarchical ) {
-						self::hard_term_limits_hier( $tax, $label, $num_terms, $statuses, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
+						$funct = 'dom_hier_cntl_check(';
 					} else {
-						self::hard_term_limits_tag( $tax, $label, $num_terms, $statuses, ( $vmn ? $min : null ), ( $vmx ? $max : null ) );
+						$funct = 'dom_tag_cntl_check(';
 					}
+					wp_add_inline_script(
+						'staxo_client',
+						$parm . 'document.addEventListener("DOMContentLoaded", ' . $funct . ' "' . $tax . '" ));',
+					);
 				}
 			}
 		}
 	}
 
 	/**
-	 * Output the javascript to change the taxonomy display to use radio buttons.
+	 * Output the javascript to change the taxonomy display to use radio buttons on quick edit screens.
+	 *
+	 * @since 3.4.0
+	 *
+	 * @param string $tax_name  The taxonomy slug.
+	 * @param string $tax_label The taxonomy label.
+	 * @param int    $pstat     Post status control type.
+	 */
+	private static function script_radio_edit( $tax_name, $tax_label, $pstat ) {
+		// minimum and maximum are 1.
+		// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
+		$less = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, 1 ) );
+		// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
+		$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, 1 ) );
+		$text = 'tax_msgs.push( [ "' . $tax_name . '", ' . $pstat . ', 1, "' . $less . '", 1, "' . $more . '" ] );' . "\n";
+		self::enqueue_client_libs();
+		wp_add_inline_script(
+			'staxo_client',
+			$text . 'document.addEventListener("DOMContentLoaded", dom_qe_radio_client( "' . $tax_name . '" ));'
+		);
+	}
+
+	/**
+	 * Output the javascript to change the taxonomy display to use radio buttons on post screens.
 	 *
 	 * @since 1.2.0
 	 *
-	 * @param string $tax_name The taxonomy slug.
+	 * @param string $tax_name  The taxonomy slug.
+	 * @param string $tax_label The taxonomy label.
+	 * @param int    $pstat     Post status control type.
 	 */
-	public static function script_radio( $tax_name ) {
+	private static function script_radio( $tax_name, $tax_label, $pstat ) {
 		// Logic is that there are two tabs for the taxonomy - all and popular.
 		// Only one category must be selected, so radio is appropriate.
 		// All will contain all options; popular may be available, but may be incomplete.
 		// List of all will be changed to radio. Popular will be converted (but for compatability).
 		// If any item in either list is clicked, then the corresponding entry in other list is set.
 		// Every other value is unset.
-		$taxn = esc_html( $tax_name );
-		$taxf = esc_html( str_replace( '-', '_', $tax_name ) );
+		// Generally we're not bothered about the status with radio buttons.
+		// But if there are existing multiple ones, then we need to leave as checkboxes.
 
 		if ( self::is_block_editor() ) {
 			// not yet supported.
+			// look for stuff within editor-post-taxonomies__hierarchical-terms-list with aria-label of the Taxonomy Name.
 			null;
 		} else {
-			// All output has passed through esc_html so switch off checking.
-			// phpcs:disable  WordPress.Security.EscapeOutput
-			?>
-			<script type="text/javascript">
-			function radio_<?php echo $taxf; ?>() {
-				var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
-				inp.forEach(item => {
-					// avoid updating hidden one.
-					if ( item.value > 0 && item.type !== "radio" ) {
-						item.type = "radio";
-						item.setAttribute('role', 'radio');
-						item.addEventListener('click', event => {
-							adj_<?php echo $taxf; ?>(item.value);
-						});
-						item.addEventListener('keypress', event => {
-							adj_<?php echo $taxf; ?>(item.value);
-						});
-					}
-				});
-			}
+			global $post;
+			$stat = $post->post_status;
+			$text = self::hard_term_limits_push( $tax_name, $tax_label, $pstat, 1, 1, $stat );
 
-			function adj_<?php echo $taxf; ?>(val) {
-				var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
-				var i, attr, id;
-				for ( i in inp ) {
-					inp[i].checked = false;
-					if ( inp[i].value === val ) {
-						inp[i].checked = true;
-					}
-				}
-				var pan = document.getElementById("<?php echo $taxn; ?>-pop");
-				inp = pan.getElementsByTagName("input");
-				for ( i in inp ) {
-					inp[i].checked = false;
-					if ( inp[i].value === val ) {
-						inp[i].checked = true;
-					}
-				}
-			}
-
-			document.addEventListener('DOMContentLoaded', function() {
-				var i, attr, tag, stag, val;
-				radio_<?php echo $taxf; ?>();
-
-				var pop = document.getElementById("<?php echo $taxn; ?>-pop");
-				pop.setAttribute('role', 'radiogroup');
-				inp = pop.getElementsByTagName("input");
-				for (const item of inp) {
-					// avoid updating hidden one.
-					if ( item.value > 0 ) {
-						item.type = "radio";
-						item.setAttribute('role', 'radio');
-						tag  = item.id;
-						stag = tag.replace("popular-", "");
-						attr = document.getElementById(stag);
-						item.checked = attr.checked;
-						item.addEventListener('click', event => {
-							adj_<?php echo $taxf; ?>(item.value);
-						});
-						item.addEventListener('keypress', event => {
-							adj_<?php echo $taxf; ?>(item.value);
-						});
-					}
-				}
-
-				var sub = document.getElementById("<?php echo $taxn; ?>-add-submit");
-				sub.addEventListener('click', event => {
-						adj_<?php echo $taxf; ?>(-1);
-				});
-				sub.addEventListener('keypress', event => {
-					adj_<?php echo $taxf; ?>(-1);
-				});
-
-				// Select the node that will be observed for mutations
-				const targetNode = document.getElementById("<?php echo $taxn; ?>-all");
-				targetNode.setAttribute('role', 'radiogroup');
-
-				// Options for the observer (which mutations to observe)
-				const config = { childList: true, subtree: true };
-
-				// Callback function to execute when mutations are observed
-				const callback = function(mutationsList, observer) {
-					// Use traditional 'for loops' for IE 11
-					for (const mutation of mutationsList) {
-						if (mutation.type === 'childList') {
-							radio_<?php echo $taxf; ?>();
-						}
-					}
-				};
-
-				// Create an observer instance linked to the callback function
-				const observer = new MutationObserver(callback);
-
-				// Start observing the target node for configured mutations
-				observer.observe(targetNode, config);
-
-			}, false);
-			</script>
-			<?php
-			// phpcs:enable  WordPress.Security.EscapeOutput
+			self::enqueue_client_libs();
+			wp_add_inline_script(
+				'staxo_client',
+				$text . 'document.addEventListener("DOMContentLoaded", dom_radio_client( "' . $tax_name . '" ))  ;'
+			);
 		}
 	}
 
 	/**
-	 * Output the scripting to check the taxonomy limits for taxonomies for block editor screen as they are being entered.
+	 * Output the scripting to check the taxonomy limits for taxonomies for quick edit screen as they are being entered.
 	 *
-	 * @since 2.0.0
+	 * @since 3.4.0
 	 *
 	 * @param string $tax_name     taxonomy name.
 	 * @param string $tax_label    taxonomy label name.
-	 * @param int    $statuses     status control type.
+	 * @param int    $pstat        post status control type.
 	 * @param int    $min_bound    minimum number of terms (null if no minimum).
 	 * @param int    $max_bound    maximum number of terms (null if no maximum).
+	 * @param bool   $hier         taxonomy is hierarchical.
 	 */
-	public static function hard_term_limits_block( $tax_name, $tax_label, $statuses, $min_bound, $max_bound ) {
-		if ( ! is_null( $min_bound ) ) {
-			$mib = esc_html( $min_bound );
-			// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-			$less = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $min_bound ) );
-		}
-		if ( ! is_null( $max_bound ) ) {
-			$mab = esc_html( $max_bound );
-			// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
-			$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
-		}
-		$lock = ( 1 === $statuses ? esc_html__( ' Publishing is blocked.', 'simple-taxonomy-refreshed' ) : esc_html__( ' Saving is blocked.', 'simple-taxonomy-refreshed' ) );
-		$taxn = esc_html( $tax_name );
-		$taxf = esc_html( str_replace( '-', '_', $tax_name ) );
-		// get the post's status and taxonomy count.
-		global $post;
-		$stat  = $post->post_status;
-		$terms = get_the_terms( $post->ID, $tax_name );
-		if ( false === $terms ) {
-			$terms = '';
+	private static function hard_term_limits_edit( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $hier ) {
+		$text = self::hard_term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, $max_bound );
+		self::enqueue_client_libs();
+		wp_add_inline_script(
+			'staxo_client',
+			$text . 'document.addEventListener("DOMContentLoaded", dom_qe_cntl_check( "' . $tax_name . '", ' . (int) $hier . ' ));'
+		);
+	}
+
+	/**
+	 * Create the tax_cntl push javascript text for hard term limits.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @param string $tax_name     Taxonomy name.
+	 * @param string $tax_label    Taxonomy label name.
+	 * @param int    $pstat        post status control type.
+	 * @param int    $min_bound    minimum number of terms (null if no minimum).
+	 * @param int    $max_bound    maximum number of terms (null if no maximum).
+	 * @param string $status       post status.
+	 */
+	private static function hard_term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $status = '' ) {
+		$lock = ( 1 === $pstat ? esc_html__( 'Publishing is blocked.', 'simple-taxonomy-refreshed' ) : esc_html__( 'Saving is blocked.', 'simple-taxonomy-refreshed' ) );
+		if ( is_null( $min_bound ) ) {
+			$mib  = 'null';
+			$less = '';
 		} else {
-			$terms = implode( ',', wp_list_pluck( $terms, 'term_id' ) );
-		}
-
-		// All output has passed through esc_html so switch off checking.
-		// phpcs:disable  WordPress.Security.EscapeOutput, Squiz.Strings.DoubleQuoteUsage
-		$script =
-			"( function( wp ) { " . PHP_EOL .
-			"const { select, dispatch, subscribe } = wp.data;" . PHP_EOL .
-			"" . PHP_EOL .
-			"let locked = false;" . PHP_EOL .
-			"let nopubl = false;" . PHP_EOL .
-			"function block_{$taxf}(evt) {" . PHP_EOL .
-			"	if ( evt.target.tagName !== 'BUTTON' ) return;" . PHP_EOL .
-			"	var cn = evt.target.className;" . PHP_EOL .
-			"	var isPublish = cn.includes('editor-post-publish-button__button');" . PHP_EOL .
-			"	if ( isPublish && ( nopubl || locked ) ) {" . PHP_EOL .
-			"		alert('Cannot Publish');" . PHP_EOL .
-			"		evt.stopPropagation();" . PHP_EOL .
-			"		evt.preventDefault();" . PHP_EOL .
-			"		evt.target.disabled = true;" . PHP_EOL .
-			"	}" . PHP_EOL .
-			"}" . PHP_EOL .
-			"function lock_{$taxf}( stat, tax ) {" . PHP_EOL .
-			"	let check = " . ( 1 === $statuses ? "['publish', 'future']" : "! ['new', 'auto-draft', 'trash']" ) . ".includes(stat);" . PHP_EOL .
-			"	let publishd = ['publish', 'future'].includes(stat);" . PHP_EOL .
-			"	let err_text = '';" . PHP_EOL .
-			( is_null( $min_bound ) ? "" : "	if ( tax.length < {$min_bound} ) err_text = '{$less}{$lock}';" . PHP_EOL ) .
-			( is_null( $max_bound ) ? "" : "	if ( tax.length > {$max_bound} ) err_text = '{$more}{$lock}';" . PHP_EOL ) .
-			"	if ( check && err_text ) {" . PHP_EOL .
-					// show notice.
-			"		dispatch( 'core/notices' ).createNotice(" . PHP_EOL .
-			"			( publishd ? 'error' : 'warning' )," . PHP_EOL .
-			"			err_text," . PHP_EOL .
-			"			{" . PHP_EOL .
-			"				id: 'str_notice_{$taxf}'," . PHP_EOL .
-			"				isDismissible: publishd," . PHP_EOL .
-			"			}" . PHP_EOL .
-			"		);" . PHP_EOL .
-			"" . PHP_EOL .
-			"		if ( ! publishd ) {" . PHP_EOL .
-						// Make sure post cannot be saved, by adding a save lock.
-			"			if ( ! locked ) {" . PHP_EOL .
-			"				locked = true;" . PHP_EOL .
-			"				dispatch( 'core/editor' ).lockPostSaving( 'str_{$taxf}_lock' );" . PHP_EOL .
-			"			}" . PHP_EOL .
-			"		}" . PHP_EOL .
-			"" . PHP_EOL .
-			"		if ( ! nopubl ) {" . PHP_EOL .
-			"			nopubl = true;" . PHP_EOL .
-			"			var sub = document.getElementsByClassName('editor-post-publish-button__button');" . PHP_EOL .
-			"			if (sub.length > 0) sub[0].disabled = true;" . PHP_EOL .
-			"			dispatch( 'core/edit-post' ).disablePublishSidebar;" . PHP_EOL .
-			"			dispatch( 'core/editor' ).isPublishable = false;" . PHP_EOL .
-			"		}" . PHP_EOL .
-			"	} else {" . PHP_EOL .
-					// remove notice.
-			"		dispatch( 'core/notices' ).removeNotice( 'str_notice_{$taxf}' );" . PHP_EOL .
-					// remove save lock.
-			"		if ( locked ) {" . PHP_EOL .
-			"			locked = false;" . PHP_EOL .
-			"			dispatch( 'core/editor' ).unlockPostSaving( 'str_{$taxf}_lock' );" . PHP_EOL .
-			"		}" . PHP_EOL .
-					// remove publish block.
-			"		if ( nopubl ) {" . PHP_EOL .
-			"			nopubl = false;" . PHP_EOL .
-			"			var sub = document.getElementsByClassName('editor-post-publish-button__button');" . PHP_EOL .
-			"			if (sub.length > 0) sub[0].disabled = false;" . PHP_EOL .
-			"			dispatch( 'core/edit-post' ).enablePublishSidebar;" . PHP_EOL .
-			"		}" . PHP_EOL .
-			"	}" . PHP_EOL .
-			"}" . PHP_EOL .
-			"" . PHP_EOL .
-			"const getstat = () => select( 'core/editor' ).getEditedPostAttribute( 'status' );" . PHP_EOL .
-			"const get{$taxf} = () => select( 'core/editor' ).getEditedPostAttribute( '{$taxn}' );" . PHP_EOL .
-			"wp.domReady( () => {" . PHP_EOL .
-			"	var btn = document.getElementById('editor');" . PHP_EOL .
-			"	btn.addEventListener('click', event => {" . PHP_EOL .
-			"		block_{$taxf}(event);" . PHP_EOL .
-			"	}, true);" . PHP_EOL .
-			"	let stat = select( 'core/editor' ).getCurrentPostAttribute( 'status' );" . PHP_EOL .
-			"	let tax = select( 'core/editor' ).getCurrentPostAttribute( '{$taxn}' );" . PHP_EOL .
-			"	lock_{$taxf}( '" . $stat . "', [" . $terms . "] );" . PHP_EOL .
-			"	subscribe( () => {" . PHP_EOL .
-			"		const newstat = getstat();" . PHP_EOL .
-			"		const statChanged = newstat !== stat;" . PHP_EOL .
-			"		stat = newstat;" . PHP_EOL .
-			"		const newtax = get{$taxf}();" . PHP_EOL .
-			"		const taxChanged = newtax !== tax;" . PHP_EOL .
-			"		tax = newtax;" . PHP_EOL .
-			"		if ( taxChanged || statChanged ) lock_{$taxf}( stat, tax );" . PHP_EOL .
-			"	} );" . PHP_EOL .
-			"} );" . PHP_EOL .
-			"} )( window.wp );";
-		// phpcs:enable  WordPress.Security.EscapeOutput, Squiz.Strings.DoubleQuoteUsage
-		wp_add_inline_script( 'staxo_placeholder', $script, 'after' );
-	}
-
-	/**
-	 * Output the scripting to check the taxonomy limits for hierarchical taxonomies as they are being entered (non-block).
-	 *
-	 * @since 1.2.0
-	 *
-	 * @param string $tax_name     taxonomy name.
-	 * @param string $tax_label    taxonomy label name.
-	 * @param int    $num_terms    initial number of terms on post.
-	 * @param int    $cntl         status control type.
-	 * @param int    $min_bound    minimum number of terms (null if no minimum).
-	 * @param int    $max_bound    maximum number of terms (null if no maximum).
-	 */
-	public static function hard_term_limits_hier( $tax_name, $tax_label, $num_terms, $cntl, $min_bound, $max_bound ) {
-		if ( ! is_null( $min_bound ) ) {
 			$mib = esc_html( $min_bound );
 			// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-			$less = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $min_bound ) );
+			$less  = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $min_bound ) );
+			$less .= ' ' . $lock;
 		}
-		if ( ! is_null( $max_bound ) ) {
+		if ( is_null( $max_bound ) ) {
+			$mab  = 'null';
+			$more = '';
+		} else {
 			$mab = esc_html( $max_bound );
 			// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
-			$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
+			$more  = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
+			$more .= ' ' . $lock;
 		}
-		$taxn = esc_html( $tax_name );
-		$taxf = esc_html( str_replace( '-', '_', $tax_name ) );
-		// All output has passed through esc_html so switch off checking.
-		// phpcs:disable  WordPress.Security.EscapeOutput
-		?>
-		<script type="text/javascript">
-		function count_<?php echo $taxf; ?>() {
-			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
-			var i, v, arr = [];
-			for ( i in inp ) {
-				if ( inp[i].checked ) {
-					v = inp[i].value;
-					if ( v > 0 && ! arr.includes( v )) {
-						arr.splice(0, 0, v);
-					}
-				}
-			}
-			return arr.length;
-		}
-
-		function check_<?php echo $taxf; ?>(bail = false) {
-			// check post_status.
-			var stat = document.getElementById("post_status").value;
-			if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
-				return;
-			}
-			<?php
-			if ( 1 === $cntl ) {
-				// check status.
-				echo 'if ( "publish" !== stat && "future" !== stat ) { return; }' . "\n";
-			}
-			?>
-			var cnt = count_<?php echo $taxf; ?>();
-			var err = false;
-
-			<?php
-			if ( ! is_null( $min_bound ) ) {
-				echo 'if ( cnt < ' . $mib . ' ) { alert( "' . $less . '" ); err = true; }' . "\n";
-			}
-
-			if ( ! is_null( $max_bound ) ) {
-				echo 'if ( cnt > ' . $mab . ' ) { alert( "' . $more . '" ); err = true; }' . "\n";
-			}
-			?>
-			if (err && bail) {
-				event.stopPropagation();
-				event.preventDefault();
-			}
-		}
-
-		document.addEventListener('DOMContentLoaded', function() {
-			var inp = document.getElementsByName("tax_input[<?php echo $taxn; ?>][]");
-			inp.forEach(item => {
-				item.addEventListener('click', event => {
-					check_<?php echo $taxf; ?>();
-				});
-				item.addEventListener('keypress', event => {
-					check_<?php echo $taxf; ?>();
-				});
-			})
-			document.getElementById("publish").addEventListener('click', event => {
-				check_<?php echo $taxf; ?>(true);
-			});
-			document.getElementById("publish").addEventListener('keypress', event => {
-				check_<?php echo $taxf; ?>(true);
-			});
-			var sp = document.getElementById("save-post");
-			if (sp) {
-				sp.addEventListener('click', event => {
-					check_<?php echo $taxf; ?>(true);
-				});
-				sp.addEventListener('keypress', event => {
-					check_<?php echo $taxf; ?>(true);
-				});
-			}
-		}, false);
-		</script>
-		<?php
-		// phpcs:enable  WordPress.Security.EscapeOutput
-	}
-
-	/**
-	 * Output the scripting to check the taxonomy limits for tag taxonomies as they are being entered (non-block).
-	 *
-	 * @since 1.2.0
-	 *
-	 * @param string $tax_name     taxonomy name.
-	 * @param string $tax_label    taxonomy label name.
-	 * @param int    $num_terms    initial number of terms on post.
-	 * @param int    $cntl         status control type.
-	 * @param int    $min_bound    minimum number of terms (null if no minimum).
-	 * @param int    $max_bound    maximum number of terms (null if no maximum).
-	 */
-	public static function hard_term_limits_tag( $tax_name, $tax_label, $num_terms, $cntl, $min_bound, $max_bound ) {
-		if ( ! is_null( $min_bound ) ) {
-			$mib = esc_html( $min_bound );
-			// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-			$less = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $min_bound ) );
-		}
-		if ( ! is_null( $max_bound ) ) {
-			$mab = esc_html( $max_bound );
-			// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
-			$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
-		}
-		$taxn  = esc_html( $tax_name );
-		$taxf  = esc_html( str_replace( '-', '_', $tax_name ) );
-		$terms = esc_html( $num_terms );
-		// All output has passed through esc_html so switch off checking.
-		// phpcs:disable  WordPress.Security.EscapeOutput
-		?>
-		<script type="text/javascript">
-		var cnt1st = true;
-		function count_<?php echo $taxf; ?>() {
-			if (cnt1st) {
-				return <?php echo $terms; ?>;
-			}
-			// tags rendered.
-			var i = 0;
-			while ( true ) {
-				inp = document.getElementById("<?php echo $taxn; ?>-check-num-"+i);
-				if (inp) {
-					i++;
-				} else {
-					return i;
-				}
-			}
-		}
-
-		function check_<?php echo $taxf; ?>(bail = false) {
-			// Ensure tage add readonly attribute remove, unless explicitly wanted.
-			document.getElementById("new-tag-<?php echo $taxn; ?>").removeAttribute("readonly");
-			document.getElementById("link-<?php echo $taxn; ?>").removeAttribute("disabled");
-			// check post_status.
-			var stat = document.getElementById("post_status").value;
-			if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
-				return;
-			}
-			<?php
-			if ( 1 === $cntl ) {
-				// check status.
-				echo 'if ( "publish" !== stat && "future" !== stat ) { return; }' . "\n";
-			}
-			?>
-
-			var cnt = count_<?php echo $taxf; ?>();
-			var err = false;
-			<?php
-			if ( ! is_null( $min_bound ) ) {
-				echo 'if ( cnt < ' . $mib . ' ) { alert( "' . $less . '" ); err = true; }' . "\n";
-			}
-
-			if ( ! is_null( $max_bound ) ) {
-				?>
-				if ( cnt > <?php echo $mab; ?> ) {
-					alert( "<?php echo $more; ?>" );
-					err = true;
-				}
-				if ( cnt >= <?php echo $mab; ?> ) {
-					document.getElementById("new-tag-<?php echo $taxn; ?>").setAttribute("readonly", true);
-					document.getElementById("link-<?php echo $taxn; ?>").setAttribute("disabled", true);
-				}
-				<?php
-			}
-			?>
-			if (err && bail) {
-				event.stopPropagation();
-				event.preventDefault();
-			}
-		}
-
-		document.addEventListener('DOMContentLoaded', function() {
-			check_<?php echo $taxf; ?>();
-			cnt1st = false;
-			var tag = document.getElementById("<?php echo $taxn; ?>");
-			var taglist = tag.getElementsByTagName('ul');
-			taglist[0].addEventListener('click', event => {
-				check_<?php echo $taxf; ?>();
-			});
-			document.getElementById("new-tag-<?php echo $taxn; ?>").addEventListener('click', event => {
-				check_<?php echo $taxf; ?>();
-			});
-			document.getElementById("new-tag-<?php echo $taxn; ?>").addEventListener('keypress', event => {
-				check_<?php echo $taxf; ?>();
-			});
-			document.getElementById("publish").addEventListener('click', event => {
-				check_<?php echo $taxf; ?>(true);
-			});
-			document.getElementById("publish").addEventListener('keypress', event => {
-				check_<?php echo $taxf; ?>(true);
-			});
-			document.getElementById("save-post").addEventListener('click', event => {
-				check_<?php echo $taxf; ?>(true);
-			});
-			document.getElementById("save-post").addEventListener('keypress', event => {
-				check_<?php echo $taxf; ?>(true);
-			});
-		}, false);
-		</script>
-		<?php
-		// phpcs:enable  WordPress.Security.EscapeOutput
+		return 'tax_cntl.push( [ "' . $tax_name . '", ' . $pstat . ', ' . $mib . ', "' . $less . '", ' . $mab . ', "' . $more . '", "' . $status . '" ] );' . "\n";
 	}
 
 	/**
@@ -3117,15 +2943,16 @@ class SimpleTaxonomyRefreshed_Admin {
 				$terms_count = 0;
 				if ( isset( $postarr['tax_input'][ $tax ] ) ) {
 					$terms = $postarr['tax_input'][ $tax ];
-					// ignore the 0 element.
-					unset( $terms[0] );
+					// ignore the 0 element (hierarchical).
+					if ( 0 === $terms[0] ) {
+						unset( $terms[0] );
+					}
 					$terms_count = ( empty( $terms ) ? 0 : count( $terms ) );
 				}
 
 				// check the minimum bound.
 				if ( true === (bool) $cntl['st_cc_umin'] && $terms_count < $cntl['st_cc_min'] ) {
 					$error_type = 'min';
-
 				}
 				// check the maximum bound.
 				if ( true === (bool) $cntl['st_cc_umax'] && $terms_count > $cntl['st_cc_max'] ) {

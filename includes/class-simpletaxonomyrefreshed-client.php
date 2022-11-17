@@ -27,6 +27,27 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static $wp_decoded_labels = array();
 
+
+	/**
+	 * Current WP version.
+	 *
+	 * @var string
+	 */
+	public static $wp_version;
+
+	/**
+	 * Get WP version.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @return void
+	 */
+	private function get_WP_version() {
+		global $wp_version;
+		$vers             = strpos( $wp_version, '-' );
+		self::$wp_version = $vers ? substr( $wp_version, 0, $vers ) : $wp_version;
+	}
+
 	/**
 	 * Constructor
 	 *
@@ -93,10 +114,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static function init() {
 		// determine whether to invoke old or new count method (Change with WP 5.7 #38843).
-		global $wp_version;
-		$vers = strpos( $wp_version, '-' );
-		$vers = $vers ? substr( $wp_version, 0, $vers ) : $wp_version;
-		if ( version_compare( $vers, '5.7' ) >= 0 ) {
+		if ( version_compare( self::$wp_version, '5.7' ) >= 0 ) {
 			// core method introduced with version 5.7.
 			$count_method = 'new';
 		} else {
@@ -167,10 +185,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static function init_2() {
 		// determine whether to invoke old or new count method.
-		global $wp_version;
-		$vers = strpos( $wp_version, '-' );
-		$vers = $vers ? substr( $wp_version, 0, $vers ) : $wp_version;
-		if ( version_compare( $vers, '5.7' ) >= 0 ) {
+		if ( version_compare( self::$wp_version, '5.7' ) >= 0 ) {
 			// core method introduced with version 5.7.
 			return;
 		}
@@ -466,19 +481,46 @@ class SimpleTaxonomyRefreshed_Client {
 					// Migration case - Not updated yet.
 					if ( ! array_key_exists( 'st_before', $taxonomy ) ) {
 						$taxonomy['st_before'] = '';
+						$taxonomy['st_sep']    = '';
 						$taxonomy['st_after']  = '';
 					}
-					if ( ! empty( $taxonomy['st_before'] ) && ' ' !== substr( $taxonomy['st_before'], -1 ) ) {
-						$prefix = $taxonomy['st_before'] . ' ';
+					// Simple text or html tags.
+					$simple = true;
+					if ( sanitize_text_field( $taxonomy['st_before'] ) !== $taxonomy['st_before'] ) {
+						$simple = false;
+					}
+					if ( isset( $taxonomy['st_sep'] ) && sanitize_text_field( $taxonomy['st_sep'] ) !== $taxonomy['st_sep'] ) {
+						$simple = false;
+					}
+					if ( sanitize_text_field( $taxonomy['st_after'] ) !== $taxonomy['st_after'] ) {
+						$simple = false;
+					}
+					if ( $simple ) {
+						if ( ! empty( $taxonomy['st_before'] ) && ' ' !== substr( $taxonomy['st_before'], -1 ) ) {
+							$prefix = $taxonomy['st_before'] . ' ';
+						} else {
+							$prefix = $taxonomy['st_before'];
+						}
+						if ( empty( $taxonomy['st_sep'] ) ) {
+							$sep = ', ';
+						} else {
+							$sep = $taxonomy['st_sep'];
+						}
+						if ( ! empty( $taxonomy['st_after'] ) && ' ' !== substr( $taxonomy['st_after'], 1 ) ) {
+							$suffix = ' ' . $taxonomy['st_after'];
+						} else {
+							$suffix = $taxonomy['st_after'];
+						}
 					} else {
 						$prefix = $taxonomy['st_before'];
-					}
-					if ( ! empty( $taxonomy['st_after'] ) && ' ' !== substr( $taxonomy['st_after'], 1 ) ) {
-						$suffix = ' ' . $taxonomy['st_after'];
-					} else {
+						if ( empty( $taxonomy['st_sep'] ) ) {
+							$sep = ', ';
+						} else {
+							$sep = $taxonomy['st_sep'];
+						}
 						$suffix = $taxonomy['st_after'];
 					}
-					$terms = get_the_term_list( $post->ID, $taxonomy['name'], $prefix, ', ', $suffix );
+					$terms = get_the_term_list( $post->ID, $taxonomy['name'], $prefix, $sep, $suffix );
 					if ( ! empty( $terms ) ) {
 						$output .= "\t" . '<div class="taxonomy-' . $taxonomy['name'] . '">' . $terms . "</div>\n";
 					} else {
@@ -1037,6 +1079,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'objects'                  => array(),
 			'auto'                     => 'none',
 			'st_before'                => '',
+			'st_sep'                   => ', ',
 			'st_after'                 => '',
 			'st_slug'                  => '',
 			'st_with_front'            => 1,
