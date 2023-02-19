@@ -1,68 +1,89 @@
-name: CI
+# Based on https://github.com/wordpress/plugin-dependencies
+name: CI simple-taxonomy-refreshed
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
-
+    branches:
+      - master
 jobs:
-  phpunit:
-
-    runs-on: ubuntu-latest
-    env:
-      TRAVIS_BUILD_DIR: ${{ github.workspace }}
-    strategy: 
+  run:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
       matrix:
-        php_version: [7.4, 7.3, 7.2, 7.1]
+        operating-system: [ubuntu-latest]
+        php-versions: ['7.4', '8.0', '8.1']
         wp_version: [latest]
         wp_multisite: [0]
+        phpunit-versions: ['9.5.20']
         include:
-          - php_version: 7.4
-            wp_multisite: 1
-          - php_version: 7.0
-            wp_version: "5.0"
-
-    services:
-      mysql:
-        image: mysql:5.7
-        env:
-          MYSQL_ROOT_PASSWORD: 'root'
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-        
+          - php-versions: '5.6'
+		        wp_version: [latest]
+		        wp_multisite: [0]
+            phpunit-versions: '5.7.27'
+            operating-system: ubuntu-latest
+          - php-versions: '7.0'
+		        wp_version: [latest]
+		        wp_multisite: [0]
+            phpunit-versions: '5.7.27'
+            operating-system: ubuntu-latest
+          - php-versions: '7.1'
+		        wp_version: [latest]
+		        wp_multisite: [0]
+            phpunit-versions: '7.5.20'
+            operating-system: ubuntu-latest
+          - php-versions: '7.2'
+		        wp_version: [latest]
+		        wp_multisite: [0]
+            phpunit-versions: '7.5.20'
+            operating-system: ubuntu-latest
+          - php-versions: '7.3'
+		        wp_version: [latest]
+		        wp_multisite: [0]
+            phpunit-versions: '9.5.20'
+            operating-system: 'ubuntu-latest'
+          - php-versions: '7.4'
+		        wp_version: [latest]
+		        wp_multisite: [1]
+            phpunit-versions: '9.5.20'
+            operating-system: 'ubuntu-latest'
+    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: ${{ matrix.php_version }}
-        extensions: mysqli
-        coverage: xdebug
-
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@v3
-      with:
-        path: vendor
-        key: ${{ runner.os }}-php-${{ matrix.php_version }}-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-php-${{ matrix.php_version }}-
-
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
-      
-    - name: Setup WP
-      run: script/setup
+        php-version: ${{ matrix.php-versions }}
+        coverage: none
+        extensions: mysql
+        tools: wp-cli, phpunit-polyfills, phpunit:${{ matrix.phpunit-versions }}
       env:
-        WP_VERSION: ${{ matrix.wp_version }}
+        COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check PHP Version
+      run: php -v
+
+    - name: Composer install
+      run: composer install --optimize-autoloader --prefer-dist
+
+    - name: Start Mysql
+      run: sudo service mysql start
+
+    - name: Install WP Tests
+      run: bash bin/install-wp-tests.sh wordpress_test root root localhost ${{ matrix.wp_version }}
+      env:
         WP_MULTISITE: ${{ matrix.wp_multisite }}
-        
-    - name: PHPUnit
-      run: script/cibuild-phpunit
-      env:
+
+    - name: phpunit tests
+      run: |
+        echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '$HOME/.composer/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
+        /usr/local/bin/phpunit --config=phpunit.xml
+			env:
         WP_MULTISITE: ${{ matrix.wp_multisite }}
 
     - name: Codecov

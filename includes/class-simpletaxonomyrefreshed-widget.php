@@ -469,6 +469,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		register_block_type(
 			'simple-taxonomy-refreshed/cloud-widget',
 			array(
+				'description'     => __( 'This block provides a tag cloud widget for the selected taxonomy.', 'simple-taxonomy-refreshed' ),
 				'editor_script'   => 'staxo-widget-editor',
 				'editor_style'    => 'staxo-widget-editor-style',
 				'render_callback' => array( $this, 'staxo_widget_display' ),

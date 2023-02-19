@@ -641,6 +641,7 @@ class SimpleTaxonomyRefreshed_Client {
 		register_block_type(
 			'simple-taxonomy-refreshed/post-terms',
 			array(
+				'description'     => __( 'This block allows the terms associated with a given taxonomy to be displayed for a post.', 'simple_taxonomy-refreshed' ),
 				'editor_script'   => 'staxo-terms-editor',
 				'render_callback' => array( __CLASS__, 'the_terms' ),
 				'attributes'      => array(
@@ -708,7 +709,7 @@ class SimpleTaxonomyRefreshed_Client {
 
 		foreach ( (array) $options['taxonomies'] as $taxonomy ) {
 			// Does the post_type uses this taxonomy.
-			if ( isset( $taxonomy['st_feed'] ) && ( ! empty( $taxonomy['objects'] ) ) && in_array( $post->post_type, $taxonomy['objects'], true ) ) {
+			if ( isset( $taxonomy['st_feed'] ) && (bool) $taxonomy['st_feed'] && ( ! empty( $taxonomy['objects'] ) ) && in_array( $post->post_type, $taxonomy['objects'], true ) ) {
 
 				$terms      = get_the_terms( $post->ID, $taxonomy['name'] );
 				$term_names = array();
@@ -1181,7 +1182,14 @@ class SimpleTaxonomyRefreshed_Client {
 		}
 
 		self::$wp_default_labels[ (int) $hier ] = (array) $labels;
-		self::$wp_decoded_labels[ (int) $hier ] = array_map( 'html_entity_decode', (array) $labels );
+		foreach ( (array) $labels as $label ) {
+			if ( is_null( $label ) ) {
+				self::$wp_decoded_labels[ (int) $hier ][ $label ] = null;
+			} else {
+				self::$wp_decoded_labels[ (int) $hier ][ $label ] = html_entity_decode( $label, ENT_QUOTES );
+			}
+		}
+		//self::$wp_decoded_labels[ (int) $hier ] = array_map( 'html_entity_decode', (array) $labels );
 	}
 
 	/**
