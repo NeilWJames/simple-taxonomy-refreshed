@@ -1189,7 +1189,8 @@ class SimpleTaxonomyRefreshed_Client {
 				self::$wp_decoded_labels[ (int) $hier ][ $label ] = html_entity_decode( $label, ENT_QUOTES );
 			}
 		}
-		//self::$wp_decoded_labels[ (int) $hier ] = array_map( 'html_entity_decode', (array) $labels );
+		// phpcs:ignore
+		// self::$wp_decoded_labels[ (int) $hier ] = array_map( 'html_entity_decode', (array) $labels );
 	}
 
 	/**
