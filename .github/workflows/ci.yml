@@ -78,16 +78,13 @@ jobs:
     - name: Composer install
       run: composer install --optimize-autoloader --prefer-dist
 
-    - name: Setdefault authentication
-      run: sudo mysqld --default-authentication-plugin=mysql_native_password
-
     - name: Start Mysql
       run: sudo service mysql start
 
     - name: Manage password with Mysql 8
       run: sudo mysql -uroot -proot -e "alter user 'root'@'localhost' identified with mysql_native_password by 'root';"
 
-    - name: Restart Mysqld
+    - name: Reload Mysql privileges
       run: sudo mysqladmin -u root -p reload
 
     - name: Install WP Tests
