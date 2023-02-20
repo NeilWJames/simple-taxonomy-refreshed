@@ -25,37 +25,37 @@ jobs:
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '5.7.27'
-		        phpunit-options: '--config=phpunit.xml'
+            phpunit-options: '--config=phpunit.xml'
             operating-system: ubuntu-latest
           - php-versions: '7.0'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '5.7.27'
-		        phpunit-options: '--config=phpunit.xml'
+            phpunit-options: '--config=phpunit.xml'
             operating-system: ubuntu-latest
           - php-versions: '7.1'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '7.5.20'
-		        phpunit-options: '--config=phpunit.xml'
+            phpunit-options: '--config=phpunit.xml'
             operating-system: ubuntu-latest
           - php-versions: '7.2'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '7.5.20'
-		        phpunit-options: '--config=phpunit.xml'
+            phpunit-options: '--config=phpunit.xml'
             operating-system: ubuntu-latest
           - php-versions: '7.3'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '9.5.20'
-		        phpunit-options: '--config=phpunit.xml --migrate-configuration'
+            phpunit-options: '--config=phpunit.xml --migrate-configuration'
             operating-system: 'ubuntu-latest'
           - php-versions: '7.4'
             wp-version: 'latest'
             wp-multisite: 1
             phpunit-versions: '9.5.20'
-		        phpunit-options: '--config=phpunit.xml --migrate-configuration'
+            phpunit-options: '--config=phpunit.xml --migrate-configuration'
             operating-system: 'ubuntu-latest'
     name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} MS ${{ matrix.wp-multisite }}
     steps:
