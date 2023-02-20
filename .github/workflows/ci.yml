@@ -84,6 +84,9 @@ jobs:
     - name: Manage password with Mysql 8
       run: sudo mysql -uroot -proot -e "alter user 'root'@'localhost' identified with mysql_native_password by 'root';"
 
+    - name:Restart Mysql
+      run: sudo service mysql restart
+
     - name: Install WP Tests
       run: bash script/install-wp-tests wordpress_test root root localhost ${{ matrix.wp-version }}
       env:
@@ -92,7 +95,7 @@ jobs:
     - name: phpunit tests
       run: |
         echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '$HOME/.composer/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
-        /usr/local/bin/phpunit ${{ matrix.phpunit-options }}
+        /usr/local/bin/phpunit ${{ matrix.phpunit-options }} --coverage-clover=coverage.xml
       env:
         wp-multisite: ${{ matrix.wp-multisite }}
 
