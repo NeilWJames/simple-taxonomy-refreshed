@@ -25,25 +25,25 @@ jobs:
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '5.7.27'
-		        phpmigrate: ''
+		        phpmigrate: ' '
             operating-system: ubuntu-latest
           - php-versions: '7.0'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '5.7.27'
-		        phpmigrate: ''
+		        phpmigrate: ' '
             operating-system: ubuntu-latest
           - php-versions: '7.1'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '7.5.20'
-		        phpmigrate: ''
+		        phpmigrate: ' '
             operating-system: ubuntu-latest
           - php-versions: '7.2'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '7.5.20'
-		        phpmigrate: ''
+		        phpmigrate: ' '
             operating-system: ubuntu-latest
           - php-versions: '7.3'
             wp-version: 'latest'
