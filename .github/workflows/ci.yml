@@ -16,41 +16,48 @@ jobs:
       matrix:
         operating-system: [ubuntu-latest]
         php-versions: ['7.4', '8.0', '8.1']
-        wp_version: [latest]
-        wp_multisite: [0]
+        wp-version: [latest]
+        wp-multisite: [0]
         phpunit-versions: ['9.5.20']
+        phpmigrate: ['--migrate-configuration']
         include:
           - php-versions: '5.6'
-            wp_version: 'latest'
-            wp_multisite: 0
+            wp-version: 'latest'
+            wp-multisite: 0
             phpunit-versions: '5.7.27'
+		        phpmigrate: ''
             operating-system: ubuntu-latest
           - php-versions: '7.0'
-            wp_version: 'latest'
-            wp_multisite: 0
+            wp-version: 'latest'
+            wp-multisite: 0
             phpunit-versions: '5.7.27'
+		        phpmigrate: ''
             operating-system: ubuntu-latest
           - php-versions: '7.1'
-            wp_version: 'latest'
-            wp_multisite: 0
+            wp-version: 'latest'
+            wp-multisite: 0
             phpunit-versions: '7.5.20'
+		        phpmigrate: ''
             operating-system: ubuntu-latest
           - php-versions: '7.2'
-            wp_version: 'latest'
-            wp_multisite: 0
+            wp-version: 'latest'
+            wp-multisite: 0
             phpunit-versions: '7.5.20'
+		        phpmigrate: ''
             operating-system: ubuntu-latest
           - php-versions: '7.3'
-            wp_version: 'latest'
-            wp_multisite: 0
+            wp-version: 'latest'
+            wp-multisite: 0
             phpunit-versions: '9.5.20'
+		        phpmigrate: ['--migrate-configuration']
             operating-system: 'ubuntu-latest'
           - php-versions: '7.4'
-            wp_version: 'latest'
-            wp_multisite: 1
+            wp-version: 'latest'
+            wp-multisite: 1
             phpunit-versions: '9.5.20'
+		        phpmigrate: ['--migrate-configuration']
             operating-system: 'ubuntu-latest'
-    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} MS ${{ matrix.wp_multisite }}
+    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} MS ${{ matrix.wp-multisite }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -60,7 +67,7 @@ jobs:
       with:
         php-version: ${{ matrix.php-versions }}
         coverage: none
-        extensions: mysql
+        extensions: mysql, xdebug
         tools: wp-cli, phpunit-polyfills, phpunit:${{ matrix.phpunit-versions }}
       env:
         COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -71,23 +78,23 @@ jobs:
     - name: Composer install
       run: composer install --optimize-autoloader --prefer-dist
 
+    - name: Manage password with Mysql 8
+      run: sudo mysqladmin --default-authentication-plugin=mysql_native_password --user=root --password=root --host=localhost --protocol=tcp
+
     - name: Start Mysql
       run: sudo service mysql start
 
-    - name: Manage password with Mysql 8
-      run: sudo mysql -uroot -proot -e "alter user 'root'@'localhost' identified with mysql_native_password by 'root';"
-
     - name: Install WP Tests
-      run: bash script/install-wp-tests wordpress_test root root localhost ${{ matrix.wp_version }}
+      run: bash script/install-wp-tests wordpress_test root root localhost ${{ matrix.wp-version }}
       env:
-        WP_MULTISITE: ${{ matrix.wp_multisite }}
+        wp-multisite: ${{ matrix.wp-multisite }}
 
     - name: phpunit tests
       run: |
         echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '$HOME/.composer/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
         /usr/local/bin/phpunit --config=phpunit.xml
       env:
-        WP_MULTISITE: ${{ matrix.wp_multisite }}
+        wp-multisite: ${{ matrix.wp-multisite }}
 
     - name: Codecov
       uses: codecov/codecov-action@v3
@@ -96,7 +103,7 @@ jobs:
         files: coverage.xml
         directory: ${{ github.workspace }}
         verbose: true
-        flags: php-${{ matrix.php_version }},wp-${{ matrix.wp_version }},multisite-${{ matrix.wp_multisite }}
+        flags: php-${{ matrix.php_version }},wp-${{ matrix.wp-version }},multisite-${{ matrix.wp-multisite }}
 
   phpcs:
     runs-on: ubuntu-latest
