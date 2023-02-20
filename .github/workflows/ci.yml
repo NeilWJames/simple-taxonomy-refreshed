@@ -75,7 +75,7 @@ jobs:
       run: sudo service mysql start
 
     - name: Manage password with Mysql 8
-      run: sudo mysql -uroot -proot -e 'alter user "root"@"localhost"" identified with mysql_native_password by "root";'
+      run: sudo mysql -uroot -proot -e "alter user 'root'@'localhost' identified with mysql_native_password by 'root';"
 
     - name: Install WP Tests
       run: bash script/install-wp-tests wordpress_test root root localhost ${{ matrix.wp_version }}
