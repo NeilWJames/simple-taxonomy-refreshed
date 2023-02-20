@@ -78,6 +78,9 @@ jobs:
     - name: Composer install
       run: composer install --optimize-autoloader --prefer-dist
 
+    - name: Setdefault authentication
+      run: sudo mysqld --default-authentication-plugin=mysql_native_password
+
     - name: Start Mysql
       run: sudo service mysql start
 
@@ -85,7 +88,7 @@ jobs:
       run: sudo mysql -uroot -proot -e "alter user 'root'@'localhost' identified with mysql_native_password by 'root';"
 
     - name: Restart Mysqld
-      run: sudo service mysqld restart
+      run: sudo mysqladmin -u root -p reload
 
     - name: Install WP Tests
       run: bash script/install-wp-tests wordpress_test root root localhost ${{ matrix.wp-version }}
