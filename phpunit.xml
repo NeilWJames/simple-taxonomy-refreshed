@@ -18,7 +18,6 @@
 	<filter>
 	  <whitelist addUncoveredFilesFromWhitelist="true" processUncoveredFilesFromWhitelist="false">
 	    <directory suffix=".php">./includes</directory>
-	    <file>./class-test-staxo-refreshed-main.php</file>
 	  </whitelist>
 	</filter>
 </phpunit>
