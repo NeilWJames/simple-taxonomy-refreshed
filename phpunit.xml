@@ -15,8 +15,10 @@
 	<logging>
 		<log type="coverage-clover" target="build/logs/clover.xml"/>
 	</logging>
-	<include>
-		<directory suffix=".php">./includes</directory>
-		<file>./simple-taxonomy-refreshed.php</file>
-	</include>
+	<filter>
+		<include>
+			<directory suffix=".php">./includes</directory>
+			<file>./simple-taxonomy-refreshed.php</file>
+		</include>
+	</filter>
 </phpunit>
