@@ -15,6 +15,7 @@ jobs:
       mydb:
         image: mysql:5.7
         env:
+          MYSQL_HOSt: localhost
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
@@ -84,6 +85,10 @@ jobs:
       run: bash script/install-wp-tests wordpress_test root root localhost ${{ matrix.wp-version }}
       env:
         wp-multisite: ${{ matrix.wp-multisite }}
+
+    - name: List config
+      run: |
+        more /tmp/wordpress-tests-lib/wp-tests-config.php
 
     - name: phpunit tests
       run: |
