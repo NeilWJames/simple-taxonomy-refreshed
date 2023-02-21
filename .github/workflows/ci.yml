@@ -92,6 +92,10 @@ jobs:
       env:
         wp-multisite: ${{ matrix.wp-multisite }}
 
+    - name: phpunit file
+      run: |
+        more phpunit.xml  
+
     - name: Codecov
       uses: codecov/codecov-action@v3
       with:
