@@ -17,8 +17,6 @@
 	</logging>
 	<include>
 		<directory suffix=".php">./includes</directory>
+		<file>./simple-taxonomy-refreshed.php</file>
 	</include>
-	<exclude>
-		<directory suffix=".php">./tests</directory>
-	</exclude>
 </phpunit>
