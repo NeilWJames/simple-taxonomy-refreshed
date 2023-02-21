@@ -18,7 +18,7 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 	 *
 	 * @return void
 	 */
-	public function setUp(): void {
+	public function setUp() {
 
 		parent::setUp();
 
@@ -31,7 +31,7 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 	 *
 	 * @param string $text text to output.
 	 */
-	public function consoleLog( $text ): void {
+	public function consoleLog( $text ) {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fwrite
 			fwrite( STDERR, $text . "\n" );
 	}
@@ -39,7 +39,7 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 	/**
 	 * Make sure multisite is as expected.
 	 */
-	public function test_log_multisite(): void {
+	public function test_log_multisite() {
 
 		$this->consoleLog( 'Test_STaxo_Refreshed_Main - Start' );
 
