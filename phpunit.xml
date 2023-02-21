@@ -9,15 +9,16 @@
 	>
 	<testsuites>
 		<testsuite name="STR Tests">
-			<directory prefix="class-test-" suffix=".php">./tests/</directory>
+			<directory prefix="class-test-" suffix=".php">./tests</directory>
 		</testsuite>
 	</testsuites>
 	<logging>
 		<log type="coverage-clover" target="build/logs/clover.xml"/>
 	</logging>
-	<filter>
-	  <whitelist addUncoveredFilesFromWhitelist="true" processUncoveredFilesFromWhitelist="false">
-	    <directory suffix=".php">./includes</directory>
-	  </whitelist>
-	</filter>
+	<include>
+		<directory suffix=".php">./includes</directory>
+	</include>
+	<exclude>
+		<directory suffix=".php">./tests</directory>
+	</exclude>
 </phpunit>
