@@ -13,7 +13,7 @@
 		</testsuite>
 	</testsuites>
 	<logging>
-		<junit outputfile="build/logs/clover.xml"/>
+		<junit outputFile="build/logs/clover.xml"/>
 	</logging>
 	<coverage cacheDirectory="/tmp/cache"
           includeUncoveredFiles="true"
