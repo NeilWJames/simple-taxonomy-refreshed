@@ -27,37 +27,31 @@ jobs:
         wp-version: [latest]
         wp-multisite: [0]
         phpunit-versions: ['9.5.20']
-        phpunit-options: ['--config=phpunit.xml --migrate-configuration']
         include:
           - php-versions: '5.6'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '5.7.27'
-            phpunit-options: '--config=phpunit.xml'
             operating-system: ubuntu-latest
           - php-versions: '7.0'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '5.7.27'
-            phpunit-options: '--config=phpunit.xml'
             operating-system: ubuntu-latest
           - php-versions: '7.1'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '7.5.20'
-            phpunit-options: '--config=phpunit.xml'
             operating-system: ubuntu-latest
           - php-versions: '7.2'
             wp-version: 'latest'
             wp-multisite: 0
             phpunit-versions: '7.5.20'
-            phpunit-options: '--config=phpunit.xml'
             operating-system: ubuntu-latest
           - php-versions: '7.4'
             wp-version: 'latest'
             wp-multisite: 1
             phpunit-versions: '9.5.20'
-            phpunit-options: '--config=phpunit.xml --migrate-configuration'
             operating-system: 'ubuntu-latest'
     name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} MS ${{ matrix.wp-multisite }}
     steps:
@@ -88,13 +82,9 @@ jobs:
     - name: phpunit tests
       run: |
         echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '$HOME/.composer/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
-        /usr/local/bin/phpunit ${{ matrix.phpunit-options }} --coverage-clover=coverage.xml
+        /usr/local/bin/phpunit --config=phpunit.xml --coverage-clover=coverage.xml
       env:
         wp-multisite: ${{ matrix.wp-multisite }}
-
-    - name: phpunit file
-      run: |
-        more phpunit.xml  
 
     - name: Codecov
       uses: codecov/codecov-action@v3
