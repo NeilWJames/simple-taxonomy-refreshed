@@ -28,16 +28,6 @@ jobs:
         wp-multisite: [0]
         phpunit-versions: ['9.5.20']
         include:
-          - php-versions: '5.6'
-            wp-version: 'latest'
-            wp-multisite: 0
-            phpunit-versions: '5.7.27'
-            operating-system: ubuntu-latest
-          - php-versions: '7.0'
-            wp-version: 'latest'
-            wp-multisite: 0
-            phpunit-versions: '5.7.27'
-            operating-system: ubuntu-latest
           - php-versions: '7.1'
             wp-version: 'latest'
             wp-multisite: 0
