@@ -72,7 +72,7 @@ jobs:
     - name: phpunit tests
       run: |
         echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '$HOME/.composer/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
-        /usr/local/bin/phpunit --config=phpunit.xml --coverage-clover=coverage.xml
+        /usr/local/bin/phpunit --config=phpunit.xml
       env:
         wp-multisite: ${{ matrix.wp-multisite }}
 
