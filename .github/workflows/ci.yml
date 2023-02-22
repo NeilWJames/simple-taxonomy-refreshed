@@ -43,6 +43,11 @@ jobs:
             wp-multisite: 1
             phpunit-versions: '9.5.20'
             operating-system: 'ubuntu-latest'
+          - php-versions: '7.4'
+            wp-version: '5.0'
+            wp-multisite: 0
+            phpunit-versions: '9.5.20'
+            operating-system: 'ubuntu-latest'
     name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} MS ${{ matrix.wp-multisite }}
     steps:
     - name: Checkout
