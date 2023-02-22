@@ -27,7 +27,7 @@ jobs:
         wp-version: [latest]
         wp-multisite: [0]
         phpunit-versions: ['9.5']
-phpunit-config: ['phpunit9.xml']
+        phpunit-config: ['phpunit9.xml']
         include:
           - php-versions: '7.1'
             wp-version: 'latest'

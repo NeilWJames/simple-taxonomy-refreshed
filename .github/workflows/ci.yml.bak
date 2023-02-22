@@ -11,53 +11,49 @@ on:
 jobs:
   run:
     runs-on: ${{ matrix.operating-system }}
+    services:
+      mydb:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: 'root'
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
     strategy:
       fail-fast: true
       matrix:
         operating-system: [ubuntu-latest]
-        php-versions: ['7.4', '8.0', '8.1']
+        php-versions: ['7.3', '7.4', '8.0', '8.1', '8.2']
         wp-version: [latest]
         wp-multisite: [0]
-        phpunit-versions: ['9.5.20']
-        php-options: ['--config=phpunit.xml --migrate-configuration']
+        phpunit-versions: ['9.5']
+phpunit-config: ['phpunit9.xml']
         include:
-          - php-versions: '5.6'
-            wp-version: 'latest'
-            wp-multisite: 0
-            phpunit-versions: '5.7.27'
-		        php-options: '--config=phpunit.xml'
-            operating-system: ubuntu-latest
-          - php-versions: '7.0'
-            wp-version: 'latest'
-            wp-multisite: 0
-            phpunit-versions: '5.7.27'
-		        php-options: '--config=phpunit.xml'
-            operating-system: ubuntu-latest
           - php-versions: '7.1'
             wp-version: 'latest'
             wp-multisite: 0
-            phpunit-versions: '7.5.20'
-		        php-options: '--config=phpunit.xml'
+            phpunit-versions: '7.5'
+            phpunit-config: 'phpunit.xml'
             operating-system: ubuntu-latest
           - php-versions: '7.2'
             wp-version: 'latest'
             wp-multisite: 0
-            phpunit-versions: '7.5.20'
-		        php-options: '--config=phpunit.xml'
+            phpunit-versions: '7.5'
+            phpunit-config: 'phpunit.xml'
             operating-system: ubuntu-latest
-          - php-versions: '7.3'
-            wp-version: 'latest'
-            wp-multisite: 0
-            phpunit-versions: '9.5.20'
-		        php-options: '--config=phpunit.xml --migrate-configuration'
-            operating-system: 'ubuntu-latest'
           - php-versions: '7.4'
             wp-version: 'latest'
             wp-multisite: 1
-            phpunit-versions: '9.5.20'
-		        php-options: '--config=phpunit.xml --migrate-configuration'
+            phpunit-versions: '9.5'
+            phpunit-config: 'phpunit9.xml'
             operating-system: 'ubuntu-latest'
-    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }} MS ${{ matrix.wp-multisite }}
+          - php-versions: '7.4'
+            wp-version: '5.1'
+            wp-multisite: 0
+            phpunit-versions: '7.5'
+            phpunit-config: 'phpunit.xml'
+            operating-system: 'ubuntu-latest'
+    name: PHP ${{ matrix.php-versions }} Test WP ${{ matrix.wp-version }} MS ${{ matrix.wp-multisite }} ${{ matrix.operating-system }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -66,8 +62,8 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-versions }}
-        coverage: none
-        extensions: mysql, xdebug
+        extensions: mysqli
+        coverage: xdebug
         tools: wp-cli, phpunit-polyfills, phpunit:${{ matrix.phpunit-versions }}
       env:
         COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,23 +74,17 @@ jobs:
     - name: Composer install
       run: composer install --optimize-autoloader --prefer-dist
 
-    - name: Manage password with Mysql 8
-      run: sudo mysqladmin --default-authentication-plugin=mysql_native_password --user=root --password=root --host=localhost --protocol=tcp
-
-    - name: Start Mysql
-      run: sudo service mysql start
-
     - name: Install WP Tests
-      run: bash script/install-wp-tests wordpress_test root root localhost ${{ matrix.wp-version }}
+      run: bash script/install-wp-tests wordpress_test root root 127.0.0.1 ${{ matrix.wp-version }}
       env:
-        wp-multisite: ${{ matrix.wp-multisite }}
+        WP_MULTISITE: ${{ matrix.wp-multisite }}
 
     - name: phpunit tests
       run: |
         echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '$HOME/.composer/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
-        /usr/local/bin/phpunit ${{ matrix.php-options }}
+        /usr/local/bin/phpunit --config=${{ matrix.phpunit-config }}
       env:
-        wp-multisite: ${{ matrix.wp-multisite }}
+        WP_MULTISITE: ${{ matrix.wp-multisite }}
 
     - name: Codecov
       uses: codecov/codecov-action@v3
