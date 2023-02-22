@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <phpunit
 	bootstrap="tests/bootstrap.php"
 	backupGlobals="false"
@@ -9,24 +8,16 @@
 	>
 	<testsuites>
 		<testsuite name="STR Tests">
-			<directory prefix="class-test-" suffix=".php">./tests</directory>
+			<directory prefix="class-test-" suffix=".php">./tests/</directory>
 		</testsuite>
 	</testsuites>
 	<logging>
-		<junit outputFile="build/logs/clover.xml"/>
+		<log type="coverage-clover" target="build/logs/clover.xml"/>
 	</logging>
-	<coverage cacheDirectory="/tmp/cache"
-          includeUncoveredFiles="true"
-          processUncoveredFiles="true"
-          pathCoverage="false"
-          ignoreDeprecatedCodeUnits="true"
-          disableCodeCoverageIgnore="true">
-		<include>
-			<directory suffix=".php">./includes</directory>
-			<file>./simple-taxonomy-refreshed.php</file>
-		</include>
-		<report>
-	    <clover outputFile="coverage.xml" />
-		</report>
-	</coverage>
+	<filter>
+	  <whitelist addUncoveredFilesFromWhitelist="true" processUncoveredFilesFromWhitelist="false">
+	    <directory suffix=".php">./includes</directory>
+	    <file>./class-test-staxo-refreshed-main.php</file>
+	  </whitelist>
+	</filter>
 </phpunit>
