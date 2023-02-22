@@ -72,14 +72,14 @@ jobs:
     - name: Install WP Tests
       run: bash script/install-wp-tests wordpress_test root root 127.0.0.1 ${{ matrix.wp-version }}
       env:
-        wp-multisite: ${{ matrix.wp-multisite }}
+        WP_MULTISITE: ${{ matrix.wp-multisite }}
 
     - name: phpunit tests
       run: |
         echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '$HOME/.composer/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
         /usr/local/bin/phpunit --config=phpunit.xml
       env:
-        wp-multisite: ${{ matrix.wp-multisite }}
+        WP_MULTISITE: ${{ matrix.wp-multisite }}
 
     - name: Codecov
       uses: codecov/codecov-action@v3
