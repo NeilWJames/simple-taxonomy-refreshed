@@ -78,6 +78,12 @@ See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 ## Changelog
 
+### Version 3.1.0 (04/04/2023)
+	* NEW: Term controls can be applied to a subset of post types only.
+	* NEW: Labels that are the same as the WP defaults are not saved.
+	* FIX: PHP 8.1 error with array map on null.
+	* FIX: Tested with WP version 6.2.
+
 ### Version 3.0.0 (17/11/2022)
 	* NEW: Post taxonomy lists may use html tags to format text.
 	* NEW: Term controls extended to Quick Edit options.

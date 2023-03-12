@@ -38,7 +38,7 @@ Clicking on *Export PHP* will download a file called test_hier.php to the browse
 	 
 	 ----
 	 
-	 Copyright 2021 - XXX-Author
+	 Copyright 2023 - XXX-Author
 	 
 	 This program is free software; you can redistribute it and/or modify
 	 it under the terms of the GNU General Public License as published by
@@ -68,32 +68,35 @@ Clicking on *Export PHP* will download a file called test_hier.php to the browse
 	   'labels' => 
 	   array (
 	     'name' => 'Test Terms',
-	     'name_description' => 'The name is how it appears on your site.',
-	     'menu_name' => 'Test Terms',
 	     'singular_name' => 'Test Term',
-	     'search_items' => 'Search Terms',
-	     'popular_items' => 'Popular Terms',
-	     'all_items' => 'All Terms',
-	     'parent_item' => 'Parent Term',
-	     'parent_item_colon' => 'Parent Term:',
-	     'parent_description' => 'Assign a parent term to create a hierarchy. The term Jazz, for example, would be the parent of Bebop and Big Band.',
-	     'slug_description' => 'The &#8220;slug&#8221; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.',
-	     'description_description' => 'The description is not prominent by default; however, some themes may show it.',
-	     'edit_item' => 'Edit Term',
-	     'view_item' => 'View Term',
-	     'update_item' => 'Update Term',
-	     'add_new_item' => 'Add New Term',
-	     'new_item_name' => 'New Term Name',
-	     'separate_items_with_commas' => 'Separate terms with commas',
-	     'add_or_remove_items' => 'Add or remove terms',
-	     'choose_from_most_used' => 'Choose from the most used terms',
-	     'not_found' => 'No Terms found',
-	     'no_terms' => 'No Terms',
-	     'items_list_navigation' => 'Terms list navigation',
-	     'items_list' => 'Terms list',
-	     'most_used' => 'Most Used',
-	     'back_to_items' => '← Back to Terms',
+	     'search_items' => 'Search Categories',
+	     'popular_items' => '',
+	     'all_items' => 'All Categories',
+	     'parent_item' => 'Parent Category',
+	     'parent_item_colon' => 'Parent Category:',
+	     'name_field_description' => 'The name is how it appears on your site.',
+	     'slug_field_description' => 'The “slug” is the URL-friendly version of the name. It is usually all lower case and contains only letters, numbers, and hyphens.',
+	     'parent_field_description' => 'Assign a parent term to create a hierarchy. The term Jazz, for example, would be the parent of Bebop and Big Band.',
+	     'desc_field_description' => 'The description is not prominent by default; however, some themes may show it.',
+	     'edit_item' => 'Edit Category',
+	     'view_item' => 'View Category',
+	     'update_item' => 'Update Category',
+	     'add_new_item' => 'Add New Category',
+	     'new_item_name' => 'New Category Name',
+	     'separate_items_with_commas' => '',
+	     'add_or_remove_items' => '',
+	     'choose_from_most_used' => '',
+	     'not_found' => 'No categories found.',
+	     'no_terms' => 'No categories',
 	     'filter_by_item' => 'Filter by category',
+	     'items_list_navigation' => 'Categories list navigation',
+	     'items_list' => 'Categories list',
+	     'most_used' => 'Most Used',
+	     'back_to_items' => '← Go to Categories',
+	     'item_link' => 'Category Link',
+	     'item_link_description' => 'A link to a category.',
+	     'name_admin_bar' => '',
+	     'archives' => 'All Categories',
 	   ),
 	   'public' => true,
 	   'publicly_queryable' => true,
@@ -111,13 +114,7 @@ Clicking on *Export PHP* will download a file called test_hier.php to the browse
 	     'delete_terms' => 'manage_categories',
 	     'assign_terms' => 'edit_posts',
 	   ),
-	   'rewrite' => 
-	   array (
-	     'slug' => 'test_hier',
-	     'with_front' => true,
-	     'hierarchical' => true,
-	     'ep_mask' => 0,
-	   ),
+	   'rewrite' => false,
 	   'query_var' => 'test_hier',
 	   'update_count_callback' => '',
 	   'show_in_rest' => true,
@@ -125,8 +122,10 @@ Clicking on *Export PHP* will download a file called test_hier.php to the browse
 	 ) );
 	 }
 	 // Display Terms with Posts: content
-	 // Display Terms Before text: Test Terms :
+	 // Display Terms Before text: Test Terms:
+	 // Display Terms Separator: , 
 	 // Display Terms After text: 
+	 // Show Terms in Feeds: 0
 
 This can be included in your own code - but then should be deleted as a custom taxonomy.
 

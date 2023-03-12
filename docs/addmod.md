@@ -103,9 +103,11 @@ Two options are supported - either to count all statuses except trash; and the o
 
 This is an optional set of parameters that allows the user to require a minimum and/or maximum number of terms in the taxonomy to be attached to the post and to select the post statuses when the test is to be applied.
 
-Since a user may be able tro edit the post, but not add or delete terms, this can be notified to the user that the number is outsied the required bounds, but the edit is allowed.
+If the taxonomy applies to more than one post type it is possible to choose which types to apply the control. when no type is selected here, then this means all post types are subject to term control.
+
+Since a user may be able to edit the post, but not add or delete terms, this can be notified to the user that the number is outside the required bounds, but the edit is allowed.
 
 The option "When post is saved" means that the test is done during save post processing - and updates will be rejected if outside the bounds.
 
-The option "As terms are changed and when post is changed" means the bounds are checked during editing as well. This functionality is a "work in progress", that is, not complete.
+The option "As terms are changed and when post is changed" means the bounds are checked during editing as well. This functionality is mostly complete, but it is possible that there are some holes. To ensure incorrect data is not saved, the "when post is saved" processing is also invoked.
 

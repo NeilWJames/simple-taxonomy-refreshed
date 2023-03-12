@@ -167,6 +167,12 @@ function linkAdm(evt, objNo) {
 		document.getElementById("admlist" + objNo).setAttribute('aria-checked', 'false');
 		document.getElementById("admlist" + objNo).removeAttribute( 'checked' );
 	}
+	document.getElementById("cclist" + objNo).disabled = ( evt.currentTarget.checked === false );
+	if (evt.currentTarget.checked === false) {
+		document.getElementById("cclist" + objNo).checked = false;
+		document.getElementById("cclist" + objNo).setAttribute('aria-checked', 'false');
+		document.getElementById("cclist" + objNo).removeAttribute( 'checked' );
+	}
 	evt.stopPropagation();
 }
 

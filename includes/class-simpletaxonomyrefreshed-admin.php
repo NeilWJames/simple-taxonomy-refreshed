@@ -318,7 +318,8 @@ class SimpleTaxonomyRefreshed_Admin {
 				__( 'Standard WordPress functionality provides no limits on the number of terms that can be attached to a post.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'This functionality provides this control. Using this tab, upper and lower bounds may be set for either Published posts or all posts.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'The tests will be applied at save post time (soft);  or also when the terms are added or removed (hard).', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'Thus a user who can edit a post may not be able to add or remove terms but can be notified of the issue and make other updates.', 'simple-taxonomy-refreshed' ) . '</p>',
+				__( 'Thus a user who can edit a post may not be able to add or remove terms but can be notified of the issue and make other updates.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'By default term controls will be applied to all corresponding post types, but just a sub-set of post types can be chosen to be controlled.', 'simple-taxonomy-refreshed' ) . '</p>',
 		);
 
 		// loop through each tab in the help array and add.
@@ -645,6 +646,7 @@ class SimpleTaxonomyRefreshed_Admin {
 					'st_cb_prv'          => 0,
 					'st_cb_tsh'          => 0,
 					'st_cc_type'         => 0,
+					'st_cc_types'        => array(),
 					'st_cc_hard'         => 0,
 					'st_cc_umin'         => 0,
 					'st_cc_umax'         => 0,
@@ -961,6 +963,11 @@ class SimpleTaxonomyRefreshed_Admin {
 			// Added 2.4.
 			if ( ! array_key_exists( 'st_sep', $taxonomy ) ) {
 				$taxonomy['st_sep'] = '';
+			}
+
+			// Added 3.1.
+			if ( ! array_key_exists( 'st_cc_types', $taxonomy ) ) {
+				$taxonomy['st_cc_types'] = array();
 			}
 
 			// Label menu_name needs to exist to edit (it is removed for registering).
@@ -1664,8 +1671,8 @@ class SimpleTaxonomyRefreshed_Admin {
 										<p><strong><?php esc_html_e( 'Attention. You can use this function to define a duplicate filter if it already exists', 'simple-taxonomy-refreshed' ); ?></strong></p>
 									<?php } ?>
 									<tr>
-										<th scope="row"><label><?php esc_html_e( 'Post types', 'simple-taxonomy-refreshed' ); ?></label></th>
-										<td><div role="group" aria-labelledby="post_types" aria-describedby="post_types_adm">
+										<th scope="row"><label id="pt_adm"><?php esc_html_e( 'Post types', 'simple-taxonomy-refreshed' ); ?></label></th>
+										<td><div role="group" aria-labelledby="pt_adm" aria-describedby="post_types_adm">
 											<?php
 											if ( true === $edit ) {
 												$objects = $taxonomy['st_adm_types'];
@@ -1808,6 +1815,36 @@ class SimpleTaxonomyRefreshed_Admin {
 								</span>
 								<span id="control_tab_1" <?php echo ( empty( $taxonomy['st_cc_type'] ) ? 'class="is-hidden"' : '' ); ?>>
 								<table class="form-table" style="clear:none;">
+									<tr>
+										<th scope="row"><label id="pt_cc"><?php esc_html_e( 'Post types', 'simple-taxonomy-refreshed' ); ?></label></th>
+										<td><div role="group" aria-labelledby="pt_cc" aria-describedby="post_types_cc">
+											<?php
+											if ( true === $edit ) {
+												$objects = $taxonomy['st_cc_types'];
+											} else {
+												$objects = array();
+											}
+											// External taxonomies types should only show defined post types.
+											$i = 0;
+											foreach ( self::get_object_types() as $type ) {
+												if ( ! $custom && ! in_array( $type->name, (array) $taxonomy['objects'], true ) ) {
+													continue;
+												}
+												$show = in_array( $type->name, (array) $objects, true );
+												echo '<label class="inline">';
+												echo '<input id="cclist' . esc_attr( $i ) . '" type="checkbox" role="checkbox" aria-checked="' . ( $show ? 'true' : 'false' );
+												echo '" tabindex="0" onclick="ariaChk(event)" ' . checked( true, $show, false );
+												if ( ! in_array( $type->name, (array) $taxonomy['objects'], true ) ) {
+													echo ' disabled';
+												}
+												echo ' name="st_cc_types[]" value="' . esc_attr( $type->name ) . '" />';
+												echo esc_html( $type->label ) . '</label>' . "\n";
+												$i++;
+											}
+											?>
+											<span class="description" id="post_types_cc"><?php esc_html_e( 'Select the Post Types to which the controls should apply. If none are selected then all eligible ones will be.', 'simple-taxonomy-refreshed' ); ?></span>
+										</td>
+									</tr>
 									<tr>
 										<th scope="row"><label id="cch_label"><?php esc_html_e( 'How Control is applied', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td><fieldset><div id="cc_hard" role="radiogroup" aria-labelledby="cch_label" aria-describedby="cch_descr">
@@ -2152,8 +2189,17 @@ class SimpleTaxonomyRefreshed_Admin {
 			}
 
 			if ( array_key_exists( 'st_cc_type', $taxo_data ) && ! empty( $taxo_data['st_cc_type'] ) ) {
-				$display  = "\n" . '/**' . esc_html__( 'Terms control parameters set.', 'simple-taxonomy-refreshed' ) . "\n";
-				$display .= esc_html__( 'Applies to posts with status:', 'simple-taxonomy-refreshed' );
+				$display = "\n" . '/**' . esc_html__( 'Terms control parameters set.', 'simple-taxonomy-refreshed' ) . "\n";
+				// output all post types parameters.
+				if ( ! array_key_exists( 'st_cc_types', $taxo_data ) || empty( $taxo_data['st_cc_types'] ) ) {
+					$display .= esc_html__( 'Applies to all valid post type(s)', 'simple-taxonomy-refreshed' );
+				} else {
+					$display .= esc_html__( 'Applies to these post type(s)', 'simple-taxonomy-refreshed' );
+					foreach ( $taxo_data['st_cc_types'] as $post_type ) {
+						$display .= "\n  " . $post_type;
+					}
+				}
+				$display .= "\n" . esc_html__( 'Applies to posts with status:', 'simple-taxonomy-refreshed' );
 				if ( 1 === (int) $taxo_data['st_cc_type'] ) {
 					$display .= '  ' . esc_html__( 'Published and Future only', 'simple-taxonomy-refreshed' );
 				} else {
@@ -2319,7 +2365,9 @@ class SimpleTaxonomyRefreshed_Admin {
 		// Before saving, remove taxonomy labels that are default.
 		global $strc;
 		foreach ( $taxonomy['labels'] as $key => $label ) {
-			if ( $strc::$wp_decoded_labels[0][ $key ] === $label || $strc::$wp_decoded_labels[1][ $key ] === $label ) {
+			if ( array_key_exists( $key, $strc::$wp_decoded_labels[0] ) && $strc::$wp_decoded_labels[0][ $key ] === $label ) {
+				unset( $taxonomy['labels'][ $key ] );
+			} elseif ( array_key_exists( $key, $strc::$wp_decoded_labels[1] ) && $strc::$wp_decoded_labels[1][ $key ] === $label ) {
 				unset( $taxonomy['labels'][ $key ] );
 			}
 		}

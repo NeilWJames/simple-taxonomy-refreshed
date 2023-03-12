@@ -983,20 +983,24 @@ class SimpleTaxonomyRefreshed_Client {
 				// Identify if term count control limits wanted.
 				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
 					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
-						// add to post types list.
+						// potentially add to post types list.
 						if ( ! empty( $taxonomy['objects'] ) ) {
+							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) ? $taxonomy['st_cc_types'] : array() );
 							foreach ( $taxonomy['objects'] as $post_type ) {
-								$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
-									'st_cc_type'   => $taxonomy['st_cc_type'],
-									'st_cc_hard'   => $taxonomy['st_cc_hard'],
-									'st_cc_umin'   => $taxonomy['st_cc_umin'],
-									'st_cc_min'    => $taxonomy['st_cc_min'],
-									'st_cc_umax'   => $taxonomy['st_cc_umax'],
-									'st_cc_max'    => $taxonomy['st_cc_max'],
-									'show_in_rest' => $taxonomy['show_in_rest'],
-									'rest_base'    => ( empty( $taxonomy['rest_base'] ) ? $taxonomy['name'] : $taxonomy['rest_base'] ),
-									'label_name'   => $taxonomy['labels']['name'],
-								);
+								// check the post type is in the list. (List not exists or is empty counts as in the list).
+								if ( empty( $cc_post_types ) || array_key_exists( $post_type, $cc_post_types ) ) {
+									$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
+										'st_cc_type'   => $taxonomy['st_cc_type'],
+										'st_cc_hard'   => $taxonomy['st_cc_hard'],
+										'st_cc_umin'   => $taxonomy['st_cc_umin'],
+										'st_cc_min'    => $taxonomy['st_cc_min'],
+										'st_cc_umax'   => $taxonomy['st_cc_umax'],
+										'st_cc_max'    => $taxonomy['st_cc_max'],
+										'show_in_rest' => $taxonomy['show_in_rest'],
+										'rest_base'    => ( empty( $taxonomy['rest_base'] ) ? $taxonomy['name'] : $taxonomy['rest_base'] ),
+										'label_name'   => $taxonomy['labels']['name'],
+									);
+								}
 							}
 						}
 					}
@@ -1012,20 +1016,24 @@ class SimpleTaxonomyRefreshed_Client {
 					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
 						// add to post types list.
 						if ( ! empty( $taxonomy['objects'] ) ) {
+							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) ? $taxonomy['st_cc_types'] : array() );
 							// need to get some properties from external taxonomy.
 							$tax_obj = get_taxonomy( $taxonomy );
 							foreach ( $taxonomy['objects'] as $post_type ) {
-								$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
-									'st_cc_type'   => $taxonomy['st_cc_type'],
-									'st_cc_hard'   => $taxonomy['st_cc_hard'],
-									'st_cc_umin'   => $taxonomy['st_cc_umin'],
-									'st_cc_min'    => $taxonomy['st_cc_min'],
-									'st_cc_umax'   => $taxonomy['st_cc_umax'],
-									'st_cc_max'    => $taxonomy['st_cc_max'],
-									'show_in_rest' => $tax_obj->show_in_rest,
-									'rest_base'    => ( empty( $tax_obj->rest_base ) ? $tax_obj->name : $tax_obj->rest_base ),
-									'label_name'   => $taxonomy['labels']['name'],
-								);
+								// check the post type is in the list. (List not exists or is empty counts as in the list).
+								if ( empty( $cc_post_types ) || array_key_exists( $post_type, $cc_post_types ) ) {
+									$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
+										'st_cc_type'   => $taxonomy['st_cc_type'],
+										'st_cc_hard'   => $taxonomy['st_cc_hard'],
+										'st_cc_umin'   => $taxonomy['st_cc_umin'],
+										'st_cc_min'    => $taxonomy['st_cc_min'],
+										'st_cc_umax'   => $taxonomy['st_cc_umax'],
+										'st_cc_max'    => $taxonomy['st_cc_max'],
+										'show_in_rest' => $tax_obj->show_in_rest,
+										'rest_base'    => ( empty( $tax_obj->rest_base ) ? $tax_obj->name : $tax_obj->rest_base ),
+										'label_name'   => $taxonomy['labels']['name'],
+									);
+								}
 							}
 						}
 					}
@@ -1099,6 +1107,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'st_cb_prv'                => 0,
 			'st_cb_tsh'                => 0,
 			'st_cc_type'               => 0,
+			'st_cc_types'              => array(),
 			'st_cc_hard'               => 0,
 			'st_cc_umin'               => 0,
 			'st_cc_umax'               => 0,
@@ -1182,6 +1191,7 @@ class SimpleTaxonomyRefreshed_Client {
 		}
 
 		self::$wp_default_labels[ (int) $hier ] = (array) $labels;
+		// PHP 8 does not allow array-map operations on null elements.
 		foreach ( (array) $labels as $label ) {
 			if ( is_null( $label ) ) {
 				self::$wp_decoded_labels[ (int) $hier ][ $label ] = null;
@@ -1189,8 +1199,6 @@ class SimpleTaxonomyRefreshed_Client {
 				self::$wp_decoded_labels[ (int) $hier ][ $label ] = html_entity_decode( $label, ENT_QUOTES );
 			}
 		}
-		// phpcs:ignore
-		// self::$wp_decoded_labels[ (int) $hier ] = array_map( 'html_entity_decode', (array) $labels );
 	}
 
 	/**

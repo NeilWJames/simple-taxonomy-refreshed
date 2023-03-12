@@ -550,16 +550,15 @@ function tag_tax_count( tax_slug ) {
  */
 function dom_tag_cntl_check( tax_slug ) {
 	// call these with special = true to force error processing.
-	document.getElementById("publish").addEventListener('click', event => {
-		tag_cntl_check( tax_slug, true );
-	});
-	document.getElementById("save-post").addEventListener('click', event => {
-		tag_cntl_check( tax_slug, true );
-	});
-	document.getElementById("save-post").addEventListener('keypress', event => {
-		tag_cntl_check( tax_slug, true );
-	});
-
+	let elt = document.getElementById("publish");
+	if ( null !== elt ) {
+		elt.addEventListener('click', event => { tag_cntl_check( tax_slug, true ); });
+	}
+	elt = document.getElementById("save-post");
+	if ( null !== elt ) {
+		elt.addEventListener('click', event => { tag_cntl_check( tax_slug, true ); });
+		elt.addEventListener('keypress', event => { tag_cntl_check( tax_slug, true ); });
+	}
 	// Select the node that will be observed for mutations
 	let tag = document.getElementById( tax_slug );
 	const targetNode = tag.getElementsByTagName('ul')[0];
