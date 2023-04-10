@@ -81,11 +81,9 @@ class SimpleTaxonomyRefreshed_Admin {
 		if ( 'toplevel_page_staxo_settings' === $screen->id ) {
 			// Add admin js/css.
 			self::enqueue_admin_libs();
-		}
-		// Quick-edit option may be used.
-		if ( 1 === 1 ) {
 			return;
 		}
+		// Quick-edit option may be used.
 		if ( 'edit' === $screen->base ) {
 			// search in taxonomies as may have been changed from parameters.
 			$taxos = get_object_taxonomies( $screen->post_type, 'objects' );
@@ -2307,7 +2305,9 @@ class SimpleTaxonomyRefreshed_Admin {
 		// Before saving, remove taxonomy labels that are default.
 		global $strc;
 		foreach ( $taxonomy['labels'] as $key => $label ) {
-			if ( $strc::$wp_decoded_labels[0][ $key ] === $label || $strc::$wp_decoded_labels[1][ $key ] === $label ) {
+			if ( array_key_exists( $key, $strc::$wp_decoded_labels[0] ) && $strc::$wp_decoded_labels[0][ $key ] === $label ) {
+				unset( $taxonomy['labels'][ $key ] );
+			} elseif ( array_key_exists( $key, $strc::$wp_decoded_labels[1] ) && $strc::$wp_decoded_labels[1][ $key ] === $label ) {
 				unset( $taxonomy['labels'][ $key ] );
 			}
 		}

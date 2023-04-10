@@ -58,8 +58,9 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 == Changelog ==
 
-* Version 3.1.0  (04/04/2023)
+* Version 3.1.0  (11/04/2023)
 	* NEW: Term controls may be applied to only a sub-set of post types.
+	* NEW: Labels that are the same as the WP defaults are not saved.
 	* FIX: PHP 8.1 error with array map on null.
 	* FIX: Tested with WP version 6.2.
 
