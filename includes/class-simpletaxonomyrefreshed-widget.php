@@ -453,7 +453,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			array(
 				'in_footer' => true,
 				'strategy'  => 'defer',
-			),
+			)
 		);
 
 		// Add supplementary script for additional information.

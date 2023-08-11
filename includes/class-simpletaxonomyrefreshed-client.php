@@ -632,7 +632,7 @@ class SimpleTaxonomyRefreshed_Client {
 			array(
 				'in_footer' => true,
 				'strategy'  => 'defer',
-			),
+			)
 		);
 
 		// Add supplementary script for additional information.
