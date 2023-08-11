@@ -677,7 +677,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				<p>
 				<?php
 				// phpcs:ignore  WordPress.Security.EscapeOutput
-				wp_kses( _e( '<strong>Warning :</strong> Flush & Delete a taxonomy will also delete all terms of the taxonomy and all object relations.', 'simple-taxonomy-refreshed' ), array( 'strong' ) );
+				echo wp_kses( __( '<strong>Warning :</strong> Flush & Delete a taxonomy will also delete all terms of the taxonomy and all object relations.', 'simple-taxonomy-refreshed' ), array( 'strong' ) );
 				?>
 				</p>
 			</div>
@@ -1962,12 +1962,14 @@ class SimpleTaxonomyRefreshed_Admin {
 			$taxonomy = array();
 			foreach ( SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields() as $field => $default_value ) {
 				if ( 'merge-external' === $action && ! array_key_exists( $field, $_POST ) ) {
-					// Don't create non-xeisting fields for external taxonomies.
+					// Don't create non-existing fields for external taxonomies.
 					continue;
 				}
 				// phpcs:ignore  WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput
 				$post_field = ( array_key_exists( $field, $_POST ) ? wp_unslash( $_POST[ $field ] ) : '' );
-				if ( isset( $post_field ) && is_string( $post_field ) ) {// String ?
+				if ( isset( $post_field ) && empty( $post_field ) ) {
+					$taxonomy[ $field ] = '';
+				} elseif ( isset( $post_field ) && is_string( $post_field ) ) {// String ?
 					if ( in_array( $field, array( 'st_before', 'st_sep', 'st_after' ), true ) ) {
 						// can contain html.
 						$taxonomy[ $field ] = wp_kses_post( $post_field );

@@ -450,7 +450,10 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 				'wp-i18n',
 			),
 			filemtime( "$dir/$index_js" ),
-			true
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			),
 		);
 
 		// Add supplementary script for additional information.

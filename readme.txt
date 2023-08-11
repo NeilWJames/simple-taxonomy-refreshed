@@ -2,9 +2,9 @@
 
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
-Tested up to: 6.2.0
+Tested up to: 6.3.0
 Requires PHP: 7.1
-Stable tag: 3.1.0
+Stable tag: 3.1.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -57,6 +57,11 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 3.1.1  (11/08/2023)
+	* NEW: JS register uses defer with 6.3 onwards. 
+	* FIX: PHP 8.1 deprecation error.
+	* FIX: Tested with WP version 6.3.
 
 * Version 3.1.0  (11/04/2023)
 	* NEW: Term controls may be applied to only a sub-set of post types.

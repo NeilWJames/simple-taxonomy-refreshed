@@ -4,7 +4,7 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 * Contributors: nwjames, momo360modena
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
-* Stable tag: 3.1.0
+* Stable tag: 3.1.1
 * Tested up to: 6.2.0
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -77,6 +77,11 @@ You should review the parameters to ensure that your needs are correctly set.
 See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 ## Changelog
+
+### Version 3.1.1  (11/08/2023)
+	* NEW: JS register uses defer with WP 6.3 onwards. 
+	* FIX: PHP 8.1 deprecation error.
+	* FIX: Tested with WP version 6.3.
 
 ### Version 3.1.0 (11/04/2023)
 	* NEW: Term controls can be applied to a subset of post types only.

@@ -309,9 +309,9 @@ class SimpleTaxonomyRefreshed_Client {
 
 		// Clean labels.
 		foreach ( $taxonomy['labels'] as $k => $v ) {
-			$taxonomy['labels'][ $k ] = stripslashes( $v );
+			$taxonomy['labels'][ $k ] = ( is_null( $v ) ? $v : stripslashes( $v ) );
 		}
-		if ( '' === $taxonomy['labels']['menu_name'] ) {
+		if ( isset( $taxonomy['labels']['menu_name'] ) && '' === $taxonomy['labels']['menu_name'] ) {
 			unset( $taxonomy['labels']['menu_name'] );
 		}
 
@@ -629,7 +629,10 @@ class SimpleTaxonomyRefreshed_Client {
 				'wp-i18n',
 			),
 			filemtime( "$dir/$index_js" ),
-			true
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			),
 		);
 
 		// Add supplementary script for additional information.
@@ -755,7 +758,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'show_count'      => (bool) $taxonomy['st_adm_count'],
 			'hide_empty'      => (bool) $taxonomy['st_adm_h_e'],
 			'hide_if_empty'   => (bool) $taxonomy['st_adm_h_i_e'],
-			'selected'        => filter_input( INPUT_GET, $query_var, FILTER_SANITIZE_STRING ),
+			'selected'        => filter_input( INPUT_GET, $query_var, FILTER_SANITIZE_FULL_SPECIAL_CHARS ),
 			'hierarchical'    => (bool) $taxonomy['st_adm_hier'],
 			'name'            => $query_var,
 			'value_field'     => 'slug',
