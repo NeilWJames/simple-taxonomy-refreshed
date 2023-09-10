@@ -2,7 +2,7 @@
 
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
-Tested up to: 6.3.0
+Tested up to: 6.3.1
 Requires PHP: 7.1
 Stable tag: 3.1.1
 License: GPLv3 or later
@@ -32,7 +32,7 @@ A tool is provided to merge a number of terms within a taxonomy into a single on
 
 Options are provided to add a selection dropdown in the admin list and to define minimum and maximum required term counts using posts of selected statuses (and not only "published"). [Term counts with WP 5.7+ requires version 1.3+ of this plugin.] These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
 
-For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
+For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/tree/master/docs) page.
 
 == Frequently Asked Questions ==
 
@@ -40,11 +40,11 @@ For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilW
 
 No, it is focused only on registering and supporting Taxonomies and their terms.
 
-= There is a very large number of options - are they all needed? =
+= There are a very large number of options - are they all needed? =
 
 The standard WordPress functionality provides many options and labels - and in the spirit of no-coding, this provides them all.
 
-Very few are required. 
+Very few are required as the default value 
 
 Enter just the Name (slug) whether Hierarchical or not and the Post Types used on the Main Options tab and Name (label) on the Labels tab will get you going.
 

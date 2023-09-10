@@ -3,9 +3,17 @@
 
 	<extensions>*/php</extensions>
 
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="simple-taxonomy-refreshed"/>
+			</property>
+		</properties>
+	</rule>
+
 	<rule ref="WordPress"/>
 
-	<config name="testVersion" value="7.1-"/>
+	<config name="testVersion" value="7.4-"/>
 
 	<rule ref="PHPCompatibilityWP"/>
 

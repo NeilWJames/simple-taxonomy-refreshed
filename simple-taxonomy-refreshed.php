@@ -97,7 +97,6 @@ function init_staxo_refreshed() {
 
 	// And its block equivalent.
 	add_action( 'init', 'staxo_widgets_block_init', 99999 );
-
 }
 
 /**

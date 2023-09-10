@@ -58,7 +58,6 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 
 		// can't i18n outside of a function.
 		self::$defaults['title'] = __( 'Advanced Taxonomy Cloud', 'simple-taxonomy-refreshed' );
-
 	}
 
 	/**
@@ -110,7 +109,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		 *
 		 * @param string $title         Default Title.
 		 * @param array  $instance      Saved values from database.
-		 * @param string $this->id_base	Root ID of widget
+		 * @param string $this->id_base Root ID of widget
 		 */
 		$title = apply_filters( 'staxo_widget_title', $title, $instance, $this->id_base );
 
@@ -192,7 +191,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 				echo '<ul class="staxo-terms-list" role="grid">' . "\n";
 				foreach ( (array) $terms as $term ) {
 					// Translators: Use WP test_domain so no need to translate.
-					$formatted_count = sprintf( translate_nooped_plural( _n_noop( '%s item', '%s items' ), $term->count ), number_format_i18n( $term->count ) );
+					$formatted_count = sprintf( translate_nooped_plural( _n_noop( '%s item', '%s items', 'simple-taxonomy-refreshed' ), $term->count ), number_format_i18n( $term->count ) );
 					echo '<li role="row"><a href="' . esc_url( get_term_link( $term, $current_taxonomy ) )
 					. '" role="link" aria-label="' . esc_html( $term->name ) . ' (' . esc_attr( $formatted_count ) . ')">'
 					. esc_html( $term->name ) . '</a>';
@@ -232,22 +231,22 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	}
 
 	/**
-	 * Filters the result text to remove fontsize onformation if min = max for term.
+	 * Filters the result text to remove fontsize information if min = max for term.
 	 *
-	 * @param string[]|string $return String containing the generated HTML tag cloud output
+	 * @param string[]|string $result String containing the generated HTML tag cloud output
 	 *                                or an array of tag links if the 'format' argument
 	 *                                equals 'array'.
 	 * @param WP_Term[]       $tags   An array of terms used in the tag cloud.
 	 * @param array           $args   An array of wp_generate_tag_cloud() arguments.
 	 */
-	public static function filter_result( $return, $tags, $args ) {
+	public static function filter_result( $result, $tags, $args ) {
 		$values = array_column( $tags, 'count' );
 		if ( max( $values ) > min( $values ) ) {
 			// normal case.
-			return $return;
+			return $result;
 		}
-		$return = preg_replace( '/ style="font-size: [.0-9]+%;"/', '', $return );
-		return $return;
+		$result = preg_replace( '/ style="font-size: [.0-9]+%;"/', '', $result );
+		return $result;
 	}
 
 	/**
@@ -328,17 +327,17 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		</p>
 
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'small' ) ); ?>"><?php esc_html_e( 'Small size:', 'simple_taxonomy-refreshed' ); ?></label><br />
+			<label for="<?php echo esc_attr( $this->get_field_id( 'small' ) ); ?>"><?php esc_html_e( 'Small size:', 'simple-taxonomy-refreshed' ); ?></label><br />
 			<input class="small-text" id="<?php echo esc_attr( $this->get_field_id( 'small' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'small' ) ); ?>" type="number" value="<?php echo esc_attr( $instance['small'] ); ?>" min="40" max="100" />
 		</p>
 
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'big' ) ); ?>"><?php esc_html_e( 'Big size:', 'simple_taxonomy-refreshed' ); ?></label><br />
+			<label for="<?php echo esc_attr( $this->get_field_id( 'big' ) ); ?>"><?php esc_html_e( 'Big size:', 'simple-taxonomy-refreshed' ); ?></label><br />
 			<input class="small-text" id="<?php echo esc_attr( $this->get_field_id( 'big' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'big' ) ); ?>" type="number" value="<?php echo esc_attr( $instance['big'] ); ?>" min="100" max="160" />
 		</p>
 
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'alignment' ) ); ?>"><?php esc_html_e( 'Alignment:', 'simple_taxonomy-refreshed' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'alignment' ) ); ?>"><?php esc_html_e( 'Alignment:', 'simple-taxonomy-refreshed' ); ?></label>
 			<select id="<?php echo esc_html( $this->get_field_id( 'alignment' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'alignment' ) ); ?>" class="widefat">
 				<?php
 				foreach ( array(

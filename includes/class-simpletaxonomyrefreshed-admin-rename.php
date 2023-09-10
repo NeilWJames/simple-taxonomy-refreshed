@@ -234,9 +234,9 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 					'slug'      => ( ( false === (bool) $args['rewrite'] ) ? '""' : '"' . $args['rewrite']['slug'] . '"' ),
 					'query_var' => '"' . $taxonomy['query_var'] . '"',
 				);
-				$i++;
+				++$i;
 				$taxos[ $taxo['label'] ] = $taxo;
-			};
+			}
 		}
 		if ( 1 === $i ) {
 			// user has no taxonomies possible to change.
@@ -361,5 +361,4 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			);
 		}
 	}
-
 }

@@ -81,7 +81,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @param WP_REST_Server $wp_rest_server Server object.
 	 * @return void
 	 */
-	public static function rest_api_init( $wp_rest_server ) {
+	public static function rest_api_init( $wp_rest_server ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		$cntl_post_types = self::refresh_term_cntl_cache( false );
 		// if terms control wanted, invoke the code.
 		if ( isset( $cntl_post_types ) && ! empty( $cntl_post_types ) ) {
@@ -138,7 +138,7 @@ class SimpleTaxonomyRefreshed_Client {
 						register_taxonomy_for_object_type( $taxonomy['name'], $cpt );
 					}
 				}
-			};
+			}
 		}
 
 		// Repeat for Externals. Note, that the external taxonomy may not yet be registered.
@@ -155,7 +155,7 @@ class SimpleTaxonomyRefreshed_Client {
 						}
 					}
 				}
-			};
+			}
 		}
 
 		// need to refresh the rewrite rules once registered.
@@ -197,7 +197,7 @@ class SimpleTaxonomyRefreshed_Client {
 						$wp_taxonomies[ $key ]->update_count_callback = array( __CLASS__, 'term_count_cb_sel' );
 					}
 				}
-			};
+			}
 		}
 	}
 
@@ -226,7 +226,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @param array|string $object_type     Object type or array of object types.
 	 * @param array        $taxonomy_object Array of taxonomy registration arguments.
 	 */
-	public static function registered_taxonomy( $taxonomy, $object_type, $taxonomy_object ) {
+	public static function registered_taxonomy( $taxonomy, $object_type, $taxonomy_object ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 		$options = get_option( OPTION_STAXO );
 		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
 			$externals = $options['externals'];
@@ -264,7 +264,7 @@ class SimpleTaxonomyRefreshed_Client {
 	public static function prepare_args( $taxonomy ) {
 		// Ensure complete.
 		$taxonomy                 = wp_parse_args( $taxonomy, self::get_taxonomy_default_fields() );
-		$hier                     = ( isset( $taxonomy['hierarchical'] ) ? $taxonomy['hierarchical'] : 1 );
+		$hier                     = ( isset( $taxonomy['hierarchical'] ) && ! empty( $taxonomy['hierarchical'] ) ? $taxonomy['hierarchical'] : 1 );
 		$taxonomy['labels']       = wp_parse_args( $taxonomy['labels'], self::get_taxonomy_default_labels( $hier ) );
 		$taxonomy['capabilities'] = wp_parse_args( $taxonomy['capabilities'], self::get_taxonomy_default_capabilities() );
 
@@ -367,7 +367,7 @@ class SimpleTaxonomyRefreshed_Client {
 			$tax_out['show_in_graphql'] = true;
 			$tax_out['graphql_single']  = $taxonomy['st_graphql_single'];
 			$tax_out['graphql_plural']  = $taxonomy['st_graphql_plural'];
-		};
+		}
 
 		if ( ! empty( $taxonomy['default_term'] ) ) {
 			$tax_out['default_term'] = $taxonomy['default_term'];
@@ -644,7 +644,7 @@ class SimpleTaxonomyRefreshed_Client {
 		register_block_type(
 			'simple-taxonomy-refreshed/post-terms',
 			array(
-				'description'     => __( 'This block allows the terms associated with a given taxonomy to be displayed for a post.', 'simple_taxonomy-refreshed' ),
+				'description'     => __( 'This block allows the terms associated with a given taxonomy to be displayed for a post.', 'simple-taxonomy-refreshed' ),
 				'editor_script'   => 'staxo-terms-editor',
 				'render_callback' => array( __CLASS__, 'the_terms' ),
 				'attributes'      => array(
@@ -1177,7 +1177,8 @@ class SimpleTaxonomyRefreshed_Client {
 		$labels['menu_name']      = '';
 		$labels['name_admin_bar'] = '';
 
-		// Add defaults for 5.8 and 5.9 if running earlier versions..
+		// Add defaults for 5.8 and 5.9 if running earlier versions.
+		// phpcs:disable WordPress.WP.I18n.MissingArgDomain
 		if ( ! isset( $labels['item_link'] ) ) {
 			$labels['item_link']             = __( 'Category Link' );
 			$labels['item_link_description'] = __( 'A link to a category' );
@@ -1192,6 +1193,7 @@ class SimpleTaxonomyRefreshed_Client {
 			$labels['slug_field_description'] = __( 'The &#8220;slug&#8221; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.' );
 			$labels['desc_field_description'] = __( 'The description is not prominent by default; however, some themes may show it.' );
 		}
+		// phpcs:enable WordPress.WP.I18n.MissingArgDomain
 
 		self::$wp_default_labels[ (int) $hier ] = (array) $labels;
 		// PHP 8 does not allow array-map operations on null elements.
@@ -1218,5 +1220,4 @@ class SimpleTaxonomyRefreshed_Client {
 		// get category (hierarchical) labels.
 		self::get_wp_default_labels_set( true );
 	}
-
 }

@@ -102,7 +102,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 						if ( false !== $term ) {
 							$prev_ids[0] = $term[0];
 							$added      += (int) $term[1];
-							$termlines++;
+							++$termlines;
 						}
 					} else {
 						if ( ( $level - 1 ) < 0 ) {
@@ -115,14 +115,14 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 						if ( false !== $term ) {
 							$prev_ids[ $level ] = $term[0];
 							$added             += (int) $term[1];
-							$termlines++;
+							++$termlines;
 						}
 					}
 				} else {
 					$term = self::create_term( $taxonomy, $term_line, 0 );
 					if ( false !== $term ) {
 						$added += (int) $term[1];
-						$termlines++;
+						++$termlines;
 					}
 				}
 			}
@@ -147,16 +147,16 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 	 *
 	 * @param string  $taxonomy  taxonomy name.
 	 * @param string  $term_name term name.
-	 * @param integer $parent    term parent.
+	 * @param integer $par_term  term parent.
 	 * @return boolean|array of term_id and whether already existed
 	 */
-	private static function create_term( $taxonomy = '', $term_name = '', $parent = 0 ) {
+	private static function create_term( $taxonomy = '', $term_name = '', $par_term = 0 ) {
 		$term_name = trim( sanitize_text_field( $term_name ) );
 		if ( empty( $term_name ) ) {
 			return false;
 		}
 
-		$id = term_exists( $term_name, $taxonomy, $parent );
+		$id = term_exists( $term_name, $taxonomy, $par_term );
 		if ( is_array( $id ) ) {
 			$id = (int) $id['term_id'];
 		}
@@ -166,10 +166,10 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 		}
 
 		// Insert on DB.
-		$term = wp_insert_term( $term_name, $taxonomy, array( 'parent' => $parent ) );
+		$term = wp_insert_term( $term_name, $taxonomy, array( 'parent' => $par_term ) );
 
 		// Cache.
-		clean_term_cache( $parent, $taxonomy );
+		clean_term_cache( $par_term, $taxonomy );
 		clean_term_cache( $term['term_id'], $taxonomy );
 
 		return array( $term['term_id'], true );

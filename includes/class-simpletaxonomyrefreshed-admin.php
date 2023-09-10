@@ -65,7 +65,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	public function enqueue_placeholder() {
 		if ( false === self::$placeholder ) {
 			// just a placeholder so version irrelevant.
-			// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+			// phpcs:disable WordPress.WP.EnqueuedResourceParameters.MissingVersion
 			wp_enqueue_script(
 				'staxo_placeholder',
 				plugins_url( '/js/placeholder.js', __DIR__ ),
@@ -73,6 +73,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				null,
 				true
 			);
+			// phpcs:enable WordPress.WP.EnqueuedResourceParameters.MissingVersion
 			self::$placeholder = true;
 		}
 
@@ -346,7 +347,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		$screen = get_current_screen();
 
 		$screen->set_help_sidebar(
-			'<p><strong>' . __( 'For more information:' ) . '</strong></p>' .
+			'<p><strong>' . __( 'For more information:', 'simple-taxonomy-refreshed' ) . '</strong></p>' .
 			'<p><a href="https://github.com/NeilWJames/simple-taxonomy-refreshed/" target="_blank">' . __( 'Github Project page', 'simple-taxonomy-refreshed' ) . '</a></p>' .
 			'<p><a href="https://wordpress.org/support/plugin/simple-taxonomy-refreshed/" target="_blank">' . __( 'WP Support Forum', 'simple-taxonomy-refreshed' ) . '</a></p>'
 		);
@@ -395,7 +396,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						break;
 					default:
 						null;
-				};
+				}
 				?>
 				</p>
 				<p><?php esc_html_e( 'Your update has been cancelled and stored data remains unchanged.', 'simple-taxonomy-refreshed' ); ?></p>
@@ -715,7 +716,7 @@ class SimpleTaxonomyRefreshed_Admin {
 							$class = 'alternate';
 							$i     = 0;
 							foreach ( (array) $current_options['taxonomies'] as $_t_name => $_t ) {
-								$i++;
+								++$i;
 								$class = ( 'alternate' === $class ) ? '' : 'alternate';
 								$lname = $_t['labels']['name'];
 								// phpcs:disable  WordPress.Security.EscapeOutput
@@ -816,7 +817,7 @@ class SimpleTaxonomyRefreshed_Admin {
 							$class = 'alternate';
 							$i     = 0;
 							foreach ( (array) $others as $_t_name => $_t ) {
-								$i++;
+								++$i;
 								$class = ( 'alternate' === $class ) ? '' : 'alternate';
 								$lname = $_t->labels->name;
 								// phpcs:disable  WordPress.Security.EscapeOutput
@@ -1104,7 +1105,7 @@ class SimpleTaxonomyRefreshed_Admin {
 												echo ' onclick="linkAdm(event, ' . esc_attr( $i ) . ')"';
 												echo ' name="objects[]" value="' . esc_attr( $type->name ) . '" />';
 												echo esc_attr( $type->label ) . '</label>' . "\n";
-												$i++;
+												++$i;
 											}
 											?>
 											</div><span class="description" id="post_types_sel"><?php esc_html_e( 'Select which builtin or custom post types will use this taxonomy.', 'simple-taxonomy-refreshed' ); ?></span>
@@ -1692,7 +1693,7 @@ class SimpleTaxonomyRefreshed_Admin {
 												}
 												echo ' name="st_adm_types[]" value="' . esc_attr( $type->name ) . '" />';
 												echo esc_html( $type->label ) . '</label>' . "\n";
-												$i++;
+												++$i;
 											}
 											?>
 											<span class="description" id="post_types_adm"><?php esc_html_e( 'You can add this taxonomy as a filter field on the admin list screen for selected builtin or custom post types linked to this taxonomy.', 'simple-taxonomy-refreshed' ); ?></span>
@@ -1771,12 +1772,14 @@ class SimpleTaxonomyRefreshed_Admin {
 											<fieldset>
 											<?php
 											// Use WordPress translations for statuses.
+											// phpcs:disable WordPress.WP.I18n.MissingArgDomain
 											self::option_check_status( 'st_cb_pub', (bool) $taxonomy['st_cb_pub'], __( 'Publish' ) );
 											self::option_check_status( 'st_cb_fut', (bool) $taxonomy['st_cb_fut'], __( 'Future' ) );
 											self::option_check_status( 'st_cb_dft', (bool) $taxonomy['st_cb_dft'], __( 'Draft' ) );
 											self::option_check_status( 'st_cb_pnd', (bool) $taxonomy['st_cb_pnd'], __( 'Pending' ) );
 											self::option_check_status( 'st_cb_prv', (bool) $taxonomy['st_cb_prv'], __( 'Private' ) );
 											self::option_check_status( 'st_cb_tsh', (bool) $taxonomy['st_cb_tsh'], __( 'Trash' ) );
+											// phpcs:enable WordPress.WP.I18n.MissingArgDomain
 											?>
 											</fieldset>
 											</div>
@@ -1837,7 +1840,7 @@ class SimpleTaxonomyRefreshed_Admin {
 												}
 												echo ' name="st_cc_types[]" value="' . esc_attr( $type->name ) . '" />';
 												echo esc_html( $type->label ) . '</label>' . "\n";
-												$i++;
+												++$i;
 											}
 											?>
 											<span class="description" id="post_types_cc"><?php esc_html_e( 'Select the Post Types to which the controls should apply. If none are selected then all eligible ones will be.', 'simple-taxonomy-refreshed' ); ?></span>
@@ -2526,7 +2529,13 @@ class SimpleTaxonomyRefreshed_Admin {
 			return false;
 		}
 
-		$terms = get_terms( $taxo_name, 'hide_empty=0&fields=ids' );
+		$terms = get_terms(
+			array(
+				'taxonomy'   => $taxo_name,
+				'hide_empty' => false,
+				'fields'     => 'ids',
+			)
+		);
 		if ( false === $terms || is_wp_error( $terms ) ) {
 			return false;
 		}
@@ -3057,7 +3066,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *                                       for inserting or updating the database.
 	 * @param WP_REST_Request $request       Request object.
 	 */
-	public function check_taxonomy_value_rest( $prepared_post, $request ) {
+	public function check_taxonomy_value_rest( $prepared_post, $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 		// previous filter has invalidated it.
 		if ( is_wp_error( $prepared_post ) ) {
 			return $prepared_post;
@@ -3242,5 +3251,5 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		return $content_types;
 	}
-
 }
+

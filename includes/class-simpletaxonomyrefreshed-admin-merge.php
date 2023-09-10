@@ -256,7 +256,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 						// failed. term count for post will be reduced. Could be terms control issues.
 						$failed[ $row['object_id'] ] = $row['object_id'];
 					} else {
-						$i++;
+						++$i;
 					}
 				}
 				$wpdb->suppress_errors( false );
@@ -307,13 +307,13 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 	 * List the taxonomy children for a give parent term (Hierarchical).
 	 *
 	 * @param string    $taxonomy  taxonomy name.
-	 * @param integer   $parent    parent term.
+	 * @param integer   $par_term  parent term.
 	 * @param integer   $level     level (indent) of parent term.
 	 * @param string    $type      input type (radio or checkbox).
 	 * @param integer[] $term_ids  term_ids to disable.
 	 * @return void
 	 */
-	private static function list_taxonomy_children( $taxonomy, $parent, $level, $type, $term_ids ) {
+	private static function list_taxonomy_children( $taxonomy, $par_term, $level, $type, $term_ids ) {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
@@ -326,7 +326,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				 AND `{$wpdb->prefix}term_taxonomy`.`parent` = %d
 				 ORDER BY `{$wpdb->prefix}terms`.`name`",
 				$taxonomy,
-				$parent
+				$par_term
 			),
 			ARRAY_A
 		);
@@ -409,7 +409,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			$output .= '<span class="components-checkbox-control__input-container"><input type="' . $type . '" role="' . $type . '" name="term' . $arr . '" id="tax_' . $row['term_id'] . '" value="' . $row['term_id'] . '" ' . $dis . '/> ';
 			$output .= '<label for="tax_' . $row['term_id'] . '" >' . esc_html( $row['name'] ) . '</label></span><br />';
-			$i++;
+			++$i;
 		}
 		if ( 0 === $i ) {
 			// user has no taxonomies possible to change.

@@ -166,11 +166,11 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 	 * List the taxonomy children for a give parent term (Hierarchical).
 	 *
 	 * @param string  $taxonomy  taxonomy name.
-	 * @param integer $parent    parent term.
+	 * @param integer $par_term  parent term.
 	 * @param integer $level     level (indent) of parent term.
 	 * @return void
 	 */
-	private static function list_taxonomy_children( $taxonomy, $parent, $level ) {
+	private static function list_taxonomy_children( $taxonomy, $par_term, $level ) {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
@@ -183,7 +183,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 				 AND `{$wpdb->prefix}term_taxonomy`.`parent` = %d
 				 ORDER BY `{$wpdb->prefix}terms`.`name`",
 				$taxonomy,
-				$parent
+				$par_term
 			),
 			ARRAY_A
 		);
@@ -308,7 +308,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 									<td><?php echo esc_html( self::get_true_false( $taxonomy->hierarchical ) ); ?></td>
 								</tr>
 								<?php
-								$i++;
+								++$i;
 							}
 							?>
 						</tbody>
