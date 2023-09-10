@@ -23,7 +23,6 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 		parent::setUp();
 
 		wp_cache_flush();
-
 	}
 
 	/**
@@ -32,7 +31,7 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 	 * @param string $text text to output.
 	 */
 	public function consoleLog( $text ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fwrite
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 			fwrite( STDERR, $text . "\n" );
 	}
 
@@ -46,7 +45,6 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 		$env = (bool) getenv( 'WP_MULTISITE' );
 
 		$this->assertTrue( ( is_multisite() === $env ), 'Multisite not as expected' );
-
 	}
 
 	/**
@@ -57,8 +55,5 @@ class Test_STaxo_Refreshed_Main extends WP_UnitTestCase {
 		$this->consoleLog( 'Test_STaxo_Refreshed_Main - Activated' );
 
 		$this->assertTrue( class_exists( 'SimpleTaxonomyRefreshed_Client' ), 'SimpleTaxonomy_Client class not defined' );
-
 	}
-
-
 }

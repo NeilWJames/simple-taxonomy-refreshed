@@ -16,7 +16,7 @@ require_once $_tests_dir . '/includes/functions.php';
  * Require the WP Document Revisions Plugin on load
  */
 function _manually_load_plugin() {
-	require dirname( __FILE__ ) . '/../simple-taxonomy-refreshed.php';
+	require __DIR__ . '/../simple-taxonomy-refreshed.php';
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
@@ -76,7 +76,6 @@ function _make_user( $role = 'administrator', $user_login = '', $pass = '', $ema
 	$user_id = wp_insert_user( $user );
 
 	return $user_id;
-
 }
 
 /**
@@ -96,7 +95,6 @@ function _destroy_user( $user_id ) {
 	} else {
 		wp_delete_user( $user_id );
 	}
-
 }
 
 /**
@@ -122,11 +120,12 @@ function _rrmdir( $dir ) {
 				if ( 'dir' === filetype( $dir . '/' . $object ) ) {
 					_rrmdir( $dir . '/' . $object );
 				} else {
-					unlink( $dir . '/' . $object );
+					wp_delete_file(( $dir . '/' . $object );
 				}
 			}
 		}
 		reset( $objects );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
 		rmdir( $dir );
 	}
 }
