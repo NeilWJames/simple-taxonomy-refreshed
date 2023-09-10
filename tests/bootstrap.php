@@ -120,7 +120,7 @@ function _rrmdir( $dir ) {
 				if ( 'dir' === filetype( $dir . '/' . $object ) ) {
 					_rrmdir( $dir . '/' . $object );
 				} else {
-					wp_delete_file(( $dir . '/' . $object );
+					wp_delete_file( $dir . '/' . $object );
 				}
 			}
 		}
