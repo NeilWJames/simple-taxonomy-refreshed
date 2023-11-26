@@ -1,21 +1,107 @@
 /**
- * Placeholder for error/warning message texts.
+ * Placeholder for control options and error/warning message texts.
  */
 
-let tax_msgs = [];
+ var tax_cntl = [];
 
 /**
- * Routine to retrieve the row of tax_msgs being processed.
+ * Routine to retrieve the row of tax_cntl being processed.
  * 
  * @param string tax_slug The taxonomy slug for the taxonomy.
  * @return string[] List of applicable parameters.
  */
-function get_msg( tax_slug ) {
-	for ( const msg of tax_msgs ) {
-		if ( msg[0] === tax_slug ) {
-			return msg;
+ function get_cntl( tax_slug ) {
+	for ( const cntl of tax_cntl ) {
+		if ( cntl[0] === tax_slug ) {
+			return cntl;
 		}
 	}
+}
+
+/**
+ * Functions to support No term option.
+ */
+
+/**
+ * Add No Term element.
+ * 
+ * @param HTML_Collection tax   The parent element of the taxonomy term list.
+ * @param bool            terms_found Existing terms found ( so No Terms not checked).
+ */
+function add_nt_element( tax, terms_found ) {
+	// check if already added.
+	if ( tax.classList.contains("NoTerm") ) {
+		return true;
+	}
+	let inp = tax.getElementsByTagName("li");
+	// create clone.
+	let no_term     = inp[0].cloneNode( true );
+	let no_term_id  = no_term.getAttribute( "id" );
+	let no_term_inp = no_term.getElementsByTagName( "input" )[0];
+	if ( undefined === no_term_inp ) {
+		return false;
+	}
+	// remove any children terms.
+	let child_list = no_term.getElementsByTagName( "ul" );
+	for ( let child_ul of child_list ){
+		no_term.removeChild( child_ul );
+	}
+	// reset id to a unique value.
+	let no_term_val = no_term_inp.value;
+	no_term.id     = no_term_id.replace( "-"+no_term_val, "--1" );
+	no_term_inp.id = no_term_inp.id.replace( "-"+no_term_val, "--1" );
+	no_term_inp.checked = ! terms_found;
+	no_term_inp.value = -1;
+	let no_term_lbl = no_term.getElementsByTagName( "label" )[0];
+	let no_term_txt = no_term_lbl.lastChild.data.replace( /[\n\r\t]/g, "");
+	no_term_lbl.lastChild.data = no_term_lbl.lastChild.data.replace( no_term_txt, " No Term" );
+	inp[0].parentNode.insertBefore( no_term, inp[0] );
+	// add class to denote treated.
+	tax.classList.add("NoTerm"); 
+	return true;
+}
+
+/**
+ * Process No Term.
+ * 
+ * @param string tax_slug    The taxonomy slug for the taxonomy.
+ * @param bool   terms_found Existing terms found ( so No Terms not checked).
+ */
+function process_no_term( tax_id, terms_found ) {
+	// minimum is set to 0, add no term.
+	let tax = document.getElementById( tax_id );
+	if ( null === tax ) {
+		return false;
+	}
+
+	return add_nt_element( tax, terms_found );
+}
+
+/**
+ * Add No Term.
+ * 
+ * @param string tax_slug The taxonomy slug for the taxonomy.
+ */
+function add_no_term( tax_slug ) {
+	cntl = get_cntl( tax_slug );
+	// bypass for non-zero minimum or non-hierarchical.
+	if ( 0 !== cntl[2] || 0 === cntl[6] ) {
+		return;
+	}
+
+	// are there existing terms.
+	terms_count = false;
+	let terms = document.getElementsByName( "tax_input["+tax_slug+"][]" );
+	for ( let item of terms ) {
+		if ( item.checked ) {
+			terms_count = true;
+		}
+	}
+	
+	// minimum is set to 0, add no term. Could either one list or twp (popular and all).
+	process_no_term( tax_slug+"-pop", terms_count );
+	process_no_term( tax_slug+"-all", terms_count );
+	process_no_term( "taxonomy-"+tax_slug, terms_count );
 }
 
 /**
@@ -75,38 +161,39 @@ function adj_radio_client( tax_slug, val) {
  * @param string tax_slug The taxonomy slug for the taxonomy.
  */
 function dom_radio_client( tax_slug ) {
+	add_no_term( tax_slug );
+	chk_radio_client( tax_slug );
+
+	let tax_pop = document.getElementById( tax_slug+"-pop" );
+	tax_pop.setAttribute('role', 'radiogroup');//
+	let tax_all = document.getElementById( tax_slug+"-all" );
+	tax_all.setAttribute('role', 'radiogroup');//
+
+	let sub = document.getElementById( tax_slug+"-add-submit" );
+	sub.addEventListener('click', event => {
+		adj_radio_client( tax_slug, -1);
+	});
+	sub.addEventListener('keypress', event => {
+		adj_radio_client( tax_slug, -1);
+	});
+
+	// Select the node that will be observed for mutations
+	const targetNode = document.getElementById( tax_slug+"-all" );
+
+	// Options for the observer (which mutations to observe)
+	const config = { childList: true, subtree: true };
+
+	// Callback function to execute when mutations are observed
+	const callback = function(mutationsList, observer) {
+		// on any change call the check code once.
 		chk_radio_client( tax_slug );
+	};
 
-		let tax_pop = document.getElementById( tax_slug+"-pop" );
-		tax_pop.setAttribute('role', 'radiogroup');//
-		let tax_all = document.getElementById( tax_slug+"-all" );
-		tax_all.setAttribute('role', 'radiogroup');//
+	// Create an observer instance linked to the callback function
+	const observer = new MutationObserver(callback);
 
-		let sub = document.getElementById( tax_slug+"-add-submit" );
-		sub.addEventListener('click', event => {
-				adj_radio_client( tax_slug, -1);
-		});
-		sub.addEventListener('keypress', event => {
-				adj_radio_client( tax_slug, -1);
-		});
-
-		// Select the node that will be observed for mutations
-		const targetNode = document.getElementById( tax_slug+"-all" );
-
-		// Options for the observer (which mutations to observe)
-		const config = { childList: true, subtree: true };
-
-		// Callback function to execute when mutations are observed
-		const callback = function(mutationsList, observer) {
-			// on any change call the check code once.
-			chk_radio_client( tax_slug );
-		};
-
-		// Create an observer instance linked to the callback function
-		const observer = new MutationObserver(callback);
-
-		// Start observing the target node for configured mutations
-		observer.observe(targetNode, config);
+	// Start observing the target node for configured mutations
+	observer.observe(targetNode, config);
 }
 
 /**
@@ -225,11 +312,15 @@ function qe_error_clear_msg( item, tag ) {
 
 		// more than one on entry means we can't change to radio.
 		let chg = taxs[0].getElementsByTagName("a").length;
-		let msgs = get_msg( tax_slug );
+		let cntl = get_cntl( tax_slug );
 		// If initial state more than one, then not radio,. Now need to look at actual taxonomy.
 		let lst = item.getElementsByClassName( tax_slug+"-checklist" );
 		if ( chg < 2 ) {
 			lst[0].setAttribute('role', 'radiogroup');
+		}
+		// process no term.
+		if ( 0 === cntl[2] ) {
+			add_nt_element( lst[0], (chg > 0) );
 		}
 		let inp = lst[0].getElementsByTagName("input");
 		let multi = 0;
@@ -257,7 +348,7 @@ function qe_error_clear_msg( item, tag ) {
 		if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
 			return;
 		}
-		if ( 1 === msgs[1] ) {
+		if ( 1 === cntl[1] ) {
 			// check published status only.
 			if ( "publish" !== stat && "future" !== stat ) { 
 				return;
@@ -266,10 +357,10 @@ function qe_error_clear_msg( item, tag ) {
 
 		if ( multi > 1 ) { 
 			// cannot convert. Output message.
-			qe_error_set_msg( item, tax_slug, msgs[5] );
+			qe_error_set_msg( item, tax_slug, cntl[5] );
 		} else if ( multi === 0 ) { 
 			// Need to assign a value. Output message.
-			qe_error_set_msg( item, tax_slug, msgs[3] );
+			qe_error_set_msg( item, tax_slug, cntl[3] );
 		} else {
 			// OK.
 			qe_error_clear_msg( item, tax_slug );
@@ -336,26 +427,6 @@ function dom_qe_radio_client( tax_slug ) {
  * Functions for processing term control.
  * 
  */
-
-/**
- * Placeholder for control options and error/warning message texts.
- */
-
- var tax_cntl = [];
-
-/**
- * Routine to retrieve the row of tax_cntl being processed.
- * 
- * @param string tax_slug The taxonomy slug for the taxonomy.
- * @return string[] List of applicable parameters.
- */
- function get_cntl( tax_slug ) {
-	for ( const cntl of tax_cntl ) {
-		if ( cntl[0] === tax_slug ) {
-			return cntl;
-		}
-	}
-}
 
 /**
  * Hierarchical controls.

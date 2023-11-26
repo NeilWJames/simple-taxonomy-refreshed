@@ -171,7 +171,7 @@ class SimpleTaxonomyRefreshed_Client {
 	}
 
 	/**
-	 * Process count for old moethod for external plugin taxonomies.
+	 * Process count for old method for external plugin taxonomies.
 	 *
 	 * @return void
 	 */
@@ -1002,6 +1002,8 @@ class SimpleTaxonomyRefreshed_Client {
 										'show_in_rest' => $taxonomy['show_in_rest'],
 										'rest_base'    => ( empty( $taxonomy['rest_base'] ) ? $taxonomy['name'] : $taxonomy['rest_base'] ),
 										'label_name'   => $taxonomy['labels']['name'],
+										'hierarchical' => $taxonomy['hierarchical'],
+										'no_term'      => ( array_key_exists( 'no_term', $taxonomy['labels'] ) ? $taxonomy['labels']['no_term'] : __( 'No term', 'simple-taxonomy-refreshed' ) ),
 									);
 								}
 							}
@@ -1034,7 +1036,8 @@ class SimpleTaxonomyRefreshed_Client {
 										'st_cc_max'    => $taxonomy['st_cc_max'],
 										'show_in_rest' => $tax_obj->show_in_rest,
 										'rest_base'    => ( empty( $tax_obj->rest_base ) ? $tax_obj->name : $tax_obj->rest_base ),
-										'label_name'   => $taxonomy['labels']['name'],
+										'label_name'   => $tax_obj->labels->name,
+										'hierarchical' => $tax_obj->hierarchical,
 									);
 								}
 							}
@@ -1195,13 +1198,16 @@ class SimpleTaxonomyRefreshed_Client {
 		}
 		// phpcs:enable WordPress.WP.I18n.MissingArgDomain
 
+		// label used for No term with radio.
+		$labels['no_term'] = __( 'No term', 'simple-taxonomy-refreshed' );
+
 		self::$wp_default_labels[ (int) $hier ] = (array) $labels;
 		// PHP 8 does not allow array-map operations on null elements.
-		foreach ( (array) $labels as $label ) {
+		foreach ( (array) $labels as $key => $label ) {
 			if ( is_null( $label ) ) {
-				self::$wp_decoded_labels[ (int) $hier ][ $label ] = null;
+				self::$wp_decoded_labels[ (int) $hier ][ $key ] = null;
 			} else {
-				self::$wp_decoded_labels[ (int) $hier ][ $label ] = html_entity_decode( $label, ENT_QUOTES );
+				self::$wp_decoded_labels[ (int) $hier ][ $key ] = html_entity_decode( $label, ENT_QUOTES );
 			}
 		}
 	}

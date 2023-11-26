@@ -2,9 +2,9 @@
 
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
-Tested up to: 6.3.1
-Requires PHP: 7.1
-Stable tag: 3.1.1
+Tested up to: 6.4.1
+Requires PHP: 7.4
+Stable tag: 3.2.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -32,7 +32,7 @@ A tool is provided to merge a number of terms within a taxonomy into a single on
 
 Options are provided to add a selection dropdown in the admin list and to define minimum and maximum required term counts using posts of selected statuses (and not only "published"). [Term counts with WP 5.7+ requires version 1.3+ of this plugin.] These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
 
-For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/tree/master/docs) page.
+For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
 
 == Frequently Asked Questions ==
 
@@ -40,11 +40,11 @@ For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilW
 
 No, it is focused only on registering and supporting Taxonomies and their terms.
 
-= There are a very large number of options - are they all needed? =
+= There is a very large number of options - are they all needed? =
 
 The standard WordPress functionality provides many options and labels - and in the spirit of no-coding, this provides them all.
 
-Very few are required as the default value 
+Very few are required. 
 
 Enter just the Name (slug) whether Hierarchical or not and the Post Types used on the Main Options tab and Name (label) on the Labels tab will get you going.
 
@@ -57,6 +57,11 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 3.2.0  (27/11/2023)
+	* NEW: Support Taxonomies having zero or one term to use radio buttons by use of a "No term" selector.
+	* DEV: Reviewed for WP Coding Standards 3.0.
+	* DEV: Minimum supported version of PHP increased to 7.4.
 
 * Version 3.1.1  (11/08/2023)
 	* NEW: JS register uses defer with 6.3 onwards. 
@@ -104,56 +109,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* FIX: Server-side terms control errors passed back to Block Editor screens and for Quick Edit.
 	* FIX: Help Text reviewed. (Also github documentation.)
 
-* Version 1.3.0 (05/03/2021)
-	* NEW: Term counts now implemented by WP 5.7 functionality.
-	* NEW: Label `filter_by_item` supported (introduced in WP 5.7).
-	* NEW: Term controls test applied when saving via Rest.
-	* FIX: Don't test Term controls during Autosave.
-	* FIX: Review Term controls Front End processing.
-
-* Version 1.2.2 (30/10/2021)
-	* FIX: Term counts wrong (props @cgzaal)
-	* FIX: Hard limits (non-Gutenberg pages) for non-hierarchical tags reviewed
-
-* Version 1.2.1 (20/10/2021)
-	* FIX: PHP Error on using rename corrected.
-
-* Version 1.2.0 (04/09/2020)
-	* NEW: Add parameter "default_term" to register_taxonomy (introduced in WP 5.5).
-	* NEW: Add facility to control minimum and maximum number of terms for a taxonomy to a post.
-	* NEW: Add filter 'staxo_term_count_statuses' to extend user-selected post statuses for term counts.
-	* NEW: Add contexual help.
-	* FIX: PHP Taxonomy dump of term counts corrected.
-
-* Version 1.1.1 (14/04/2020)
-	* FIX: Taxonomies saved with versions prior to 1.1.0 would create a PHP warning message.
-
-* Version 1.1.0 (18/03/2020)
-	* NEW: Added capability to add dropdown filter for taxonomy in the admin list screens.
-	* NEW: Enable term counts to be based on user-selected post statuses.
-
-* Version 1.0.3 (14/02/2020)
-	* Inconsistency in treatment of query_var variable corrected (introduced in 1.0.2).
-	* User-defined text surrounding custom taxonomies when requested for listing in posts.
-
-* Version 1.0.2 (25/01/2020)
-	* Add tool to rename custom taxonomy slug. Terms and their usages will be remain linked to the taxonomy.
-	* Some labels clarified.
-
-* Version 1.0.1 (13/01/2020)
-	* Ensure rewrite rules flushed if parameters require it. (Also affects original plugin.)
-
-* Version 1.0.0 (15/12/2019)
-	* Initial version using source taken from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy) by Amaury Balmer.
-	* Passed though WP Coding Standards.
-	* Incorporates additional fixes made there but not released
-	* Now uses json for export/import, so existing exports cannot be used
-	* Added most current taxonomy parameters including those that control the display of the taxonomies and ability to use with Block Editor
-
-        This may require review and update of existing configuration on upgrade to this version
-
-	* Removed the option for special metaboxes as standard processing takes care of this (except possibly ensuring that only one term per post is allowed)
-	* Nonces and class usage standardised
+For information on earlier version changes, go the [Simple Taxonomy Refreshed Changes](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/changes.md) page.
 	
 == Migration Notice ==
 

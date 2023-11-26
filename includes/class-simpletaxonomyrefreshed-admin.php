@@ -71,7 +71,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				plugins_url( '/js/placeholder.js', __DIR__ ),
 				array( 'wp-data' ),
 				null,
-				true
+				array( 'strategy' => 'defer' ),
 			);
 			// phpcs:enable WordPress.WP.EnqueuedResourceParameters.MissingVersion
 			self::$placeholder = true;
@@ -115,7 +115,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			plugins_url( $index_js, __DIR__ ),
 			array(),
 			filemtime( "$dir/$index_js" ),
-			false
+			array( 'strategy' => 'defer' ),
 		);
 
 		$index_css = 'css/staxo-admin-style' . $suffix . '.css';
@@ -123,7 +123,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			'staxo-admin-style',
 			plugins_url( $index_css, __DIR__ ),
 			array(),
-			filemtime( "$dir/$index_css" )
+			filemtime( "$dir/$index_css" ),
 		);
 	}
 
@@ -154,7 +154,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			plugins_url( $index_js, __DIR__ ),
 			array( 'wp-block-editor', 'wp-blocks', 'wp-core-data', 'wp-data', 'wp-dom', 'wp-dom-ready', 'wp-edit-post', 'wp-editor' ),
 			filemtime( "$dir/$index_js" ),
-			false
+			array( 'strategy' => 'defer' ),
 		);
 	}
 
@@ -489,7 +489,11 @@ class SimpleTaxonomyRefreshed_Admin {
 			<th scope="row"><label for="<?php echo $name; ?>"><?php echo $label; ?></label></th>
 			<td>
 				<input name="<?php echo $name; ?>" type="text" id="<?php echo $name; ?>" value="<?php echo esc_attr( $taxonomy[ $name ] ); ?>" class="regular-text" />
-				<span class="description"><?php echo $descr; ?></span>
+				<?php
+				if ( '' !== $descr ) {
+					echo '<br /><span class="description">' . $descr . '</span>';
+				}
+				?>
 			</td>
 		</tr>
 		<?php
@@ -516,7 +520,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				<input name="labels[<?php echo $name; ?>]" type="text" id="labels-<?php echo $name; ?>" value="<?php echo esc_attr( $taxonomy['labels'][ $name ] ); ?>" class="regular-text" />
 				<?php
 				if ( '' !== $descr ) {
-					echo '<span class="description">' . $descr . '</span>';
+					echo '<br /><span class="description">' . $descr . '</span>';
 				}
 				?>
 			</td>
@@ -542,7 +546,11 @@ class SimpleTaxonomyRefreshed_Admin {
 			<th scope="row"><label for="<?php echo $name; ?>"><?php echo $label; ?></label></th>
 			<td>
 				<input name="capabilities[<?php echo $name; ?>]" type="text" id="<?php echo $name; ?>" value="<?php echo esc_attr( $taxonomy['capabilities'][ $name ] ); ?>" class="regular-text" />
-				<span class="description"><?php echo $descr; ?></span>;
+				<?php
+				if ( '' !== $descr ) {
+					echo '<br /><span class="description">' . $descr . '</span>';
+				}
+				?>
 			</td>
 		</tr>
 		<?php
@@ -1413,6 +1421,12 @@ class SimpleTaxonomyRefreshed_Admin {
 											'item_link_description',
 											esc_html__( 'Description for a navigation link block', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'Used in the block editor.', 'simple-taxonomy-refreshed' )
+										);
+										self::option_label(
+											$taxonomy,
+											'no_term',
+											esc_html__( 'No term', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Used by the plugin to select no term from this taxonomy should be used (where a checkbox has been changed to a radio button).', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -2603,24 +2617,24 @@ class SimpleTaxonomyRefreshed_Admin {
 				$label = $tax_obj->labels->name;
 
 				// get min/max flags.
-				$min = (int) $cntl['st_cc_min'];
 				$vmn = (bool) $cntl['st_cc_umin'];
-				$max = (int) $cntl['st_cc_max'];
+				$min = ( $vmn ? (int) $cntl['st_cc_min'] : null );
 				$vmx = (bool) $cntl['st_cc_umax'];
+				$max = ( $vmx ? (int) $cntl['st_cc_max'] : null );
 
 				// error on which post statuses.
 				$pstat = (int) $cntl['st_cc_type'];
 
 				// should we change checkbox to a radio button.
-				if ( (bool) $tax_obj->hierarchical && $vmn && 1 === $min && $vmx && 1 === $max ) {
-					self::script_radio_edit( $tax, $label, $pstat );
+				if ( (bool) $tax_obj->hierarchical && 1 === $max ) {
+					self::script_radio_edit( $tax, $label, $pstat, $min, (bool) $tax_obj->hierarchical, $cntl['no_term'] );
 					// if set to radio then next test not needed.
 					continue;
 				}
 
 				// should hard limits apply.
 				if ( 2 === (int) $cntl['st_cc_hard'] && $user_change ) {
-					self::hard_term_limits_edit( $tax, $label, $pstat, ( $vmn ? $min : null ), ( $vmx ? $max : null ), (bool) $tax_obj->hierarchical );
+					self::hard_term_limits_edit( $tax, $label, $pstat, $min, $max, (bool) $tax_obj->hierarchical, $cntl['no_term'] );
 				}
 			}
 		}
@@ -2678,10 +2692,11 @@ class SimpleTaxonomyRefreshed_Admin {
 					$num_terms = count( $terms );
 				}
 				// set min/max flags.
-				$min = (int) $cntl['st_cc_min'];
 				$vmn = (bool) $cntl['st_cc_umin'];
-				$max = (int) $cntl['st_cc_max'];
+				$min = ( $vmn ? (int) $cntl['st_cc_min'] : null );
 				$vmx = (bool) $cntl['st_cc_umax'];
+				$max = ( $vmx ? (int) $cntl['st_cc_max'] : null );
+
 				// Put out saving error message as current may be erroneous.
 				if ( $status > 0 ) {
 					$err_notice = false;
@@ -2815,9 +2830,9 @@ class SimpleTaxonomyRefreshed_Admin {
 				$pstat = (int) $cntl['st_cc_type'];
 				// should we change checkbox to a radio button.
 				// (Not over limit, hierarchical, min and max limits exist and set to 1).
-				if ( $num_terms < 2 && (bool) $tax_obj->hierarchical && $vmn && 1 === $min && $vmx && 1 === $max ) {
+				if ( $num_terms < 2 && (bool) $tax_obj->hierarchical && 1 === $max ) {
 					$cntl_type = (int) $cntl['st_cc_hard'];
-					self::script_radio( $tax, $label, $num_terms, $pstat, $cntl_type );
+					self::script_radio( $tax, $label, $pstat, $min, true, $cntl['no_term'] );
 					// if we converted to radio and there is already one term, then it always is in limits (non-block only).
 					if ( 1 === $num_terms && ! self::is_block_editor() ) {
 						continue;
@@ -2827,7 +2842,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				if ( 2 === (int) $cntl['st_cc_hard'] && $user_change ) {
 					global $post;
 					$stat = $post->post_status;
-					$parm = self::hard_term_limits_push( $tax, $label, $pstat, ( $vmn ? $min : null ), ( $vmx ? $max : null ), $stat );
+					$parm = self::term_limits_push( $tax, $label, $pstat, $min, $max, true, $cntl['no_term'], $stat );
 					self::enqueue_client_libs();
 					if ( self::is_block_editor() ) {
 						// Block editor is the same. N.B. This should be called elsewhere.
@@ -2851,17 +2866,20 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @since 3.4.0
 	 *
-	 * @param string $tax_name  The taxonomy slug.
-	 * @param string $tax_label The taxonomy label.
+	 * @param string $tax_name  The taxonomy name.
+	 * @param string $tax_label The taxonomy label name.
 	 * @param int    $pstat     Post status control type.
+	 * @param int    $min_bound minimum number of terms (null if no minimum).
+	 * @param bool   $hier      taxonomy is hierarchical.
+	 * @param string $nt_label  The taxonomy label name for No term.
 	 */
-	private static function script_radio_edit( $tax_name, $tax_label, $pstat ) {
-		// minimum and maximum are 1.
-		// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-		$less = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, 1 ) );
-		// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
-		$more = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, 1 ) );
-		$text = 'tax_msgs.push( [ "' . $tax_name . '", ' . $pstat . ', 1, "' . $less . '", 1, "' . $more . '" ] );' . "\n";
+	private static function script_radio_edit( $tax_name, $tax_label, $pstat, $min_bound, $hier, $nt_label ) {
+		global $post;
+		if ( is_null( $post ) || ! isset( $post->post_status ) ) {
+			return;
+		}
+		$stat = $post->post_status;
+		$text = self::term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, 1, $hier, $nt_label, $stat );
 		self::enqueue_client_libs();
 		wp_add_inline_script(
 			'staxo_client',
@@ -2877,8 +2895,11 @@ class SimpleTaxonomyRefreshed_Admin {
 	 * @param string $tax_name  The taxonomy slug.
 	 * @param string $tax_label The taxonomy label.
 	 * @param int    $pstat     Post status control type.
+	 * @param int    $min_bound minimum number of terms (null if no minimum).
+	 * @param bool   $hier      Whether taxonomy is hierarchical.
+	 * @param string $nt_label  The taxonomy label name for No term.
 	 */
-	private static function script_radio( $tax_name, $tax_label, $pstat ) {
+	private static function script_radio( $tax_name, $tax_label, $pstat, $min_bound, $hier, $nt_label ) {
 		// Logic is that there are two tabs for the taxonomy - all and popular.
 		// Only one category must be selected, so radio is appropriate.
 		// All will contain all options; popular may be available, but may be incomplete.
@@ -2894,8 +2915,11 @@ class SimpleTaxonomyRefreshed_Admin {
 			null;
 		} else {
 			global $post;
+			if ( is_null( $post ) || ! isset( $post->post_status ) ) {
+				return;
+			}
 			$stat = $post->post_status;
-			$text = self::hard_term_limits_push( $tax_name, $tax_label, $pstat, 1, 1, $stat );
+			$text = self::term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, 1, $hier, $nt_label, $stat );
 
 			self::enqueue_client_libs();
 			wp_add_inline_script(
@@ -2910,15 +2934,16 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @since 3.4.0
 	 *
-	 * @param string $tax_name     taxonomy name.
-	 * @param string $tax_label    taxonomy label name.
-	 * @param int    $pstat        post status control type.
-	 * @param int    $min_bound    minimum number of terms (null if no minimum).
-	 * @param int    $max_bound    maximum number of terms (null if no maximum).
-	 * @param bool   $hier         taxonomy is hierarchical.
+	 * @param string $tax_name  taxonomy name.
+	 * @param string $tax_label taxonomy label name.
+	 * @param int    $pstat     post status control type.
+	 * @param int    $min_bound minimum number of terms (null if no minimum).
+	 * @param int    $max_bound maximum number of terms (null if no maximum).
+	 * @param bool   $hier      Whether taxonomy is hierarchical.
+	 * @param string $nt_label  The taxonomy label name for No term.
 	 */
-	private static function hard_term_limits_edit( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $hier ) {
-		$text = self::hard_term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, $max_bound );
+	private static function hard_term_limits_edit( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $hier, $nt_label ) {
+		$text = self::term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $hier, $nt_label );
 		self::enqueue_client_libs();
 		wp_add_inline_script(
 			'staxo_client',
@@ -2927,26 +2952,29 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
-	 * Create the tax_cntl push javascript text for hard term limits.
+	 * Create the tax_cntl push javascript text for term limits.
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param string $tax_name     Taxonomy name.
-	 * @param string $tax_label    Taxonomy label name.
-	 * @param int    $pstat        post status control type.
-	 * @param int    $min_bound    minimum number of terms (null if no minimum).
-	 * @param int    $max_bound    maximum number of terms (null if no maximum).
-	 * @param string $status       post status.
+	 * @param string $tax_name  Taxonomy name.
+	 * @param string $tax_label Taxonomy label name.
+	 * @param int    $pstat     post status control type.
+	 * @param int    $min_bound minimum number of terms (null if no minimum).
+	 * @param int    $max_bound maximum number of terms (null if no maximum).
+	 * @param bool   $hier      Whether taxonomy is hierarchical.
+	 * @param string $nt_label  The taxonomy label name for No term.
+	 * @param string $status    post status.
 	 */
-	private static function hard_term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $status = '' ) {
+	private static function term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $hier, $nt_label, $status = '' ) {
 		$lock = ( 1 === $pstat ? esc_html__( 'Publishing is blocked.', 'simple-taxonomy-refreshed' ) : esc_html__( 'Saving is blocked.', 'simple-taxonomy-refreshed' ) );
 		if ( is_null( $min_bound ) ) {
 			$mib  = 'null';
 			$less = '';
 		} else {
+			// can be set to zero when the intent that it is set as 1 (i.e. Show No terms.).
 			$mib = esc_html( $min_bound );
 			// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-			$less  = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $min_bound ) );
+			$less  = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, max( $min_bound, 1 ) ) );
 			$less .= ' ' . $lock;
 		}
 		if ( is_null( $max_bound ) ) {
@@ -2958,7 +2986,8 @@ class SimpleTaxonomyRefreshed_Admin {
 			$more  = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
 			$more .= ' ' . $lock;
 		}
-		return 'tax_cntl.push( [ "' . $tax_name . '", ' . $pstat . ', ' . $mib . ', "' . $less . '", ' . $mab . ', "' . $more . '", "' . $status . '" ] );' . "\n";
+		$no_terms = ( isset( $nt_label ) ? $nt_label : __( 'No term', 'simple-taxonomy-refreshed' ) );
+		return 'tax_cntl.push( [ "' . $tax_name . '", ' . $pstat . ', ' . $mib . ', "' . $less . '", ' . $mab . ', "' . $more . '", ' . (int) $hier . ', "' . $nt_label . '", "' . $status . '" ] );' . "\n";
 	}
 
 	/**
@@ -3005,6 +3034,10 @@ class SimpleTaxonomyRefreshed_Admin {
 					// ignore the 0 element (hierarchical).
 					if ( 0 === $terms[0] ) {
 						unset( $terms[0] );
+					}
+					// remove the No Terms value. (Ensure at beginning).
+					if ( isset( $terms[1] ) && -1 === $terms[1] ) {
+						unset( $terms[1] );
 					}
 					$terms_count = ( empty( $terms ) ? 0 : count( $terms ) );
 				}

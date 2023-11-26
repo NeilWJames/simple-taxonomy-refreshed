@@ -215,6 +215,9 @@ function hideCnt(evt) {
 }
 
 function hideSel(evt, objNo) {
+	if ( ! ( objNo in [0,1,2] ) ) {
+		objNo = 0;
+	} 
 	for (var i = 0; i < cb_types.length; i++) {
 		cb_types[i].setAttribute('tabindex', '-1');
 		cb_types[i].setAttribute('aria-selected', 'false');
