@@ -45,6 +45,8 @@ There are many labels that can be used for a taxonomy, any and all can be change
 
 Scroll down the page using the plugin to see them all.
 
+A label "No Term" has been created for use with the plugin. See "Term Control" for details.
+
 The plugin uses core WordPress default values. These depend on whether the taxonomy is hierarchical (Category) or not (Tag).
 
 When creating a non-hierarchical taxonomy, it is recommended to set the hierarchical value to False on the main tab (the labels appear as Category type) and save the taxonomy.
@@ -111,3 +113,4 @@ The option "When post is saved" means that the test is done during save post pro
 
 The option "As terms are changed and when post is changed" means the bounds are checked during editing as well. This functionality is mostly complete, but it is possible that there are some holes. To ensure incorrect data is not saved, the "when post is saved" processing is also invoked.
 
+When the taxonomy is defined as hierarchical, the terms will normally be displayed as a set of checkboxes. When the maximum number of terms is set as 1, i.e. only one term is possible, the checkboxes are changed to radio buttons by the plugin. This will also be the case if there is no minimum (or is set to 0). To support this, a virtual term "No term" has been created (see "Labels" above) that can be selected, but no term of the taxonomy will be attached to the post.

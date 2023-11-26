@@ -109,7 +109,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* FIX: Server-side terms control errors passed back to Block Editor screens and for Quick Edit.
 	* FIX: Help Text reviewed. (Also github documentation.)
 
-For information on earlier version changes, go the [Simple Taxonomy Refreshed Changes](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/changes.md) page.
+For information on earlier version changes, go the [Simple Taxonomy Refreshed Changes](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/changelog.md) page.
 	
 == Migration Notice ==
 
