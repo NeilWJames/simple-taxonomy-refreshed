@@ -34,6 +34,8 @@ Options are provided to add a selection dropdown in the admin list and to define
 
 For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
 
+When using the admin screen, additional information is available in the help pulldown area.
+
 == Frequently Asked Questions ==
 
 = Does this plugin handles custom fields? =
@@ -62,6 +64,8 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* NEW: Support Taxonomies having zero or one term to use radio buttons by use of a "No term" selector.
 	* DEV: Reviewed for WP Coding Standards 3.0.
 	* DEV: Minimum supported version of PHP increased to 7.4.
+	* FIX: PHP 8.1 undefined array error.
+	* FIX: Tested with WP version 6.4.
 
 * Version 3.1.1  (11/08/2023)
 	* NEW: JS register uses defer with 6.3 onwards. 
