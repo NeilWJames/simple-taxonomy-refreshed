@@ -6,7 +6,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2023-11-26 23:51+0000\n"
+"POT-Creation-Date: 2023-11-28 21:35+0000\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-KeywordsList: __;_e;_ex:1,2c;_n:1,2;_n_noop:1,2;_nx:1,2,4c;_nx_noop:1,2,3c;_x:1,2c;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c\n"
 "X-Poedit-SearchPath-0: .\n"
@@ -206,11 +206,11 @@ msgstr ""
 msgid "Copy Terms"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin-conversion.php:390, includes/class-simpletaxonomyrefreshed-admin-merge.php:541, includes/class-simpletaxonomyrefreshed-admin.php:3246
+#: includes/class-simpletaxonomyrefreshed-admin-conversion.php:390, includes/class-simpletaxonomyrefreshed-admin-merge.php:541, includes/class-simpletaxonomyrefreshed-admin.php:3249
 msgid "False"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin-conversion.php:391, includes/class-simpletaxonomyrefreshed-admin-merge.php:542, includes/class-simpletaxonomyrefreshed-admin.php:3247
+#: includes/class-simpletaxonomyrefreshed-admin-conversion.php:391, includes/class-simpletaxonomyrefreshed-admin-merge.php:542, includes/class-simpletaxonomyrefreshed-admin.php:3250
 msgid "True"
 msgstr ""
 
@@ -1075,7 +1075,7 @@ msgstr ""
 msgid "Select which builtin or custom post types will use this taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1123, includes/class-simpletaxonomyrefreshed-admin.php:2160
+#: includes/class-simpletaxonomyrefreshed-admin.php:1123, includes/class-simpletaxonomyrefreshed-admin.php:2157
 msgid "Display Terms with Posts"
 msgstr ""
 
@@ -1091,7 +1091,7 @@ msgstr ""
 msgid "They can take the form of either simple text or as html data such as list tags. But all three need to be consistent types"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1143, includes/class-simpletaxonomyrefreshed-admin.php:2162
+#: includes/class-simpletaxonomyrefreshed-admin.php:1143, includes/class-simpletaxonomyrefreshed-admin.php:2159
 msgid "Display Terms Before text"
 msgstr ""
 
@@ -1119,7 +1119,7 @@ msgstr ""
 msgid "By default, it will consist of a comma followed by a space."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1159, includes/class-simpletaxonomyrefreshed-admin.php:2164
+#: includes/class-simpletaxonomyrefreshed-admin.php:1159, includes/class-simpletaxonomyrefreshed-admin.php:2161
 msgid "Display Terms After text"
 msgstr ""
 
@@ -1363,7 +1363,7 @@ msgstr ""
 msgid "Description for a navigation link block"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:1428, includes/class-simpletaxonomyrefreshed-admin.php:2989, includes/class-simpletaxonomyrefreshed-client.php:1006, includes/class-simpletaxonomyrefreshed-client.php:1202
+#: includes/class-simpletaxonomyrefreshed-admin.php:1428, includes/class-simpletaxonomyrefreshed-admin.php:2991, includes/class-simpletaxonomyrefreshed-client.php:1006, includes/class-simpletaxonomyrefreshed-client.php:1202
 msgid "No term"
 msgstr ""
 
@@ -1836,215 +1836,215 @@ msgid "Select the maximum number of terms that can be attached to a post."
 msgstr ""
 
 #: includes/class-simpletaxonomyrefreshed-admin.php:1972
-msgid "You cannot edit the Simple Taxonomy Refresher options."
+msgid "You cannot edit the Simple Taxonomy Refreshed options."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2020
+#: includes/class-simpletaxonomyrefreshed-admin.php:2017
 msgid "You are trying to edit a taxonomy without name. Impossible !"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2059
+#: includes/class-simpletaxonomyrefreshed-admin.php:2056
 msgid "Impossible to add your taxonomy... You must enter a taxonomy name."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2045
+#: includes/class-simpletaxonomyrefreshed-admin.php:2042
 msgid "You are trying to add a taxonomy with a name already used by another taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2085
+#: includes/class-simpletaxonomyrefreshed-admin.php:2082
 msgid "You are trying to output a taxonomy that doesn't exist..."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2163
+#: includes/class-simpletaxonomyrefreshed-admin.php:2160
 msgid "Display Terms Separator"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2165
+#: includes/class-simpletaxonomyrefreshed-admin.php:2162
 msgid "Show Terms in Feeds"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2171
+#: includes/class-simpletaxonomyrefreshed-admin.php:2168
 msgid "Admin List screens for these post type(s) will have a filter list dropdown:"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2175
+#: includes/class-simpletaxonomyrefreshed-admin.php:2172
 msgid "with wp_dropdown_categories parameters:"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2190
+#: includes/class-simpletaxonomyrefreshed-admin.php:2187
 msgid "Term count callback modified."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2192
+#: includes/class-simpletaxonomyrefreshed-admin.php:2189
 msgid "N.B. Callback parameter update_count_callback set, so will be ineffective"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2194
+#: includes/class-simpletaxonomyrefreshed-admin.php:2191
 msgid "Applies to posts with status: "
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2198
+#: includes/class-simpletaxonomyrefreshed-admin.php:2195
 msgid "Published"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2199
+#: includes/class-simpletaxonomyrefreshed-admin.php:2196
 msgid "Future"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2200
+#: includes/class-simpletaxonomyrefreshed-admin.php:2197
 msgid "Default"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2201
+#: includes/class-simpletaxonomyrefreshed-admin.php:2198
 msgid "Pending"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2202
+#: includes/class-simpletaxonomyrefreshed-admin.php:2199
 msgid "Private"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2203
+#: includes/class-simpletaxonomyrefreshed-admin.php:2200
 msgid "Trash"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2196
+#: includes/class-simpletaxonomyrefreshed-admin.php:2193
 msgid "All except trash"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2209
+#: includes/class-simpletaxonomyrefreshed-admin.php:2206
 msgid "Terms control parameters set."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2214
+#: includes/class-simpletaxonomyrefreshed-admin.php:2211
 msgid "Applies to these post type(s)"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2212
+#: includes/class-simpletaxonomyrefreshed-admin.php:2209
 msgid "Applies to all valid post type(s)"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2219
+#: includes/class-simpletaxonomyrefreshed-admin.php:2216
 msgid "Applies to posts with status:"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2223
+#: includes/class-simpletaxonomyrefreshed-admin.php:2220
 msgid "All statuses except Trash."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2221
+#: includes/class-simpletaxonomyrefreshed-admin.php:2218
 msgid "Published and Future only"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2231
+#: includes/class-simpletaxonomyrefreshed-admin.php:2228
 msgid "Soft tests. I.e. Controls will apply on saving."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2229
+#: includes/class-simpletaxonomyrefreshed-admin.php:2226
 msgid "Hard tests. I.e. Controls will apply during Form Editing and on saving."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2227
+#: includes/class-simpletaxonomyrefreshed-admin.php:2224
 msgid "Notifications only if outside bounds will be given and user cannot change terms."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2238
+#: includes/class-simpletaxonomyrefreshed-admin.php:2235
 msgid "No minimum number of terms."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2236
+#: includes/class-simpletaxonomyrefreshed-admin.php:2233
 msgid "Minimum number of terms set to %d."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2245
+#: includes/class-simpletaxonomyrefreshed-admin.php:2242
 msgid "No maximum number of terms."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2243
+#: includes/class-simpletaxonomyrefreshed-admin.php:2240
 msgid "Maximum number of terms set to %d."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2322
+#: includes/class-simpletaxonomyrefreshed-admin.php:2319
 msgid "You are trying to add a taxonomy with a name already used by an another taxonomy."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2367
+#: includes/class-simpletaxonomyrefreshed-admin.php:2364
 msgid "You are trying to edit a taxonomy with a name different as original. Use the Rename Slug function for this."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2516
+#: includes/class-simpletaxonomyrefreshed-admin.php:2513
 msgid "You are trying to delete a taxonomy that does not exist."
 msgstr ""
 
 #. translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
-#: includes/class-simpletaxonomyrefreshed-admin.php:2723, includes/class-simpletaxonomyrefreshed-admin.php:2977, includes/class-simpletaxonomyrefreshed-admin.php:3061
+#: includes/class-simpletaxonomyrefreshed-admin.php:2721, includes/class-simpletaxonomyrefreshed-admin.php:2979, includes/class-simpletaxonomyrefreshed-admin.php:3063
 msgid "The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2729, includes/class-simpletaxonomyrefreshed-admin.php:2715
+#: includes/class-simpletaxonomyrefreshed-admin.php:2727, includes/class-simpletaxonomyrefreshed-admin.php:2713
 msgid "For information as you cannot add them."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2731, includes/class-simpletaxonomyrefreshed-admin.php:2717, includes/class-simpletaxonomyrefreshed-admin.php:2783
+#: includes/class-simpletaxonomyrefreshed-admin.php:2729, includes/class-simpletaxonomyrefreshed-admin.php:2715, includes/class-simpletaxonomyrefreshed-admin.php:2781
 msgid "N.B. You will not be able to save any changes!"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2726
+#: includes/class-simpletaxonomyrefreshed-admin.php:2724
 msgid "Please review and add additional terms before trying to save."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2709
+#: includes/class-simpletaxonomyrefreshed-admin.php:2707
 msgid "The number of terms for taxonomy (%1$s) needs to be at least %2$d."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2712
+#: includes/class-simpletaxonomyrefreshed-admin.php:2710
 msgid "Please review and add additional terms."
 msgstr ""
 
 #. translators: %1$s is the taxonomy label; %2$d is the required maximum number of terms.
 #. translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
-#: includes/class-simpletaxonomyrefreshed-admin.php:2775, includes/class-simpletaxonomyrefreshed-admin.php:2986, includes/class-simpletaxonomyrefreshed-admin.php:3064
+#: includes/class-simpletaxonomyrefreshed-admin.php:2773, includes/class-simpletaxonomyrefreshed-admin.php:2988, includes/class-simpletaxonomyrefreshed-admin.php:3066
 msgid "The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2781
+#: includes/class-simpletaxonomyrefreshed-admin.php:2779
 msgid "For information as you cannot remove them."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2778
+#: includes/class-simpletaxonomyrefreshed-admin.php:2776
 msgid "Please review and remove terms before trying to save."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2969
+#: includes/class-simpletaxonomyrefreshed-admin.php:2971
 msgid "Publishing is blocked."
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:2969
+#: includes/class-simpletaxonomyrefreshed-admin.php:2971
 msgid "Saving is blocked."
 msgstr ""
 
 #. translators: %s is the taxonomy label name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:3156
+#: includes/class-simpletaxonomyrefreshed-admin.php:3158
 msgid "Not enough terms entered for Taxonomy \"%s\""
 msgstr ""
 
 #. translators: %s is the taxonomy label name.
-#: includes/class-simpletaxonomyrefreshed-admin.php:3165
+#: includes/class-simpletaxonomyrefreshed-admin.php:3167
 msgid "Too many terms entered for Taxonomy \"%s\""
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:3267
+#: includes/class-simpletaxonomyrefreshed-admin.php:3273
 msgid "None"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:3268
+#: includes/class-simpletaxonomyrefreshed-admin.php:3274
 msgid "Content"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:3269
+#: includes/class-simpletaxonomyrefreshed-admin.php:3275
 msgid "Excerpt"
 msgstr ""
 
-#: includes/class-simpletaxonomyrefreshed-admin.php:3270
+#: includes/class-simpletaxonomyrefreshed-admin.php:3276
 msgid "Content and excerpt"
 msgstr ""
 
