@@ -264,7 +264,7 @@ class SimpleTaxonomyRefreshed_Client {
 	public static function prepare_args( $taxonomy ) {
 		// Ensure complete.
 		$taxonomy                 = wp_parse_args( $taxonomy, self::get_taxonomy_default_fields() );
-		$hier                     = ( isset( $taxonomy['hierarchical'] ) && ! empty( $taxonomy['hierarchical'] ) ? $taxonomy['hierarchical'] : 1 );
+		$hier                     = ( isset( $taxonomy['hierarchical'] ) && ! empty( $taxonomy['hierarchical'] ) ? $taxonomy['hierarchical'] : 0 );
 		$taxonomy['labels']       = wp_parse_args( $taxonomy['labels'], self::get_taxonomy_default_labels( $hier ) );
 		$taxonomy['capabilities'] = wp_parse_args( $taxonomy['capabilities'], self::get_taxonomy_default_capabilities() );
 
@@ -1002,7 +1002,7 @@ class SimpleTaxonomyRefreshed_Client {
 										'show_in_rest' => $taxonomy['show_in_rest'],
 										'rest_base'    => ( empty( $taxonomy['rest_base'] ) ? $taxonomy['name'] : $taxonomy['rest_base'] ),
 										'label_name'   => $taxonomy['labels']['name'],
-										'hierarchical' => $taxonomy['hierarchical'],
+										'hierarchical' => (bool) $taxonomy['hierarchical'],
 										'no_term'      => ( array_key_exists( 'no_term', $taxonomy['labels'] ) ? $taxonomy['labels']['no_term'] : __( 'No term', 'simple-taxonomy-refreshed' ) ),
 									);
 								}

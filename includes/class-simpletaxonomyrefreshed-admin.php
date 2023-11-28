@@ -765,7 +765,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										}
 										?>
 									</td>
-									<td><?php echo esc_html( self::get_true_false( $_t['hierarchical'] ) ); ?></td>
+									<td><?php echo esc_html( self::get_true_false( $_t['hierarchical'], 0 ) ); ?></td>
 									<td><?php echo esc_html( self::get_true_false( $_t['rewrite'] ) ); ?></td>
 									<td><?php echo esc_html( self::get_true_false( $_t['public'] ) ); ?></td>
 									<td><?php echo esc_html( self::get_true_false( ( isset( $_t['show_in_rest'] ) ? $_t['show_in_rest'] : 1 ) ) ); ?></td>
@@ -861,7 +861,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										}
 										?>
 									</td>
-									<td><?php echo esc_html( self::get_true_false( (int) $_t->hierarchical ) ); ?></td>
+									<td><?php echo esc_html( self::get_true_false( (int) $_t->hierarchical, 0 ) ); ?></td>
 									<td><?php echo esc_html( self::get_true_false( (int) $_t->show_in_rest ) ); ?></td>
 								</tr>
 								<?php
@@ -1633,7 +1633,7 @@ class SimpleTaxonomyRefreshed_Admin {
 					<?php } else { ?>
 					<div id="wpgraphql" class="meta-box-sortabless" role="tabpanel">
 					<input type="hidden" id="name" name="name" value="<?php echo esc_attr( $taxonomy['name'] ); ?>" />
-					<input type="hidden" id="hierarchical" name="hierarchical" value="<?php echo esc_attr( $taxonomy['hierarchical'] ); ?>" />
+					<input type="hidden" id="hierarchical" name="hierarchical" value="<?php echo esc_attr( (int) $taxonomy['hierarchical'] ); ?>" />
 					<input type="hidden" id="st_update_count_callback" name="st_update_count_callback" value="<?php echo esc_attr( $taxonomy['st_update_count_callback'] ); ?>" />
 					<?php } ?>
 						<div class="postbox">
@@ -1969,7 +1969,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		if ( isset( $_POST['action'] ) && in_array( wp_unslash( $_POST['action'] ), array( 'add-taxonomy', 'merge-taxonomy', 'merge-external' ), true ) ) {
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_die( esc_html__( 'You cannot edit the Simple Taxonomy Refresher options.', 'simple-taxonomy-refreshed' ) );
+				wp_die( esc_html__( 'You cannot edit the Simple Taxonomy Refreshed options.', 'simple-taxonomy-refreshed' ) );
 			}
 
 			// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
@@ -1984,18 +1984,17 @@ class SimpleTaxonomyRefreshed_Admin {
 				}
 				// phpcs:ignore  WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput
 				$post_field = ( array_key_exists( $field, $_POST ) ? wp_unslash( $_POST[ $field ] ) : '' );
-				if ( isset( $post_field ) && empty( $post_field ) ) {
+				if ( isset( $post_field ) ) {
 					$taxonomy[ $field ] = '';
-				} elseif ( isset( $post_field ) && is_string( $post_field ) ) {// String ?
-					if ( in_array( $field, array( 'st_before', 'st_sep', 'st_after' ), true ) ) {
-						// can contain html.
-						$taxonomy[ $field ] = wp_kses_post( $post_field );
-						$simple             = false;
-					} else {
-						$taxonomy[ $field ] = sanitize_text_field( trim( stripslashes( $post_field ) ) );
-					}
-				} elseif ( isset( $post_field ) ) {
-					if ( is_array( $post_field ) ) {
+					if ( is_string( $post_field ) ) {// String ?
+						if ( in_array( $field, array( 'st_before', 'st_sep', 'st_after' ), true ) ) {
+							// can contain html.
+							$taxonomy[ $field ] = wp_kses_post( $post_field );
+							$simple             = false;
+						} else {
+							$taxonomy[ $field ] = sanitize_text_field( trim( stripslashes( $post_field ) ) );
+						}
+					} elseif ( is_array( $post_field ) ) {
 						$taxonomy[ $field ] = array();
 						foreach ( $post_field as $k => $_v ) {
 							$taxonomy[ $field ][ sanitize_text_field( $k ) ] = sanitize_text_field( $_v );
@@ -2003,8 +2002,6 @@ class SimpleTaxonomyRefreshed_Admin {
 					} else {
 						$taxonomy[ $field ] = sanitize_text_field( $post_field );
 					}
-				} else {
-					$taxonomy[ $field ] = '';
 				}
 			}
 
@@ -2627,7 +2624,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 				// should we change checkbox to a radio button.
 				if ( (bool) $tax_obj->hierarchical && 1 === $max ) {
-					self::script_radio_edit( $tax, $label, $pstat, $min, (bool) $tax_obj->hierarchical, $cntl['no_term'] );
+					$min_r = ( is_null( $min ) ? 0 : $min );
+					self::script_radio_edit( $tax, $label, $pstat, $min_r, (bool) $tax_obj->hierarchical, $cntl['no_term'] );
 					// if set to radio then next test not needed.
 					continue;
 				}
@@ -2832,7 +2830,9 @@ class SimpleTaxonomyRefreshed_Admin {
 				// (Not over limit, hierarchical, min and max limits exist and set to 1).
 				if ( $num_terms < 2 && (bool) $tax_obj->hierarchical && 1 === $max ) {
 					$cntl_type = (int) $cntl['st_cc_hard'];
-					self::script_radio( $tax, $label, $pstat, $min, true, $cntl['no_term'] );
+					// for radio, force min to be 0 or 1.
+					$min_r = ( is_null( $min ) ? 0 : $min );
+					self::script_radio( $tax, $label, $pstat, $min_r, true, $cntl['no_term'] );
 					// if we converted to radio and there is already one term, then it always is in limits (non-block only).
 					if ( 1 === $num_terms && ! self::is_block_editor() ) {
 						continue;
@@ -2879,7 +2879,9 @@ class SimpleTaxonomyRefreshed_Admin {
 			return;
 		}
 		$stat = $post->post_status;
-		$text = self::term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, 1, $hier, $nt_label, $stat );
+		// for radio, force min to be 0 or 1.
+		$min_r = ( is_null( $min_bound ) ? 0 : $min_bound );
+		$text  = self::term_limits_push( $tax_name, $tax_label, $pstat, $min_r, 1, $hier, $nt_label, $stat );
 		self::enqueue_client_libs();
 		wp_add_inline_script(
 			'staxo_client',
@@ -2895,7 +2897,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 * @param string $tax_name  The taxonomy slug.
 	 * @param string $tax_label The taxonomy label.
 	 * @param int    $pstat     Post status control type.
-	 * @param int    $min_bound minimum number of terms (null if no minimum).
+	 * @param int    $min_bound minimum number of terms (0 or 1).
 	 * @param bool   $hier      Whether taxonomy is hierarchical.
 	 * @param string $nt_label  The taxonomy label name for No term.
 	 */
@@ -3238,10 +3240,11 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Use for build selector - convert number to string.
 	 *
-	 * @param string $key  index into true/false type.
+	 * @param string $key    index into true/false type.
+	 * @param string $dfault optional default value.
 	 * @return string/array
 	 */
-	private static function get_true_false( $key = '' ) {
+	private static function get_true_false( $key = '', $dfault = null ) {
 		$types = array(
 			'0' => __( 'False', 'simple-taxonomy-refreshed' ),
 			'1' => __( 'True', 'simple-taxonomy-refreshed' ),
@@ -3251,7 +3254,10 @@ class SimpleTaxonomyRefreshed_Admin {
 			return $types[ $key ];
 		}
 
-		return $types;
+		if ( is_null( $dfault ) ) {
+			return $types;
+		}
+		return $types[ $dfault ];
 	}
 
 	/**

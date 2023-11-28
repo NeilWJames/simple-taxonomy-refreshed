@@ -1,7 +1,7 @@
 # Changelog
 
-## Version 3.2.0  (27/11/2023)
-	* NEW: Support Taxonomies having zero or one term to use radio buttons by use of a "No term" selector.
+## Version 3.2.0  (29/11/2023)
+	* NEW: Taxonomies that have zero or one term will use radio buttons by using a "No term" selector.
 	* DEV: Reviewed for WP Coding Standards 3.0.
 	* DEV: Minimum supported version of PHP increased to 7.4.
 	* FIX: PHP 8.1 undefined array error.

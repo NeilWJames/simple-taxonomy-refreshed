@@ -603,8 +603,8 @@ function tag_tax_count( tax_slug ) {
 		clear_errblock( tax_slug );
 	}
 
-	// special case when min = 1 and max = 1, then otherwise cannot change tag.
-	if ( 1 === cntl[2] && 1 === cntl[4] && cnt >= 0 && cnt <= 2 && ! special ) {
+	// special case when max = 1, then otherwise cannot change tag.
+	if ( 1 === cntl[4] && cnt >= 0 && cnt <= 2 && ! special ) {
 		return;
 	}
 

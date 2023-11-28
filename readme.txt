@@ -60,8 +60,8 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 == Changelog ==
 
-* Version 3.2.0  (27/11/2023)
-	* NEW: Support Taxonomies having zero or one term to use radio buttons by use of a "No term" selector.
+* Version 3.2.0  (29/11/2023)
+	* NEW: Taxonomies that have zero or one term will use radio buttons by using a "No term" selector.
 	* DEV: Reviewed for WP Coding Standards 3.0.
 	* DEV: Minimum supported version of PHP increased to 7.4.
 	* FIX: PHP 8.1 undefined array error.
@@ -86,34 +86,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* NEW: Term control front end logic moved from page to js file.
 	* FIX: Server-side Tag Term Counts incorrect.
 
-* Version 2.3.0 (24/08/2022)
-	* NEW: Export configuration allows taxonomies to be ordered (and so will be in this order on re-import).
-	* NEW: Further accessibility changes made to administration screen.
-
-* Version 2.2.0 (06/06/2022)
-	* NEW: Accessibility changes made to administration screen.
-	* NEW: Shortcode `staxo_post_terms` and Block for displaying Terms attached to post.
-	* NEW: Some common css and js code moved from inline to separate files.
-
-* Version 2.1.0 (15/02/2022)
-	* NEW: Taxonomy widget upgraded and extended to be able to be invoked as a block.
-	* FIX: Some a11y issues addressed.
-	* FIX: Term Counts for non_WP External Taxonomies may not have worked.
-
-* Version 2.0.0 (10/07/2021)
-	* NEW: Taxonomy labels that are default values are not saved with options.
-	* NEW: Taxonomy labels use core translations for default values rather plugin-specific ones.
-	* NEW: Support of Description labels and 'rest_namespace' introduced with WP 5.9.
-	* NEW: Support of `item_link` and `item_link_description` labels introduced with WP 5.8.
-	* NEW: Restructure functions to regroup them under a Taxonomy menu item.
-	* NEW: Add/Modify taxonomy and Export/Import configuration split into separate functions.
-	* NEW: Enable extra functions for all taxonomies.
-	* NEW: Provide a Merge taxonomy terms function.
-	* NEW: Deliver Custom Taxonomy terms to RSS Feeds.
-	* FIX: Server-side terms control errors passed back to Block Editor screens and for Quick Edit.
-	* FIX: Help Text reviewed. (Also github documentation.)
-
-For information on earlier version changes, go the [Simple Taxonomy Refreshed Changes](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/changelog.md) page.
+For information on earlier version changes, see the [Simple Taxonomy Refreshed Changes](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/changelog.md) page.
 	
 == Migration Notice ==
 
