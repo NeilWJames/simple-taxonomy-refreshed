@@ -573,7 +573,6 @@ class SimpleTaxonomyRefreshed_Client {
 		return self::taxonomy_filter( '', 'arbitrary', $tax['tax'] );
 	}
 
-
 	/**
 	 * Get taxonomy names for selection (use cache).
 	 *
@@ -1066,7 +1065,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'labels'                   => array(),
 			'public'                   => 1,
 			'publicly_queryable'       => 1,
-			'hierarchical'             => 1,
+			'hierarchical'             => 0,
 			'show_ui'                  => 1,
 			'show_in_menu'             => 1,
 			'show_in_nav_menus'        => 1,

@@ -154,7 +154,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			plugins_url( $index_js, __DIR__ ),
 			array( 'wp-block-editor', 'wp-blocks', 'wp-core-data', 'wp-data', 'wp-dom', 'wp-dom-ready', 'wp-edit-post', 'wp-editor' ),
 			filemtime( "$dir/$index_js" ),
-			array( 'strategy' => 'defer' ),
+			false,
 		);
 	}
 
