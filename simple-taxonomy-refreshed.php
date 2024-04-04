@@ -16,7 +16,7 @@
  */
 
 /*
-Copyright This Version 2019-23 Neil James (neil@familyjames.com)
+Copyright This Version 2019-24 Neil James (neil@familyjames.com)
 Copyright Original Version 2010-2013 Amaury Balmer (amaury@beapi.fr)
 
 This program is free software; you can redistribute it and/or modify
