@@ -2,7 +2,7 @@
 
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
-Tested up to: 6.5
+Tested up to: 6.6
 Requires PHP: 7.4
 Stable tag: 3.2.0
 License: GPLv3 or later
@@ -14,7 +14,7 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 Supports adding one or more taxonomies (either hierarchical or tag) to any objects registered on your installation.
 
-This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-6.5 with PHP 7.2-8.1.
+This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-6.6 with PHP 7.2-8.2.
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 

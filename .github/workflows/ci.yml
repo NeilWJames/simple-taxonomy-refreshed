@@ -11,14 +11,6 @@ on:
 jobs:
   run:
     runs-on: ${{ matrix.operating-system }}
-    services:
-      mydb:
-        image: mysql:8.1
-        env:
-          MYSQL_ROOT_PASSWORD: 'root'
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
     strategy:
       fail-fast: true
       matrix:
@@ -37,6 +29,9 @@ jobs:
             operating-system: 'ubuntu-latest'
     name: PHP ${{ matrix.php-versions }} Test WP ${{ matrix.wp-version }} MS ${{ matrix.wp-multisite }} ${{ matrix.operating-system }}
     steps:
+    - name: Start DB
+      run: sudo systemctl start mysql
+
     - name: Checkout
       uses: actions/checkout@v4
 
