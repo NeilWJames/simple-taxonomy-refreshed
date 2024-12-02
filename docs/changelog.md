@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 3.3.0  (06/12/2024)
+	* DEV: Ensure option autoloaded.
+	* DEV: Review of list_table ordering.
+	* DEV: Reviewed for WP Coding Standards 3.1.
+	* FIX: Register against CPT created after init process run.
+
 ## Version 3.2.0  (29/11/2023)
 	* NEW: Taxonomies that have zero or one term will use radio buttons by using a "No term" selector.
 	* DEV: Reviewed for WP Coding Standards 3.0.
