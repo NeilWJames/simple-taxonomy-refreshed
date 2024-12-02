@@ -2687,7 +2687,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 				// determine type of error to report going into process.
 				$stat = (int) $cntl['st_cc_type'];
-				if ( 2 === $stat && $status > 0 || 1 === $stat && 1 === $status ) {
+				if ( 2 === $stat && $status > 0 || ( 1 === $stat && 1 === $status ) ) {
 					$err_msg = 'error';
 				} else {
 					$err_msg = 'warning';
