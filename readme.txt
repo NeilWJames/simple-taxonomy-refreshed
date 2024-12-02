@@ -1,10 +1,10 @@
 === Simple Taxonomy Refreshed ===
 
 Contributors: nwjames, momo360modena
-Tags: tags, taxonomies, custom taxonomies, taxonomy, category, block editor
-Tested up to: 6.6
+Tags: tags, taxonomies, custom taxonomies, taxonomy, category
+Tested up to: 6.7.1
 Requires PHP: 7.4
-Stable tag: 3.2.0
+Stable tag: 3.3.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -14,7 +14,7 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 Supports adding one or more taxonomies (either hierarchical or tag) to any objects registered on your installation.
 
-This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-6.6 with PHP 7.2-8.2.
+This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-6.7 with PHP 7.2-8.3.
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 
@@ -59,6 +59,11 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 3.3.0  (06/12/2024)
+	* DEV: Ensure option autoloaded.
+	* DEV: Review of list_table ordering.
+	* FIX: Register against CPT created after init process run.
 
 * Version 3.2.0  (29/11/2023)
 	* NEW: Taxonomies that have zero or one term will use radio buttons by using a "No term" selector.

@@ -2330,7 +2330,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		$current_options['taxonomies'][ $staxo ] = $taxonomy;
 
-		update_option( OPTION_STAXO, $current_options );
+		update_option( OPTION_STAXO, $current_options, true );
 
 		// Force cache refresh.
 		wp_cache_delete( 'staxo_own_taxos', '' );
@@ -2400,7 +2400,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		$current_options['taxonomies'][ $staxo ] = $taxonomy;
 
-		update_option( OPTION_STAXO, $current_options );
+		update_option( OPTION_STAXO, $current_options, true );
 
 		// Force cache refresh.
 		wp_cache_delete( 'staxo_own_taxos', '' );
@@ -2460,7 +2460,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		$current_options['externals'][ $staxo ] = $taxonomy;
 
-		update_option( OPTION_STAXO, $current_options );
+		update_option( OPTION_STAXO, $current_options, true );
 
 		// Force cache refresh.
 		wp_cache_delete( 'staxo_own_taxos', '' );
@@ -2503,18 +2503,32 @@ class SimpleTaxonomyRefreshed_Admin {
 			// Flush rewriting rules !
 			flush_rewrite_rules( false );
 
+			// remove from any orderings.
+			if ( isset( $current_options['list_order'] ) && is_array( $current_options['list_order'] ) ) {
+				$lists = $current_options['list_order'];
+				foreach ( $lists as $pt => $list ) {
+					// remove the taxonomy if found.
+					if ( in_array( $staxo, $lists[ $pt ], true ) ) {
+						unset( $lists[ $pt ][ $staxo ] );
+					}
+					// is a list still needed.
+					if ( count( $list ) < 2 ) {
+							unset( $lists[ $pt ] );
+					}
+				}
+				$current_options['list_order'] = $lists;
+			}
 		} elseif ( isset( $current_options['externals'][ $staxo ] ) ) {
 			// external taxonomy.
 			$opt = 'deleted';
 			unset( $current_options['externals'][ $staxo ] ); // Delete from options.
-
 		} else {
 			// Taxo not exist ?
 			wp_die( esc_html__( 'You are trying to delete a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
 			exit();
 		}
 
-		update_option( OPTION_STAXO, $current_options );
+		update_option( OPTION_STAXO, $current_options, true );
 
 		// Force cache refresh.
 		wp_cache_delete( 'staxo_own_taxos', '' );
@@ -2673,7 +2687,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 				// determine type of error to report going into process.
 				$stat = (int) $cntl['st_cc_type'];
-				if ( ( 2 === $stat && $status > 0 ) || ( 1 === $stat && 1 === $status ) ) {
+				if ( 2 === $stat && $status > 0 || 1 === $stat && 1 === $status ) {
 					$err_msg = 'error';
 				} else {
 					$err_msg = 'warning';

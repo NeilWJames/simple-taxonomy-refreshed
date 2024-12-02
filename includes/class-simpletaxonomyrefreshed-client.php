@@ -133,11 +133,7 @@ class SimpleTaxonomyRefreshed_Client {
 				register_taxonomy( $taxonomy['name'], $taxonomy['objects'], $args );
 
 				// avoid side effects (see https://developer.wordpress.org/reference/functions/register_taxonomy/).
-				if ( ! empty( $taxonomy['objects'] ) ) {
-					foreach ( $taxonomy['objects'] as $cpt ) {
-						register_taxonomy_for_object_type( $taxonomy['name'], $cpt );
-					}
-				}
+				// see init_2() - called with low priority to allow cpt to be declared later.
 			}
 		}
 
@@ -171,11 +167,24 @@ class SimpleTaxonomyRefreshed_Client {
 	}
 
 	/**
-	 * Process count for old method for external plugin taxonomies.
+	 * Ensure taxonomies registered and process count for old method for external plugin taxonomies.
 	 *
 	 * @return void
 	 */
 	public static function init_2() {
+		$options = get_option( OPTION_STAXO );
+		// Make sure done late to allow for other cpt being defined later.
+		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
+				// avoid side effects (see https://developer.wordpress.org/reference/functions/register_taxonomy/).
+				if ( ! empty( $taxonomy['objects'] ) ) {
+					foreach ( $taxonomy['objects'] as $cpt ) {
+						register_taxonomy_for_object_type( $taxonomy['name'], $cpt );
+					}
+				}
+			}
+		}
+
 		// determine whether to invoke old or new count method.
 		if ( version_compare( self::$wp_version, '5.7' ) >= 0 ) {
 			// core method introduced with version 5.7.
@@ -183,8 +192,6 @@ class SimpleTaxonomyRefreshed_Client {
 		}
 
 		// Only concerned for old method, i.e. version < 5.7.
-		$options = get_option( OPTION_STAXO );
-
 		// Set update method if using default.
 		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
 			foreach ( (array) $options['externals'] as $key => $args ) {
@@ -212,7 +219,9 @@ class SimpleTaxonomyRefreshed_Client {
 		$options = get_option( OPTION_STAXO );
 		if ( isset( $options['list_order'] ) && is_array( $options['list_order'] ) ) {
 			foreach ( $options['list_order'] as $post_type => $taxos ) {
-				add_action( "manage_taxonomies_for_{$post_type}_columns", array( __CLASS__, 'reorder_admin_list' ), 10, 2 );
+				if ( is_array( $taxos ) && ! empty( $taxos ) ) {
+					add_filter( "manage_taxonomies_for_{$post_type}_columns", array( __CLASS__, 'reorder_admin_list' ), 1, 2 );
+				}
 			}
 		}
 	}
@@ -252,7 +261,9 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static function reorder_admin_list( $taxonomies, $post_type ) {
 		$options = get_option( OPTION_STAXO );
-		return $options['list_order'][ $post_type ];
+		$ordered = $options['list_order'][ $post_type ];
+		$extra   = array_diff( $taxonomies, $ordered );
+		return array_merge( $ordered, $extra );
 	}
 
 	/**

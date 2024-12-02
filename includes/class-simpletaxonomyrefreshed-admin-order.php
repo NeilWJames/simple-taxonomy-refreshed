@@ -78,7 +78,6 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			// get data from cache.
 			$orderings      = self::ordering_cache();
 			$deflt_ordering = $orderings['default'];
-			$saved_ordering = $orderings['saved'];
 			$displ_ordering = $orderings['display'];
 
 			// update display with changes made.
@@ -100,12 +99,12 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			// if any changes to default order, store them.
 			$options = get_option( OPTION_STAXO );
 			// if all default, then remove.
-			if ( empty( $displ_ordering ) ) {
+			if ( empty( $displ_ordering ) || 1 === count( $displ_ordering ) ) {
 				unset( $options['list_order'] );
 			} else {
 				$options['list_order'] = $displ_ordering;
 			}
-			update_option( OPTION_STAXO, $options );
+			update_option( OPTION_STAXO, $options, true );
 			wp_cache_delete( 'staxo_orderings' );
 		}
 	}
@@ -267,7 +266,6 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 					}
 				}
 			} else {
-				$saved_ordering = array();
 				$displ_ordering = $post_tax;
 			}
 
@@ -282,12 +280,11 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 
 			$orderings = array(
 				'default'  => $post_tax,
-				'saved'    => $saved_ordering,
 				'display'  => $displ_ordering,
 				'multiple' => $multiple,
 			);
 
-			wp_cache_set( 'staxo_orderings', $orderings, 1200 );
+			wp_cache_set( 'staxo_orderings', $orderings, 300 );
 		}
 		return $orderings;
 	}

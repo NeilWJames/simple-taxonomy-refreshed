@@ -118,11 +118,30 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				}
 			}
 
+			// possibly update the list orderings.
+			if ( isset( $current_options['list_order'] ) ) {
+				$ordering = $current_options['list_order'];
+				foreach ( $new_taxonomy['objects'] as $o => $pt ) {
+					if ( isset( $ordering[ $pt ] ) ) {
+						foreach ( $ordering[ $pt ] as $key => $tax ) {
+							if ( $tax === $taxonomy ) {
+								$ordering[ $pt ][ $key ] = $new_slug;
+							}
+						}
+					}
+				}
+				$current_options['list_order'] = $ordering;
+				wp_cache_delete( 'staxo_orderings' );
+			}
+
 			// Modify the taxonomy settings.
 			// Remove old entry.
 			unset( $current_options['taxonomies'][ $taxonomy ] );
 			$current_options['taxonomies'][ $new_taxonomy['name'] ] = $new_taxonomy;
-			update_option( OPTION_STAXO, $current_options );
+			update_option( OPTION_STAXO, $current_options, true );
+
+			// Force cache refresh.
+			wp_cache_delete( 'staxo_own_taxos', '' );
 
 			// Appears to be some taxonomy structure data held in the options table.
 			global $wpdb;

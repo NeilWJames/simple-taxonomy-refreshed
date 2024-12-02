@@ -136,7 +136,7 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 					}
 					wp_cache_delete( 'staxo_taxonomies' );
 					wp_cache_delete( 'staxo_orderings' );
-					update_option( OPTION_STAXO, $config_file );
+					update_option( OPTION_STAXO, $config_file, true );
 					SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache();
 					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'OK. Configuration is restored.', 'simple-taxonomy-refreshed' ), 'updated' );
 					// Change of file may provoke a change of rewrite rules, so trigger it via transient data.
