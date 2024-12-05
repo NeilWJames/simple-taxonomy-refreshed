@@ -3,9 +3,9 @@
 This plugin provides a no-code facility to manage your taxonomies - either by defining your own or by adding additional function to existing ones.
 
 * Contributors: nwjames, momo360modena
-* Tags: tags, taxonomies, custom taxonomies, taxonomy, category, categories, term conversion, conversion
-* Stable tag: 3.2.0
-* Tested up to: 6.6.1
+* Tags: tags, taxonomies, custom taxonomies, taxonomy, category
+* Stable tag: 3.3.0
+* Tested up to: 6.7.1
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -13,9 +13,9 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 This plugin provides a no-code process to manage your taxonomies - either by defining your own or by adding additional function to existing ones.
 
-Supports adding one or more taxonomies (either hierarchical or tag) to any objects registered on your installation.
+Supports adding one or more taxonomies (either hierarchical or tag) to any post type registered on your installation.
 
-This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-6.2 and PHP 7.2-8.1.
+This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-6.7 and PHP 7.2-8.2.
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 
@@ -25,7 +25,7 @@ You can also export the Taxonomy definition to include it directly in your own c
 
 You can also create terms easily by typing them into a list; or by copying them from an existing taxonomy.
 
-A tool has been provided to support changing the taxonomy slug. Any terms and their usages will also be linked to the renamed slug.
+A tool has been provided to support changing the taxonomy slug. All terms and their usages will also be linked to the renamed slug.
 
 For admin screens displaying multiple taxonomies it is possible to define their display column order.
 
@@ -34,9 +34,9 @@ A tool is provided to merge a number of terms within a taxonomy into a single on
 Options are provided to add a selection dropdown in the admin list and to define term counts using posts of selected statuses (and not just "published").
 (The Term Count functionality requires version 1.3+ when WP 5.7+ is installed.) These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
 
-For those wishing to change its operation, this will require code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
+For those wishing to modidy its operation, this will require code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
 
-For full info go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed) page.
+For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed) page.
 
 Also see the [example page](./example.md) to see usage of the update screen and the tools. 
 
@@ -80,4 +80,4 @@ See [Usage details](./usage.md) for more information on the usage of the plugin.
 
 ## Changelog
 
-See [Change log](./changelog.md) for information on the changes made to the plugin.
+See [Change log](./changelog.md) for information on the changes made to the different versions of the plugin.

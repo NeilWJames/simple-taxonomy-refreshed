@@ -130,13 +130,13 @@ It operates in five phases:
 
 - The options selected are displayed for you to confirm the processing to be carried out, with all posts using the Source Term(s) will be linked to the Destination term and the Source Term(s) will be deleted.
 
-- Once processes, the results of the processing are presented and standard WordPress caches are cleared.
+- Once processed, the results of the processing are presented and standard WordPress caches are cleared.
 
 ### Taxonomy List Order
 
 As delivered, Posts support both Categories and Tags (with slugs `categories` and `post-tags` respectively.
 
-Since `categories` were defined before post-tags`, the Posts Admin List (*All Posts*) has them in this order:
+Since `categories` were defined before `post-tags`, the Posts Admin List (*All Posts*) has them in this order:
 
 ![Posts Default](../images/PostAdminDefault.png)
 
@@ -171,7 +171,6 @@ When the plugin is first loaded, there is no configuration to export. But it is 
 
 ![Initial Export/Import](../images/ExportImport0.png)
 
-Once some configuration data has been created, both export and import options becme available. 
+Once some configuration data has been created, both export and import options become available. 
 
 ![Export/Import](../images/ExportImport.png)
-

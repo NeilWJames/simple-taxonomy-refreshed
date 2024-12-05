@@ -38,7 +38,7 @@ Clicking on *Export PHP* will download a file called test_hier.php to the browse
 	 
 	 ----
 	 
-	 Copyright 2023 - XXX-Author
+	 Copyright 2024 - XXX-Author
 	 
 	 This program is free software; you can redistribute it and/or modify
 	 it under the terms of the GNU General Public License as published by
@@ -127,14 +127,14 @@ Clicking on *Export PHP* will download a file called test_hier.php to the browse
 	 // Display Terms After text: 
 	 // Show Terms in Feeds: 0
 
-This can be included in your own code - but then should be deleted as a custom taxonomy.
+This can be included in your own code - but then should be deleted as a plugin taxonomy. Any additional functionality may then need to be added.
 
 You can also use it as a single page reference, which is why the last comment lines have been added.
 
 ## Adding Terms to the taxonomy
 Since show_in_menu is set to true, it is available as a sub-menu from the Posts menu.
 
-However, we'll add some via the Terms import]functionality.
+However, we'll add some via the Terms import functionality.
 
 Enter the four terms for the taxonomy using leading tabs to denote the levels:
 
@@ -182,7 +182,7 @@ When the Import button is clicked, the data will be loaded. Confirmation message
 
 These show the number of non-blank lines processed, together with the number of terms created (if any).
 
-As the same screen (and data) is returned to the user, clicking the Import button again shows a slightly different message. The same number of items have been processed, but nothing has added. 
+As the same screen (and data) is returned to the user, clicking the Import button again shows a slightly different message. The same number of items have been processed, but nothing has added as terms aleadt exist with those names. 
 
 ![Update messages](../images/Imp2nd.png)
 
@@ -200,15 +200,15 @@ Normally you cannot change the taxonomy slug since any terms that have been defi
 
 Whilst you can create a second custom taxonomy with similar parameters and use the export/import migration capabilities, this will not move any term usages across.
 
-A tool (Rename Taxonomy Slug) has been provided for that purpose only.
+A tool (Rename Taxonomy Slug) has been provided for just that purpose.
 
 ![Rename Taxonomy Slug](../images/RenameTaxSlug.png)
 
-You select the taxonomy to be changed and it shows you existing values. Enter the new slug name.
+You select the taxonomy to be changed and it shows you its existing values. Enter the new slug name.
 
 Because the query_var and rewrite slug are closely related to the taxonomy slug, these are displayed and are optionally updatable here.
 
-Since the rewrite option was not defined with this basic example, it is not shown on this screen.
+Because the rewrite option was not defined with this basic example, it is not shown on this example screen.
 
 ![New Slug Entered](../images/RenamedSlug.png)
 

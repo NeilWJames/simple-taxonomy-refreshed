@@ -1,0 +1,4 @@
+To raise security issues, see:
+https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/SECURITY.md
+
+SBOM: not applicable

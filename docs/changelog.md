@@ -2,7 +2,7 @@
 
 ## Version 3.3.0  (06/12/2024)
 	* DEV: Ensure option autoloaded.
-	* DEV: Review of list_table ordering.
+	* DEV: Review of list_table ordering processing.
 	* DEV: Reviewed for WP Coding Standards 3.1.
 	* FIX: Register against CPT created after init process run.
 

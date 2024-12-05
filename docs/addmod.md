@@ -1,6 +1,6 @@
 # Add/Modify a Taxonomy
 
-**Note. Defining a taxonomy uses the first seven panels. There are an additional four panels used for defining additional uses of the taxonomy. These four panels are available to both custom taxonomies and external ones.**
+**Note. Defining a taxonomy uses the first seven panels. There are an additional four panels used for defining additional uses of the taxonomy. These four panels are available to both custom taxonomies and those created by other plugins or WordPress itself.**
 
 The main purpose of the plugin is to be able to set the very many parameters available to the user when defining a Taxonomy.
 
@@ -29,7 +29,7 @@ These fields may also be output directly using a shortcode `staxo_post_terms` or
 
 ![Main Panel](../images/ExternalExtraOpts.png)
 
-These are optional entries that may be added to an existing taxonomy - and the corresponding element, e.g. WPGraphQL may already be set up. Clearly this should not then be used.
+These are optional entries that may be added to a taxonomy defined elsewhere - and the corresponding element, say for WPGraphQL may already be set up. Clearly this should not then be defined here.
 
 ## Visibility
 
