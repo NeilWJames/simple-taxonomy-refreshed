@@ -14,6 +14,7 @@
  *
  * @package           simple-taxonomy-refreshed
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Silence is golden.' );
 }
@@ -46,8 +47,7 @@ add_action( 'plugins_loaded', 'init_staxo_refreshed' );
  * @return void
  * @author Neil James from Amaury Balmer
  */
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
-function init_staxo_refreshed() {
+function init_staxo_refreshed() { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
 	// Detect if Simple Taxonomy is active. If found then bail with message.
 	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 	if ( in_array( 'simple-taxonomy/simple-taxonomy.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ), true ) ) {
@@ -116,8 +116,7 @@ function init_staxo_refreshed() {
  * @return void
  * @author Neil James
  */
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
-function init_staxo_widget() {
+function init_staxo_widget() { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
 	global $strw;
 	register_widget( $strw );
 }
@@ -128,8 +127,7 @@ function init_staxo_widget() {
  * @param string[] $widget_types  Widgets to hide.
  * @return string[]
  */
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
-function hide_staxonomy_widget( $widget_types ) {
+function hide_staxonomy_widget( $widget_types ) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
 	$widget_types[] = 'staxonomy';
 	return $widget_types;
 }
@@ -153,8 +151,7 @@ function staxo_widgets_block_init() {
  * @return void
  * @author Neil James
  */
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
-function alert_if_original_active() {
+function alert_if_original_active() { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
 	?>
 		<script type="text/javascript">
 				function alert_message() {

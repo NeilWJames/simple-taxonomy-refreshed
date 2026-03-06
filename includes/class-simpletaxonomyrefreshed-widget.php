@@ -5,6 +5,7 @@
  * @package simple-taxonomy-refreshed
  * @author Neil James/Amaury Balmer
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Silence is golden.' );
 }

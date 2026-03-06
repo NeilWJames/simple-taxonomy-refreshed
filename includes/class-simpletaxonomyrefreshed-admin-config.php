@@ -5,6 +5,7 @@
  * @package simple-taxonomy-refreshed
  * @author Neil James
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Silence is golden.' );
 }
