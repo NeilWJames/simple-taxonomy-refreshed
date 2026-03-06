@@ -5,6 +5,9 @@
  * @package simple-taxonomy-refreshed
  * @author Neil James
  */
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Silence is golden.' );
+}
 
 /**
  * Simple Taxonomy Admin Import class.
@@ -63,7 +66,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 			// check nonce for form submit.
 			check_admin_referer( self::IMPORT_SLUG );
 
-			// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 			$taxonomy = sanitize_text_field( wp_unslash( $_POST['taxonomy'] ) );
 			if ( ! taxonomy_exists( $taxonomy ) ) {
 				wp_die( esc_html__( 'You cannot import terms into a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
@@ -76,7 +79,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 
 			$prev_ids = array();
 			// standard sanitizing will remove the newline and tab characters - do it for each term.
-			// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 			$terms = explode( "\n", str_replace( array( "\r\n", "\n\r", "\r" ), "\n", $_POST['import_content'] ) );
 			// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
 			$hierarchy = ( isset( $_POST['hierarchy'] ) ? sanitize_text_field( wp_unslash( $_POST['hierarchy'] ) ) : 'no' );
@@ -250,7 +253,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 					<?php
 					// Output the tag with PHP to avoid these leading format tabs being output in the textarea.
 					echo '<textarea name="import_content" id="import_content" rows="20" style="width:100%" onkeydown="insertTab(this, event);">';
-					// phpcs:ignore  WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput
+					// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput
 					echo esc_html( stripslashes( wp_unslash( $_POST['import_content'] ) ) );
 					echo '</textarea>';
 					?>

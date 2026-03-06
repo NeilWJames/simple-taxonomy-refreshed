@@ -5,6 +5,9 @@
  * @package simple-taxonomy-refreshed
  * @author Neil James
  */
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Silence is golden.' );
+}
 
 /**
  * Simple Taxonomy Admin Rename class.

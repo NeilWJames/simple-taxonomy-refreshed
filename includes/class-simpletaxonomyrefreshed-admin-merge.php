@@ -5,6 +5,9 @@
  * @package simple-taxonomy-refreshed
  * @author Neil James
  */
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Silence is golden.' );
+}
 
 /**
  * Simple Taxonomy Admin Term Merge class.
@@ -60,13 +63,13 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 	 * @return void
 	 */
 	public static function staxo_merge() {
-		// phpcs:ignore  WordPress.Security.NonceVerification
+		// phpcs:ignore WordPress.Security.NonceVerification
 		if ( isset( $_POST['action'] ) && self::MERGE_SLUG === $_POST['action'] ) {
 			check_admin_referer( self::MERGE_SLUG );
 
 			// Taxonomy chosen - output the terms as a radio group.
 			if ( isset( $_POST['phase'] ) && 'one' === $_POST['phase'] ) {
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				$taxonomy = wp_unslash( $_POST['taxonomy'] );
 
 				// Selected taxonomy.
@@ -121,13 +124,13 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 
 			// Taxonomy chosen; Destination chosen - output the terms as checkboxes. Allow multiple.
 			if ( isset( $_POST['phase'] ) && 'two' === $_POST['phase'] ) {
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				$taxonomy = wp_unslash( $_POST['taxonomy'] );
 
 				// Selected taxonomy.
 				$tax_obj = get_taxonomy( $taxonomy );
 
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				$destination = (int) wp_unslash( $_POST['term'] );
 
 				ob_start();
@@ -156,18 +159,18 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 
 			// All input selected - Confirm.
 			if ( isset( $_POST['phase'] ) && 'three' === $_POST['phase'] ) {
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				$taxonomy = wp_unslash( $_POST['taxonomy'] );
 
 				// Selected taxonomy.
 				$tax_obj = get_taxonomy( $taxonomy );
 
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				$destination = wp_unslash( $_POST['destination'] );
 				$dest_obj    = get_term( $destination );
 
 				if ( isset( $_POST['term'] ) ) {
-					// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 					$terms = wp_unslash( $_POST['term'] );
 					if ( is_array( $terms ) ) {
 						$sources = array();
@@ -204,20 +207,19 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 
 			// All input selected - go for it.
 			if ( isset( $_POST['phase'] ) && 'four' === $_POST['phase'] ) {
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				$taxonomy = wp_unslash( $_POST['taxonomy'] );
 
 				// Selected taxonomy.
 				$tax_obj = get_taxonomy( $taxonomy );
 
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				$destination = wp_unslash( $_POST['destination'] );
 				$dest_obj    = get_term( $destination );
 
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				$sources = array( wp_unslash( $_POST['sources'] ) );
-				// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 				$stt_ids = array( wp_unslash( $_POST['stt_ids'] ) );
 
 				ob_start();

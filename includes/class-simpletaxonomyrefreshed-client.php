@@ -5,6 +5,9 @@
  * @package simple-taxonomy-refreshed
  * @author Neil James
  */
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Silence is golden.' );
+}
 
 /**
  * Simple Taxonomy Client class.
@@ -85,12 +88,14 @@ class SimpleTaxonomyRefreshed_Client {
 		$cntl_post_types = self::refresh_term_cntl_cache( false );
 		// if terms control wanted, invoke the code.
 		if ( isset( $cntl_post_types ) && ! empty( $cntl_post_types ) ) {
+			// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 			global $stra;
 			if ( ! $stra ) {
 				// we are in the includes directory.
 				require_once __DIR__ . '/class-simpletaxonomyrefreshed-admin.php';
 				$stra = SimpleTaxonomyRefreshed_Admin::get_instance();
 			}
+			// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 
 			// register rest filters for any post types.
 			foreach ( $cntl_post_types as $post_type => $tax ) {

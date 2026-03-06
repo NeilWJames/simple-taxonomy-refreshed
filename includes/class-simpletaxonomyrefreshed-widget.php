@@ -5,6 +5,9 @@
  * @package simple-taxonomy-refreshed
  * @author Neil James/Amaury Balmer
  */
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Silence is golden.' );
+}
 
 /**
  * Class to provide a widget for custom taxonomy (tag cloud or list)
@@ -45,6 +48,16 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	 * @return void
 	 */
 	public function __construct() {
+		// Do translation stuff in str_widgets_init.
+		null;
+	}
+
+	/**
+	 * Constructor
+	 *
+	 * @return void
+	 */
+	public function str_widgets_init() {
 		parent::__construct(
 			'staxonomy',
 			__( 'Simple Taxonomy Widget', 'simple-taxonomy-refreshed' ),
@@ -116,10 +129,10 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		// buffer output to return rather than echo directly.
 		ob_start();
 
-		// phpcs:ignore  WordPress.Security.EscapeOutput
+		// phpcs:ignore WordPress.Security.EscapeOutput
 		echo $before_widget;
 		if ( $title ) {
-			// phpcs:ignore  WordPress.Security.EscapeOutput
+			// phpcs:ignore WordPress.Security.EscapeOutput
 			echo $before_title . esc_html( $title ) . $after_title;
 		}
 
@@ -204,7 +217,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			}
 		}
 
-		// phpcs:ignore  WordPress.Security.EscapeOutput
+		// phpcs:ignore WordPress.Security.EscapeOutput
 		echo $after_widget;
 
 		// return buffer contents and remove it.

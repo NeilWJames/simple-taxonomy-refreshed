@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/NeilWJames/simple-taxonomy-refreshed
  * Description:       WordPress provides simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code
  *                    Converted, Standardised and Extended from Simple Taxonomy by Amaury Balmer
- * Version:           3.3.0
+ * Version:           3.3.1
  * Requires at least: 4.9
  * Requires PHP:      7.4
  * Author:            Neil James
@@ -14,9 +14,12 @@
  *
  * @package           simple-taxonomy-refreshed
  */
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Silence is golden.' );
+}
 
 /*
-Copyright This Version 2019-24 Neil James (neil@familyjames.com)
+Copyright This Version 2019-26 Neil James (neil@familyjames.com)
 Copyright Original Version 2010-2013 Amaury Balmer (amaury@beapi.fr)
 
 This program is free software; you can redistribute it and/or modify
@@ -43,8 +46,10 @@ add_action( 'plugins_loaded', 'init_staxo_refreshed' );
  * @return void
  * @author Neil James from Amaury Balmer
  */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
 function init_staxo_refreshed() {
 	// Detect if Simple Taxonomy is active. If found then bail with message.
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 	if ( in_array( 'simple-taxonomy/simple-taxonomy.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ), true ) ) {
 		// Plugin is activated.
 		alert_if_original_active();
@@ -58,14 +63,19 @@ function init_staxo_refreshed() {
 	// Call client classes.
 	require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-client.php';
 	require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-widget.php';
+	// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound 
 	global $strw;
 	if ( ! $strw ) {
 		$strw = new SimpleTaxonomyRefreshed_Widget();
+		add_action( 'widgets_init', array( $strw, 'str_widgets_init' ) );
 	}
+	// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound 
 
 	// Client.
+	// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound 
 	global $strc, $stra;
 	$strc = new SimpleTaxonomyRefreshed_Client();
+	// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound 
 
 	// Admin (Load when needed).
 	if ( is_admin() ) {
@@ -79,6 +89,7 @@ function init_staxo_refreshed() {
 		require_once __DIR__ . '/includes/class-simpletaxonomyrefreshed-admin-config.php';
 
 		if ( ! $stra ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound 
 			$stra = SimpleTaxonomyRefreshed_Admin::get_instance();
 		}
 		$staxo_c = SimpleTaxonomyRefreshed_Admin_Conversion::get_instance();
@@ -105,6 +116,7 @@ function init_staxo_refreshed() {
  * @return void
  * @author Neil James
  */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
 function init_staxo_widget() {
 	global $strw;
 	register_widget( $strw );
@@ -116,6 +128,7 @@ function init_staxo_widget() {
  * @param string[] $widget_types  Widgets to hide.
  * @return string[]
  */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
 function hide_staxonomy_widget( $widget_types ) {
 	$widget_types[] = 'staxonomy';
 	return $widget_types;
@@ -140,6 +153,7 @@ function staxo_widgets_block_init() {
  * @return void
  * @author Neil James
  */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound 
 function alert_if_original_active() {
 	?>
 		<script type="text/javascript">

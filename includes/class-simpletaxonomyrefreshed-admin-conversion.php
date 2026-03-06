@@ -5,6 +5,9 @@
  * @package simple-taxonomy-refreshed
  * @author Neil James
  */
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Silence is golden.' );
+}
 
 /**
  * Simple Taxonomy Admin Conversion class.
@@ -64,7 +67,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 		if ( isset( $_POST['action'] ) && self::CONVERT_SLUG === $_POST['action'] ) {
 			check_admin_referer( self::CONVERT_SLUG );
 
-			// phpcs:ignore  WordPress.Security.ValidatedSanitizedInput
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 			$names = wp_unslash( $_POST['name'] );
 
 			// Find how many elements.

@@ -5,6 +5,9 @@
  * @package simple-taxonomy-refreshed
  * @author Neil James
  */
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Silence is golden.' );
+}
 
 /**
  * Simple Taxonomy Admin class.
@@ -235,7 +238,14 @@ class SimpleTaxonomyRefreshed_Admin {
 		self::check_delete_taxonomy();
 		self::check_export_taxonomy();
 
-		register_setting( 'simple-taxonomy-refreshed', 'settings_updated' );
+		register_setting(
+			'simple-taxonomy-refreshed',
+			'settings_updated',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'wp_kses_post',
+			),
+		);
 
 		global $strc;
 		$cntl_post_types = $strc::refresh_term_cntl_cache( false );
@@ -1074,7 +1084,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											/>
 											<span class="description">
 											<?php
-											// phpcs:ignore  WordPress.Security.EscapeOutput
+											// phpcs:ignore WordPress.Security.EscapeOutput
 											_e( '<strong>Name</strong> is used on DB and to register taxonomy. (Lowercase alphanumeric and _ characters only)', 'simple-taxonomy-refreshed' );
 											?>
 											</span>
@@ -2260,7 +2270,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			header( 'Content-Description: File Transfer' );
 			flush(); // this doesn't really matter.
 
-			// phpcs:ignore  WordPress.Security.EscapeOutput
+			// phpcs:ignore WordPress.Security.EscapeOutput
 			die( $output . "\n" );
 		}
 
