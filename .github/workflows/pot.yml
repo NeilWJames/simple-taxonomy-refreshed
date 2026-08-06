@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
     branches: [master]
 
-
 jobs:
   generate-pot:
     runs-on: ubuntu-slim
@@ -23,3 +22,5 @@ jobs:
         with:
             commit-message: "Update POT file"
             title: "Update POT file"
+            branch: automated/generate-pot
+            delete-branch: true
