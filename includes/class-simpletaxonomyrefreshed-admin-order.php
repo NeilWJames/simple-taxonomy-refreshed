@@ -233,7 +233,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 	 * @since 2.0.0
 	 *
 	 * @param boolean $refresh Whether to refresh the cache.
-	 * @return Array
+	 * @return array
 	 */
 	private static function ordering_cache( $refresh = false ) {
 		$orderings = ( $refresh ? false : wp_cache_get( 'staxo_orderings' ) );

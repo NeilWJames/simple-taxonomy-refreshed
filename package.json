@@ -1,0 +1,28 @@
+{
+  "name": "simple-taxonomy-refreshed",
+  "version": "1.0.0",
+  "description": "Taxonomy management for WordPress",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build:blocks",
+    "build:blocks": "wp-scripts build --webpack-src-dir=src/blocks --output-path=build/blocks",
+    "start": "wp-scripts start --webpack-src-dir=src/blocks --output-path=build/blocks",
+    "wp-env": "wp-env"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NeilWJames/simple-taxonomy-refreshed.git"
+  },
+  "keywords": [
+    "wordpress",
+    "taxonomy"
+  ],
+  "author": "Neil W. James",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "@wordpress/env": "^11.12.0",
+    "@wordpress/scripts": "^34.0.0"
+  }
+}

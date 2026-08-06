@@ -170,12 +170,12 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				$destination = wp_unslash( $_POST['destination'] );
 				$dest_obj    = get_term( $destination );
 
+				$sources = array();
+				$tt_ids  = array();
 				if ( isset( $_POST['term'] ) ) {
 					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 					$terms = wp_unslash( $_POST['term'] );
 					if ( is_array( $terms ) ) {
-						$sources = array();
-						$tt_ids  = array();
 						foreach ( $terms as $var => $val ) {
 							$sources[ $var ] = $val;
 							$tt_ids[ $var ]  = get_term( $sources[ $var ] )->term_taxonomy_id;

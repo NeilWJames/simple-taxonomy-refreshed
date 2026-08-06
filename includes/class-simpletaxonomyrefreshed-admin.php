@@ -72,7 +72,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			// phpcs:disable WordPress.WP.EnqueuedResourceParameters.MissingVersion
 			wp_enqueue_script(
 				'staxo_placeholder',
-				plugins_url( '/js/placeholder.js', __DIR__ ),
+				plugins_url( '/build/placeholder.js', __DIR__ ),
 				array( 'wp-data' ),
 				null,
 				array( 'strategy' => 'defer' ),
@@ -104,6 +104,20 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Decide whether to load from /src and not /build.
+	 *
+	 * @since 3.4.0
+	 *
+	 * @return bool
+	 */
+	public static function load_from_src() {
+		// is the plugin source available. Normally it is not, but can be copied from GitHub.
+		$dir = dirname( __DIR__ ) . '/src';
+
+		return WP_DEBUG && is_dir( $dir );
+	}
+
+	/**
 	 * Call to enqueue the admin js/css.
 	 *
 	 * @since 2.3.0
@@ -112,8 +126,8 @@ class SimpleTaxonomyRefreshed_Admin {
 	public function enqueue_admin_libs() {
 		// enqueue on staxo-settings page only.
 		$dir      = dirname( __DIR__ );
-		$suffix   = ( WP_DEBUG ) ? '.dev' : '';
-		$index_js = 'js/staxo-admin' . $suffix . '.js';
+		$source   = ( self::load_from_src() ) ? 'src' : 'build';
+		$index_js = $source . '/staxo-admin.js';
 		wp_enqueue_script(
 			'staxo_admin',
 			plugins_url( $index_js, __DIR__ ),
@@ -122,7 +136,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			array( 'strategy' => 'defer' ),
 		);
 
-		$index_css = 'css/staxo-admin-style' . $suffix . '.css';
+		$index_css = $source . '/staxo-admin.css';
 		wp_enqueue_style(
 			'staxo-admin-style',
 			plugins_url( $index_css, __DIR__ ),
@@ -151,8 +165,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		self::$enqueue_client = true;
 		// enqueue on client pages only.
 		$dir      = dirname( __DIR__ );
-		$suffix   = ( WP_DEBUG ) ? '.dev' : '';
-		$index_js = 'js/staxo-client' . $suffix . '.js';
+		$source   = ( self::load_from_src() ) ? 'src' : 'build';
+		$index_js = $source . '/staxo-client.js';
 		wp_enqueue_script(
 			'staxo_client',
 			plugins_url( $index_js, __DIR__ ),
@@ -610,6 +624,10 @@ class SimpleTaxonomyRefreshed_Admin {
 					// translators: %1$s is the taxonomy slug name.
 					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', sprintf( __( 'Taxonomy "%1$s" deleted successfully !', 'simple-taxonomy-refreshed' ), $staxo ), 'updated' );
 					break;
+				case 'ext_deleted':
+					// translators: %1$s is the taxonomy slug name.
+					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', sprintf( __( 'Taxonomy "%1$s" extra functions deleted successfully !', 'simple-taxonomy-refreshed' ), $staxo ), 'updated' );
+					break;
 				case 'added':
 					// translators: %1$s is the taxonomy slug name.
 					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', sprintf( __( 'Taxonomy "%1$s" added successfully !', 'simple-taxonomy-refreshed' ), $staxo ), 'updated' );
@@ -842,6 +860,8 @@ class SimpleTaxonomyRefreshed_Admin {
 								// phpcs:disable  WordPress.Security.EscapeOutput
 								// translators: %s is the taxonomy name.
 								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), $lname ) );
+								// translators: %s is the taxonomy name.
+								$del_msg = esc_js( sprintf( __( "You are about to delete the extra functions of taxonomy '%s'\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-refreshed' ), $lname ) );
 								// phpcs:enable  WordPress.Security.EscapeOutput
 								?>
 								<tr id="external-<?php echo esc_attr( $i ); ?>" class="<?php esc_attr( $class ); ?>">
@@ -1316,8 +1336,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											$taxonomy,
 											'parent_field_description',
 											esc_html__( 'Parent Term Field Description', 'simple-taxonomy-refreshed' ),
-											esc_html__( 'These Description texts will appear in the term item entry screen.', 'simple-taxonomy-refreshed' ),
-											''
+											esc_html__( 'These Description texts will appear in the term item entry screen.', 'simple-taxonomy-refreshed' )
 										);
 										self::option_label(
 											$taxonomy,
@@ -1731,12 +1750,15 @@ class SimpleTaxonomyRefreshed_Admin {
 											esc_html__( 'Hierarchical ?', 'simple-taxonomy-refreshed' ),
 											esc_html__( 'Hierarchical dropdown. Only relevant for hierarchical taxonomies.', 'simple-taxonomy-refreshed' )
 										);
-										self::option_text(
-											$taxonomy,
-											'st_adm_depth',
-											esc_html__( 'Hierarchy Depth', 'simple-taxonomy-refreshed' ),
-											esc_html__( 'Hierarchical dropdown depth. Only relevant for hierarchical taxonomies.', 'simple-taxonomy-refreshed' )
-										);
+									?>
+									<tr>
+										<th scope="row"><label for="st_adm_depth"><?php esc_html_e( 'Hierarchy Depth', 'simple-taxonomy-refreshed' ); ?></label></th>
+										<td>
+											<input name="st_adm_depth" type="number" id="st_adm_depth" value="<?php echo esc_attr( $taxonomy['st_adm_depth'] ); ?>" class="regular-number" min="0" />
+											<?php echo '<br /><span class="description">' . esc_html__( 'Hierarchical dropdown depth. Only relevant for hierarchical taxonomies.', 'simple-taxonomy-refreshed' ) . '</span>'; ?>
+										</td>
+									</tr>
+									<?php
 										self::option_yes_no(
 											$taxonomy,
 											'st_adm_count',
@@ -1825,6 +1847,8 @@ class SimpleTaxonomyRefreshed_Admin {
 							<div class="inside">
 								<table class="form-table" style="clear:none;">
 									<p id="cc_descr"><?php esc_html_e( 'Term controls are to be applied on posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
+									<p><?php esc_html_e( 'Note that the terms need to be displayed on the Admin screen to use this effectively. Current value: ', 'simple-taxonomy-refreshed' ); ?>
+									<span id="show_ui_2"><?php esc_attr( self::get_true_false( (int) $taxonomy['show_ui'] ) ); ?></span></p>
 									<tr>
 										<th scope="row"><label id="cc_label"><?php esc_html_e( 'Post status', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td><fieldset><div id="cc_type" role="radiogroup" aria-labelledby="cc_label" aria-describedby="cc_descr">
@@ -1946,25 +1970,10 @@ class SimpleTaxonomyRefreshed_Admin {
 		</form>
 		<script type="text/javascript">
 			document.addEventListener('DOMContentLoaded', function(evt) {
-				str_admin_init();
+				str_admin_init(evt);
 				hideSel(evt, <?php echo esc_attr( $taxonomy['st_cb_type'] ); ?>)
 				ccSel(evt, <?php echo esc_attr( $taxonomy['st_cc_type'] ); ?>)
 				cchSel(evt, <?php echo esc_attr( $taxonomy['st_cc_hard'] ); ?>)
-				switchMinMax(evt);
-				document.getElementById("st_cc_umin").addEventListener('change', event => {
-					switchMinMax(evt);
-				});
-				document.getElementById("st_cc_umax").addEventListener('change', event => {
-					switchMinMax(evt);
-				});
-				document.getElementById("st_update_count_callback").addEventListener('change', event => {
-					hideCnt(evt);
-				});
-				document.getElementById("st_update_count_callback").addEventListener("keydown",function(e){
-					if(e.keyCode == 32){
-						e.preventDefault();
-					}
-				});
 			});
 		</script>
 		<?php
@@ -2492,7 +2501,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string  $taxonomy        taxonomy name.
+	 * @param array   $taxonomy        taxonomy name.
 	 * @param boolean $flush_relations whether to delete the object relations/terms.
 	 * @return void
 	 */
@@ -2531,7 +2540,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			}
 		} elseif ( isset( $current_options['externals'][ $staxo ] ) ) {
 			// external taxonomy.
-			$opt = 'deleted';
+			$opt = 'ext_deleted';
 			unset( $current_options['externals'][ $staxo ] ); // Delete from options.
 		} else {
 			// Taxo not exist ?
@@ -2900,10 +2909,11 @@ class SimpleTaxonomyRefreshed_Admin {
 	 */
 	private static function script_radio_edit( $tax_name, $tax_label, $pstat, $min_bound, $hier, $nt_label ) {
 		global $post;
-		if ( is_null( $post ) || ! isset( $post->post_status ) ) {
-			return;
+		if ( ! is_null( $post ) && isset( $post->post_status ) ) {
+			$stat = $post->post_status;
+		} else {
+			$stat = '';
 		}
-		$stat = $post->post_status;
 		// for radio, force min to be 0 or 1.
 		$min_r = ( is_null( $min_bound ) ? 0 : $min_bound );
 		$text  = self::term_limits_push( $tax_name, $tax_label, $pstat, $min_r, 1, $hier, $nt_label, $stat );
@@ -3013,8 +3023,8 @@ class SimpleTaxonomyRefreshed_Admin {
 			$more  = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
 			$more .= ' ' . $lock;
 		}
-		$no_terms = ( isset( $nt_label ) ? $nt_label : __( 'No term', 'simple-taxonomy-refreshed' ) );
-		return 'tax_cntl.push( [ "' . $tax_name . '", ' . $pstat . ', ' . $mib . ', "' . $less . '", ' . $mab . ', "' . $more . '", ' . (int) $hier . ', "' . $nt_label . '", "' . $status . '" ] );' . "\n";
+		$no_term = ( isset( $nt_label ) ? $nt_label : __( 'No term', 'simple-taxonomy-refreshed' ) );
+		return 'tax_cntl.push( [ "' . $tax_name . '", ' . $pstat . ', ' . $mib . ', "' . $less . '", ' . $mab . ', "' . $more . '", ' . (int) $hier . ', "' . $no_term . '", "' . $status . '" ] );' . "\n";
 	}
 
 	/**

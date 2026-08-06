@@ -37,9 +37,9 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	);
 
 	/**
-	 * Display the widget�s instance in the REST API )Legacy method).
+	 * Display the widget's instance in the REST API )Legacy method).
 	 *
-	 * @var boolean $show_instance_in_rest Let RESR method work.
+	 * @var boolean $show_instance_in_rest Let REST method work.
 	 */
 	public $show_instance_in_rest = true;
 
@@ -167,12 +167,12 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			);
 			echo '<div class="staxo-terms-cloud" style="text-align:' . esc_attr( $instance['alignment'] ) . ';">' . "\n";
 			// add in filter to make sure only items with specific counts returned.
-			add_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 3, 10 );
+			add_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 10, 3 );
 			// add in filter to keep font size at 100% if count(min) = count(max).
-			add_filter( 'wp_generate_tag_cloud', array( __CLASS__, 'filter_result' ), 3, 10 );
+			add_filter( 'wp_generate_tag_cloud', array( __CLASS__, 'filter_result' ), 10, 3 );
 			wp_tag_cloud( $cloud_args );
-			remove_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 3, 10 );
-			remove_filter( 'wp_generate_tag_cloud', array( __CLASS__, 'filter_result' ), 3, 10 );
+			remove_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 10 );
+			remove_filter( 'wp_generate_tag_cloud', array( __CLASS__, 'filter_result' ), 10 );
 			echo '</div>' . "\n";
 		} else {
 			/*
@@ -196,9 +196,9 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 				)
 			);
 			// add in filter to make sure only items with specific counts returned.
-			add_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 3, 10 );
+			add_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 10, 3 );
 			$terms = get_terms( $list_args );
-			remove_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 3, 10 );
+			remove_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 10 );
 			if ( false === $terms ) {
 				echo '<p>' . esc_html__( 'No terms available for this taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>';
 			} else {
@@ -266,8 +266,8 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	/**
 	 * Callback to display widget contents in classic widget.
 	 *
-	 * @param Array  $args the widget arguments.
-	 * @param Object $instance the WP Widget instance.
+	 * @param array  $args the widget arguments.
+	 * @param object $instance the WP Widget instance.
 	 */
 	public function widget( $args, $instance ) {
 
@@ -280,8 +280,8 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	/**
 	 * Method for save widgets options.
 	 *
-	 * @param string $new_instance new settings for this widget.
-	 * @param string $old_instance old settings for this widget.
+	 * @param string[] $new_instance new settings for this widget.
+	 * @param string[] $old_instance old settings for this widget.
 	 * @return array
 	 */
 	public function update( $new_instance, $old_instance ) {
@@ -415,7 +415,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	/**
 	 * Get taxonomy names for selection (use cache).
 	 *
-	 * @return Array Taxonomy names for documents
+	 * @return array Taxonomy names for documents
 	 * @since 2.1.0
 	 */
 	public function get_taxonomies() {
@@ -448,129 +448,44 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			return;
 		}
 
-		$dir      = dirname( __DIR__ );
-		$suffix   = ( WP_DEBUG ) ? '.dev' : '';
-		$index_js = 'js/staxo-widget' . $suffix . '.js';
-		wp_register_script(
-			'staxo-widget-editor',
-			plugins_url( $index_js, __DIR__ ),
-			array(
-				'wp-blocks',
-				'wp-element',
-				'wp-block-editor',
-				'wp-components',
-				'wp-server-side-render',
-				'wp-i18n',
-			),
-			filemtime( "$dir/$index_js" ),
-			array(
-				'in_footer' => true,
-				'strategy'  => 'defer',
-			)
+		$dir       = dirname( __DIR__ );
+		$build_dir = $dir . '/build/blocks/staxo-widget';
+
+		// integrate the render callback into the parameters.
+		add_filter( 'block_type_metadata_settings', array( $this, 'update_settings' ), 10, 2 );
+
+		register_block_type_from_metadata( $build_dir );
+
+		// Attach the taxonomy data to the editor script.
+		// WordPress auto-generates the script handle from the block name by converting slashes to hyphens.
+		// Block name: simple-taxonomy-refreshed/cloud-widget → handle: simple-taxonomy-refreshed-cloud-widget-script .
+		$script_handle = 'simple-taxonomy-refreshed-cloud-widget-editor-script';
+		$taxonomies    = $this->get_taxonomies();
+
+		wp_add_inline_script(
+			$script_handle,
+			'const staxo_data = ' . wp_json_encode( $taxonomies ),
+			'before'
 		);
+	}
 
-		// Add supplementary script for additional information.
-		// Ensure taxonomies are set.
-		$taxonomies = $this->get_taxonomies();
-		wp_add_inline_script( 'staxo-widget-editor', 'const staxo_data = ' . wp_json_encode( $taxonomies ), 'before' );
-
-		$index_css = 'css/staxo-widget-editor-style' . $suffix . '.css';
-		wp_register_style(
-			'staxo-widget-editor-style',
-			plugins_url( $index_css, __DIR__ ),
-			array( 'wp-edit-blocks' ),
-			filemtime( "$dir/$index_css" )
-		);
-
-		register_block_type(
-			'simple-taxonomy-refreshed/cloud-widget',
-			array(
-				'description'     => __( 'This block provides a tag cloud widget for the selected taxonomy.', 'simple-taxonomy-refreshed' ),
-				'editor_script'   => 'staxo-widget-editor',
-				'editor_style'    => 'staxo-widget-editor-style',
-				'render_callback' => array( $this, 'staxo_widget_display' ),
-				'attributes'      => array(
-					'title'           => array(
-						'type'    => 'string',
-						'default' => 'Advanced Taxonomy Cloud',
-					),
-					'taxonomy'        => array(
-						'type'    => 'string',
-						'default' => 'post_tag',
-					),
-					'disptype'        => array(
-						'type'    => 'string',
-						'default' => 'cloud',
-					),
-					'small'           => array(
-						'type'    => 'number',
-						'default' => 50,
-					),
-					'big'             => array(
-						'type'    => 'number',
-						'default' => 150,
-					),
-					'alignment'       => array(
-						'type'    => 'string',
-						'default' => 'justify',
-					),
-					'orderby'         => array(
-						'type'    => 'string',
-						'default' => 'name',
-					),
-					'ordering'        => array(
-						'type'    => 'string',
-						'default' => 'ASC',
-					),
-					'showcount'       => array(
-						'type'    => 'boolean',
-						'default' => false,
-					),
-					'numdisp'         => array(
-						'type'    => 'number',
-						'default' => 45,
-					),
-					'minposts'        => array(
-						'type'    => 'number',
-						'default' => 0,
-					),
-					// phpcs:disable
-					// 'excludes'      => array(
-					// 'type'  => 'array',
-					// 'items' => array(
-					// 'type' => 'number',
-					// ),
-					// ),
-					// phpcs:enable
-					'align'           => array(
-						'type' => 'string',
-					),
-					'backgroundColor' => array(
-						'type' => 'string',
-					),
-					'linkColor'       => array(
-						'type' => 'string',
-					),
-					'textColor'       => array(
-						'type' => 'string',
-					),
-					'gradient'        => array(
-						'type' => 'string',
-					),
-					'fontSize'        => array(
-						'type' => 'string',
-					),
-					'style'           => array(
-						'type' => 'object',
-					),
-				),
-			)
-		);
-
-		// set translations.
-		if ( function_exists( 'wp_set_script_translations' ) ) {
-			wp_set_script_translations( 'str-widget-editor', 'simple_taxonomy-refreshed' );
+	/**
+	 * Function for call filter taxonomy.
+	 *
+	 * @param array $settings Block register settings.
+	 * @param array $metadata Block metadata.
+	 * @return array
+	 */
+	public function update_settings( $settings, $metadata ) {
+		// Only add render callback for this specific block.
+		if ( 'simple-taxonomy-refreshed/cloud-widget' === $metadata['name'] ) {
+			// Only add render callback for this specific block.
+			$settings['render_callback'] = array( $this, 'staxo_widget_display' );
+			// Translate title and description from block.json.
+			$settings['title']       = __( 'Taxonomy Cloud', 'simple-taxonomy-refreshed' );
+			$settings['description'] = __( 'Display a Taxonomy Cloud.', 'simple-taxonomy-refreshed' );
 		}
+		return $settings;
 	}
 
 	/**

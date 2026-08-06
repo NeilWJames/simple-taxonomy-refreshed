@@ -2,9 +2,9 @@
 
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category
-Tested up to: 6.9
-Requires PHP: 7.4
-Stable tag: 3.3.1
+Tested up to: 7.0
+Requires PHP: 8.2
+Stable tag: 3.4.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -14,7 +14,7 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 Supports adding one or more taxonomies (either hierarchical or tag) to any objects registered on your installation.
 
-This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) (now closed) and developed on WordPress 5.1-6.9 with PHP 7.2-8.4.
+This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) (now closed) and developed on WordPress 5.1-7.0 with PHP 7.2-8.4.
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 
@@ -59,6 +59,14 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 3.4.0  (09/08/2026)
+	* NEW: Blocks use API V3 and block.json.
+	* FIX: Correct type of Hierarchy Depth.
+	* FIX: Permit Term Controls to work for sub-set of possible post types.
+	* DEV: Tested against WP 7.0.
+	* DEV: Reviewed for WP Coding Standards 3.4.
+	* DEV: Reviewed for Plugin Check 2.0.
 
 * Version 3.3.1  (06/03/2026)
 	* FIX: Translations not always being called on init.

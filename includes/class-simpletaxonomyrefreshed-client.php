@@ -31,6 +31,12 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static $wp_decoded_labels = array();
 
+	/**
+	 * Has the js taxonomy data been downloaded.
+	 *
+	 * @var bool
+	 */
+	private static $js_downloaded = false;
 
 	/**
 	 * Current WP version.
@@ -56,12 +62,12 @@ class SimpleTaxonomyRefreshed_Client {
 		add_action( 'rest_api_init', array( __CLASS__, 'init' ), 1 );
 		add_action( 'init', array( __CLASS__, 'init' ), 1 );
 		add_action( 'init', array( __CLASS__, 'init_2' ), 99999 );
-		add_action( 'init', array( __CLASS__, 'staxo_terms_block' ), 99999 );
+		add_action( 'init', array( $this, 'staxo_terms_block' ), 99999 );
 		add_action( 'admin_init', array( __CLASS__, 'admin_init' ) );
 
-		add_filter( 'the_excerpt', array( __CLASS__, 'the_excerpt' ), 10, 1 );
-		add_filter( 'the_content', array( __CLASS__, 'the_content' ), 10, 1 );
-		add_shortcode( 'staxo_post_terms', array( __CLASS__, 'the_terms' ), 10, 1 );
+		add_filter( 'the_excerpt', array( __CLASS__, 'the_excerpt' ) );
+		add_filter( 'the_content', array( __CLASS__, 'the_content' ) );
+		add_shortcode( 'staxo_post_terms', array( __CLASS__, 'the_terms' ) );
 		add_filter( 'the_category_rss', array( __CLASS__, 'the_category_feed' ), 10, 2 );
 
 		add_action( 'template_redirect', array( __CLASS__, 'template_redirect' ) );
@@ -458,17 +464,20 @@ class SimpleTaxonomyRefreshed_Client {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $content content of the content or excerpt.
-	 * @param string $type    content, excerpt or arbitrary selector.
-	 * @param string $tax     taxonomy slug for arbitrary call (optional).
+	 * @param string      $content content of the content or excerpt.
+	 * @param string      $type    content, excerpt or arbitrary selector.
+	 * @param string      $tax     taxonomy slug for arbitrary call (optional).
+	 * @param string|null $post_type post type.
 	 * @return string
 	 */
-	public static function taxonomy_filter( $content, $type, $tax = '' ) {
+	public static function taxonomy_filter( $content, $type, $tax = '', $post_type = null ) {
 		global $post;
 
-		if ( ! isset( $post->post_type ) ) {
+		if ( is_null( $post_type ) && ! isset( $post->post_type ) ) {
 			return $content;
 		}
+
+		$p_type = ( is_null( $post_type ) ? $post->post_type : $post_type );
 
 		$options = get_option( OPTION_STAXO );
 		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
@@ -485,7 +494,7 @@ class SimpleTaxonomyRefreshed_Client {
 				continue;
 			}
 			// Does the post_type uses this taxonomy.
-			if ( ( 'arbitrary' === $type || isset( $taxonomy['auto'] ) ) && ( ! empty( $taxonomy['objects'] ) ) && in_array( $post->post_type, $taxonomy['objects'], true ) ) {
+			if ( ( 'arbitrary' === $type || isset( $taxonomy['auto'] ) ) && ( ! empty( $taxonomy['objects'] ) ) && in_array( $p_type, $taxonomy['objects'], true ) ) {
 				if ( 'both' === $taxonomy['auto'] || $type === $taxonomy['auto'] || 'arbitrary' === $type ) {
 					// Migration case - Not updated yet.
 					if ( ! array_key_exists( 'st_before', $taxonomy ) ) {
@@ -580,7 +589,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @param array $atts shortcode attributes (not currently used).
 	 * @return string
 	 */
-	public static function the_terms( $atts ) {
+	public static function the_terms( $atts = array() ) {
 		$tax = shortcode_atts(
 			array(
 				'tax' => '',
@@ -591,13 +600,32 @@ class SimpleTaxonomyRefreshed_Client {
 	}
 
 	/**
+	 * Meta function for call filter taxonomy from blocks.
+	 *
+	 * @since 3.4.0
+	 *
+	 * @param object $attributes attributes (not currently used).
+	 * @param string $content    block content.
+	 * @return string
+	 */
+	public static function block_terms( $attributes, $content ) {
+		$tax = shortcode_atts(
+			array(
+				'tax' => '',
+			),
+			$attributes
+		);
+		return self::taxonomy_filter( $content, 'arbitrary', $tax['tax'] );
+	}
+
+	/**
 	 * Get taxonomy names for selection (use cache).
 	 *
-	 * @return Array Taxonomy names for documents
+	 * @return array Taxonomy names for documents
 	 * @since 2.2.0
 	 */
 	public static function get_taxonomies() {
-		$taxonomies = wp_cache_get( 'staxo_own_taxos', '' );
+		$taxonomies = wp_cache_get( 'staxo_terms' );
 
 		if ( false === $taxonomies ) {
 			$taxonomies = array();
@@ -605,7 +633,7 @@ class SimpleTaxonomyRefreshed_Client {
 			$options = get_option( OPTION_STAXO );
 			if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
 				foreach ( (array) $options['taxonomies'] as $taxonomy ) {
-					if ( (bool) $taxonomy['public'] ) {
+					if ( (bool) $taxonomy['public'] && (bool) $taxonomy['show_in_rest'] ) {
 						$taxonomies[ $taxonomy['name'] ] = ( empty( $taxonomy['labels']['name'] ) ? $taxonomy['name'] : $taxonomy['labels']['name'] );
 					}
 				}
@@ -613,7 +641,7 @@ class SimpleTaxonomyRefreshed_Client {
 				asort( $taxonomies );
 			}
 
-			wp_cache_set( 'staxo_own_taxos', $taxonomies );
+			wp_cache_set( 'staxo_terms', $taxonomies );
 		}
 
 		return $taxonomies;
@@ -624,78 +652,49 @@ class SimpleTaxonomyRefreshed_Client {
 	 *
 	 * @since 2.2.0
 	 */
-	public static function staxo_terms_block() {
+	public function staxo_terms_block() {
 		if ( ! function_exists( 'register_block_type' ) ) {
 			// Gutenberg is not active, e.g. Old WP version installed.
 			return;
 		}
 
-		$dir      = dirname( __DIR__ );
-		$suffix   = ( WP_DEBUG ) ? '.dev' : '';
-		$index_js = 'js/staxo-terms' . $suffix . '.js';
-		wp_register_script(
-			'staxo-terms-editor',
-			plugins_url( $index_js, __DIR__ ),
-			array(
-				'wp-blocks',
-				'wp-element',
-				'wp-block-editor',
-				'wp-components',
-				'wp-server-side-render',
-				'wp-i18n',
-			),
-			filemtime( "$dir/$index_js" ),
-			array(
-				'in_footer' => true,
-				'strategy'  => 'defer',
-			)
+		$dir       = dirname( __DIR__ );
+		$build_dir = $dir . '/build/blocks/staxo-terms';
+
+		// integrate the render callback into the parameters.
+		add_filter( 'block_type_metadata_settings', array( $this, 'update_settings' ), 10, 2 );
+
+		register_block_type_from_metadata( $build_dir );
+
+		// Attach the taxonomy data to the editor script.
+		// WordPress auto-generates the script handle from the block name by converting slashes to hyphens.
+		// Block name: simple-taxonomy-refreshed/staxo-terms → handle: simple-taxonomy-refreshed-staxo-terms-script .
+		$script_handle = 'simple-taxonomy-refreshed-staxo-terms-editor-script';
+		$taxonomies    = self::get_taxonomies();
+
+		wp_add_inline_script(
+			$script_handle,
+			'const staxo_post = ' . wp_json_encode( $taxonomies ),
+			'before'
 		);
+	}
 
-		// Add supplementary script for additional information.
-		// Ensure taxonomies are set.
-
-		$taxonomies = self::get_taxonomies();
-		wp_add_inline_script( 'staxo-terms-editor', 'const staxo_own_data = ' . wp_json_encode( $taxonomies ), 'before' );
-
-		register_block_type(
-			'simple-taxonomy-refreshed/post-terms',
-			array(
-				'description'     => __( 'This block allows the terms associated with a given taxonomy to be displayed for a post.', 'simple-taxonomy-refreshed' ),
-				'editor_script'   => 'staxo-terms-editor',
-				'render_callback' => array( __CLASS__, 'the_terms' ),
-				'attributes'      => array(
-					'tax'             => array(
-						'type' => 'string',
-					),
-					'align'           => array(
-						'type' => 'string',
-					),
-					'backgroundColor' => array(
-						'type' => 'string',
-					),
-					'linkColor'       => array(
-						'type' => 'string',
-					),
-					'textColor'       => array(
-						'type' => 'string',
-					),
-					'gradient'        => array(
-						'type' => 'string',
-					),
-					'fontSize'        => array(
-						'type' => 'string',
-					),
-					'style'           => array(
-						'type' => 'object',
-					),
-				),
-			)
-		);
-
-		// set translations.
-		if ( function_exists( 'wp_set_script_translations' ) ) {
-			wp_set_script_translations( 'staxo-terms-editor', 'simple_taxonomy-refreshed' );
+	/**
+	 * Function for call filter taxonomy.
+	 *
+	 * @param array $settings Block register settings.
+	 * @param array $metadata Block metadata.
+	 * @return array
+	 */
+	public function update_settings( $settings, $metadata ) {
+		// Only add render callback for this specific block.
+		if ( 'simple-taxonomy-refreshed/staxo-terms' === $metadata['name'] ) {
+			$settings['render_callback'] = array( $this, 'block_terms' );
+			// Translate title and description from block.json.
+			$settings['title']       = __( 'Display Post Terms', 'simple-taxonomy-refreshed' );
+			$settings['description'] = __( 'Display the Post Terms for Added Taxonomies.', 'simple-taxonomy-refreshed' );
 		}
+		return $settings;
 	}
 
 	/**
@@ -847,7 +846,7 @@ class SimpleTaxonomyRefreshed_Client {
 					'statuses'  => array(),  // empty means pass though values.
 					'in_string' => '',
 				);
-				set_transient( 'staxo_sel_' . $taxonomy, $tax_details, '', ( WP_DEBUG ? 10 : HOUR_IN_SECONDS ) );
+				set_transient( 'staxo_sel_' . $taxonomy, $tax_details, ( WP_DEBUG ? 10 : HOUR_IN_SECONDS ) );
 
 				return $tax_details;
 			}
@@ -906,7 +905,7 @@ class SimpleTaxonomyRefreshed_Client {
 				'in_string' => $in_string,
 			);
 
-			set_transient( 'staxo_sel_' . $taxonomy, $tax_details, '', ( WP_DEBUG ? 10 : HOUR_IN_SECONDS ) );
+			set_transient( 'staxo_sel_' . $taxonomy, $tax_details, ( WP_DEBUG ? 10 : HOUR_IN_SECONDS ) );
 		}
 
 		return $tax_details;
@@ -917,8 +916,8 @@ class SimpleTaxonomyRefreshed_Client {
 	 * Allows taxonomy term counts to include user-specified post statuses.
 	 *
 	 * @since 1.1
-	 * @param Array  $terms    the terms to filter.
-	 * @param Object $taxonomy the taxonomy slug.
+	 * @param array  $terms    the terms to filter.
+	 * @param object $taxonomy the taxonomy slug.
 	 */
 	public static function term_count_cb_sel( $terms, $taxonomy ) {
 		add_filter( 'query', array( __CLASS__, 'term_count_query_filter_sel' ) );
@@ -1007,7 +1006,7 @@ class SimpleTaxonomyRefreshed_Client {
 							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) ? $taxonomy['st_cc_types'] : array() );
 							foreach ( $taxonomy['objects'] as $post_type ) {
 								// check the post type is in the list. (List not exists or is empty counts as in the list).
-								if ( empty( $cc_post_types ) || array_key_exists( $post_type, $cc_post_types ) ) {
+								if ( empty( $cc_post_types ) || in_array( $post_type, $cc_post_types, true ) ) {
 									$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
 										'st_cc_type'   => $taxonomy['st_cc_type'],
 										'st_cc_hard'   => $taxonomy['st_cc_hard'],
@@ -1042,7 +1041,7 @@ class SimpleTaxonomyRefreshed_Client {
 							$tax_obj = get_taxonomy( $taxonomy );
 							foreach ( $taxonomy['objects'] as $post_type ) {
 								// check the post type is in the list. (List not exists or is empty counts as in the list).
-								if ( empty( $cc_post_types ) || array_key_exists( $post_type, $cc_post_types ) ) {
+								if ( empty( $cc_post_types ) || in_array( $post_type, $cc_post_types, true ) ) {
 									$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
 										'st_cc_type'   => $taxonomy['st_cc_type'],
 										'st_cc_hard'   => $taxonomy['st_cc_hard'],

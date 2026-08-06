@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "name": "simple-taxonomy-refreshed/cloud-widget",
+  "apiVersion": 3,
+  "title": "Taxonomy Cloud",
+  "description": "Display a Taxonomy Cloud.",
+  "category": "widgets",
+  "icon": "admin-page",
+  "textdomain": "simple-taxonomy-refreshed",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Advanced Taxonomy Cloud"
+    },
+    "taxonomy": {
+      "type": "string",
+      "default": "post_tag"
+    },
+    "disptype": {
+      "type": "string",
+      "default": "cloud"
+    },
+    "small": {
+      "type": "number",
+      "default": 50
+    },
+    "big": {
+      "type": "number",
+      "default": 150
+    },
+    "alignment": {
+      "type": "string",
+      "default": "justify"
+    },
+    "orderby": {
+      "type": "string",
+      "default": "name"
+    },
+    "ordering": {
+      "type": "string",
+      "default": "ASC"
+    },
+    "showcount": {
+      "type": "boolean",
+      "default": false
+    },
+    "numdisp": {
+      "type": "number",
+      "default": 0
+    },
+    "minposts": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "align": true,
+    "color": {
+      "gradients": true,
+      "link": true
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true
+    },
+    "typography": {
+      "fontSize": true,
+      "lineHeight": true
+    }
+  }
+}

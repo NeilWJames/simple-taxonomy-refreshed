@@ -14,7 +14,7 @@ var direction = {
 	39: 1,
 };
 
-function str_admin_init() {
+function str_admin_init(evt) {
 	tablist  = document.querySelectorAll('[role="tablist"]');
 	vertical = 'getAttribute' in tablist && tablist.getAttribute('aria-orientation') == 'vertical';
 	panels   = document.querySelectorAll('[role="tabpanel"]');
@@ -30,6 +30,32 @@ function str_admin_init() {
 		tabs[i].addEventListener('keyup', keyupEventListener);
 		// Build an array with all tabs (<button>s) in it
 		tabs[i].index = i;
+	}
+
+	// Various linkages.
+	switchMinMax(evt);
+	document.getElementById("st_cc_umin").addEventListener('change', event => {
+		switchMinMax(evt);
+	});
+	document.getElementById("st_cc_umax").addEventListener('change', event => {
+		switchMinMax(evt);
+	});
+	document.getElementById("st_update_count_callback").addEventListener('change', event => {
+		hideCnt(evt);
+	});
+	document.getElementById("st_update_count_callback").addEventListener("keydown",function(e){
+		if(e.keyCode == 32){
+			e.preventDefault();
+		}
+	});
+
+	// Specific action to display value of one attribute on another.
+	const select = document.getElementById('show_ui');
+	if (select) {
+		select.addEventListener('change', function(event) {
+			const newText = event.target.options[event.target.selectedIndex].text;
+			document.getElementById('show_ui_2').textContent = newText;
+		});
 	}
 }
 

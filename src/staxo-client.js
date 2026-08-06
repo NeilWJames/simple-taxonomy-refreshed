@@ -25,10 +25,11 @@
 /**
  * Add No Term element.
  * 
- * @param HTML_Collection tax   The parent element of the taxonomy term list.
+ * @param HTML_Collection tax         The parent element of the taxonomy term list.
  * @param bool            terms_found Existing terms found ( so No Terms not checked).
+ * @param string          no_term_str No term label string.
  */
-function add_nt_element( tax, terms_found ) {
+function add_nt_element( tax, terms_found, no_term_str ) {
 	// check if already added.
 	if ( tax.classList.contains("NoTerm") ) {
 		return true;
@@ -54,7 +55,7 @@ function add_nt_element( tax, terms_found ) {
 	no_term_inp.value = -1;
 	let no_term_lbl = no_term.getElementsByTagName( "label" )[0];
 	let no_term_txt = no_term_lbl.lastChild.data.replace( /[\n\r\t]/g, "");
-	no_term_lbl.lastChild.data = no_term_lbl.lastChild.data.replace( no_term_txt, " No Term" );
+	no_term_lbl.lastChild.data = no_term_lbl.lastChild.data.replace( no_term_txt, no_term_str );
 	inp[0].parentNode.insertBefore( no_term, inp[0] );
 	// add class to denote treated.
 	tax.classList.add("NoTerm"); 
@@ -64,17 +65,19 @@ function add_nt_element( tax, terms_found ) {
 /**
  * Process No Term.
  * 
- * @param string tax_slug    The taxonomy slug for the taxonomy.
+ * @param string tax_id      The taxonomy element id for the taxonomy.
  * @param bool   terms_found Existing terms found ( so No Terms not checked).
+ * @param string tax_slug    The taxonomy slug for the taxonomy.
  */
-function process_no_term( tax_id, terms_found ) {
+function process_no_term( tax_id, terms_found, tax_slug ) {
 	// minimum is set to 0, add no term.
 	let tax = document.getElementById( tax_id );
 	if ( null === tax ) {
 		return false;
 	}
+	cntl = get_cntl( tax_slug );
 
-	return add_nt_element( tax, terms_found );
+	return add_nt_element( tax, terms_found, cntl[7] );
 }
 
 /**
@@ -98,10 +101,10 @@ function add_no_term( tax_slug ) {
 		}
 	}
 	
-	// minimum is set to 0, add no term. Could either one list or twp (popular and all).
-	process_no_term( tax_slug+"-pop", terms_count );
-	process_no_term( tax_slug+"-all", terms_count );
-	process_no_term( "taxonomy-"+tax_slug, terms_count );
+	// minimum is set to 0, add no term. Could either one list or two (popular and all).
+	process_no_term( tax_slug+"-pop", terms_count, tax_slug );
+	process_no_term( tax_slug+"-all", terms_count, tax_slug );
+	process_no_term( "taxonomy-"+tax_slug, terms_count, tax_slug );
 }
 
 /**
@@ -282,7 +285,7 @@ function qe_error_clear_msg( item, tag ) {
  */
 
 /**
- * Converts checkbox to radio buttons.
+ * Converts checkbox to radio buttons. We are not concerned here for limit checking.
  * 
  * @param string tax_slug The taxonomy slug for the taxonomy.
  */
@@ -306,12 +309,10 @@ function qe_error_clear_msg( item, tag ) {
 		if ( item.id.substring(0,5) !== 'edit-' ) {
 			continue;
 		}
-		// get post to see taxonomies initial state only).
-		let post = document.getElementById( "post-" + item.id.substring(5) );
-		let taxs = post.getElementsByClassName( "taxonomy-"+tax_slug );
 
 		// more than one on entry means we can't change to radio.
-		let chg = taxs[0].getElementsByTagName("a").length;
+		//let chg = taxs[0].getElementsByTagName("a").length;
+		const chg = item.querySelectorAll('input[name="tax_input[' + tax_slug + '][]"]:checked').length;
 		let cntl = get_cntl( tax_slug );
 		// If initial state more than one, then not radio,. Now need to look at actual taxonomy.
 		let lst = item.getElementsByClassName( tax_slug+"-checklist" );
@@ -320,8 +321,9 @@ function qe_error_clear_msg( item, tag ) {
 		}
 		// process no term.
 		if ( 0 === cntl[2] ) {
-			add_nt_element( lst[0], (chg > 0) );
+			add_nt_element( lst[0], (chg > 0), cntl[7] );
 		}
+
 		let inp = lst[0].getElementsByTagName("input");
 		let multi = 0;
 		for ( let tax of inp ) {
@@ -333,38 +335,6 @@ function qe_error_clear_msg( item, tag ) {
 				tax.type = "radio";
 				tax.setAttribute('role', 'radio');
 			}
-		}
-
-		// check post_status.
-		var stat;
-		if ( tag === "option" ) {
-			stat = event.target.value;
-			// clear any error message but it may be put back.
-			qe_error_clear_msg( item, tax_slug );
-		} else {
-			const cfix = item.getElementsByClassName( "inline-edit-status" )[0];
-			stat = cfix.getElementsByTagName("select")[0].value;
-		}
-		if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
-			return;
-		}
-		if ( 1 === cntl[1] ) {
-			// check published status only.
-			if ( "publish" !== stat && "future" !== stat ) { 
-				return;
-			}
-		}
-
-		if ( multi > 1 ) { 
-			// cannot convert. Output message.
-			qe_error_set_msg( item, tax_slug, cntl[5] );
-		} else if ( multi === 0 ) { 
-			// Need to assign a value. Output message.
-			qe_error_set_msg( item, tax_slug, cntl[3] );
-		} else {
-			// OK.
-			qe_error_clear_msg( item, tax_slug );
-			return;
 		}
 	}
 }
@@ -410,7 +380,7 @@ function dom_qe_radio_client( tax_slug ) {
 	inp.parentElement.addEventListener('click', event => {
 		chk_qe_radio_client( tax_slug );
 	});
-	inp.parentElement.addEventListener('keypress', event => {
+	inp.parentElement.addEventListener('focusout', event => {
 		chk_qe_radio_client( tax_slug );
 	});
 	const rows = inp.getElementsByTagName("tr");
@@ -418,6 +388,9 @@ function dom_qe_radio_client( tax_slug ) {
 	for( let item of rows ) {
 		let postId = item.id.match(re)[0];
 			item.addEventListener('click', event => {
+				rst_qe_radio_client( tax_slug, postId );
+			});
+			item.addEventListener('focusout', event => {
 				rst_qe_radio_client( tax_slug, postId );
 			});
 	}
@@ -660,7 +633,6 @@ function dom_tag_cntl_check( tax_slug ) {
 	const { select, dispatch, subscribe } = wp.data;
 	const tax_slug = slug;
 	const cntl = get_cntl( tax_slug );
-	console.log(cntl);
 
 	let locked = false;
 	let nopubl = false;
