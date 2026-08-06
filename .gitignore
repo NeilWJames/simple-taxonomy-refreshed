@@ -1,3 +1,6 @@
+.DS_Store
 bin
-vendor
+build/blocks/
 composer.lock
+node_modules/
+vendor
