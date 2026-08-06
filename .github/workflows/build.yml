@@ -1,11 +1,11 @@
 name: Build Blocks
 
 on:
-workflow_dispatch:
+  workflow_dispatch:
 
 permissions:
-contents: write
-pull-requests: write
+  contents: write
+  pull-requests: write
 
 jobs:
   build:
