@@ -5,8 +5,8 @@
  * Description:       WordPress provides simple custom taxonomy, this plugin makes it even simpler, removing the need for you to write <em>any</em> code
  *                    Converted, Standardised and Extended from Simple Taxonomy by Amaury Balmer
  * Version:           3.4.0
- * Requires at least: 4.9
- * Requires PHP:      7.4
+ * Requires at least: 6.6
+ * Requires PHP:      8.2
  * Author:            Neil James
  * License:           GPL v3
  * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
