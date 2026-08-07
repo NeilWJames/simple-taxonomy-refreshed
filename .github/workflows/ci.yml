@@ -16,7 +16,7 @@ jobs:
       matrix:
         operating-system: [ubuntu-latest]
         php-versions: ['8.2', '8.3', '8.4']
-        wp-version: [latest]
+        wp-version: ['6.9', latest]
         wp-multisite: [0]
         phpunit-versions: ['9.5']
         phpunit-config: ['phpunit9.xml']

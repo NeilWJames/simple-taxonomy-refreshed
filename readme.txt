@@ -30,7 +30,7 @@ For admin screens displaying multiple taxonomies it is possible to define their 
 
 A tool is provided to merge a number of terms within a taxonomy into a single one. All usages of the selected terms are changed to the merged one.
 
-Options are provided to add a selection dropdown in the admin list and to define minimum and maximum required term counts using posts of selected statuses (and not only "published"). [Term counts with WP 5.7+ requires version 1.3+ of this plugin.] These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
+Options are provided to add a selection dropdown in the admin list and to define minimum and maximum required term counts using posts of selected statuses (and not only "published"). These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
 
 For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
 
@@ -60,7 +60,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 == Changelog ==
 
-* Version 3.4.0  (09/08/2026)
+* Version 3.4.0  (08/08/2026)
 	* NEW: Blocks use API V3 and block.json.
 	* FIX: Correct type of Hierarchy Depth.
 	* FIX: Permit Term Controls to work for sub-set of possible post types.
@@ -87,32 +87,13 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* FIX: PHP 8.1 undefined array error.
 	* FIX: Tested with WP version 6.4.
 
-* Version 3.1.1  (11/08/2023)
-	* NEW: JS register uses defer with 6.3 onwards. 
-	* FIX: PHP 8.1 deprecation error.
-	* FIX: Tested with WP version 6.3.
-
-* Version 3.1.0  (11/04/2023)
-	* NEW: Term controls may be applied to only a sub-set of post types.
-	* NEW: Labels that are the same as the WP defaults are not saved.
-	* FIX: PHP 8.1 error with array map on null.
-	* FIX: Tested with WP version 6.2.
-
-* Version 3.0.0  (17/11/2022)
-	* NEW: Post taxonomy lists may use html tags to format text.
-	* NEW: Term controls extended to Quick Edit options.
-	* NEW: Controls defined as operating as terms are entered now works.
-	* NEW: Further accessibility changes made to administration screens.
-	* NEW: Term control front end logic moved from page to js file.
-	* FIX: Server-side Tag Term Counts incorrect.
-
 For information on earlier version changes, see the [Simple Taxonomy Refreshed Changes](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/changelog.md) page.
 	
 == Migration Notice ==
 
 = From Simple Taxonomy =
 
-It is a drop-in replacement for [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy) - using the same options table entry.
+It is a drop-in replacement for the now withdrawn [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy) - using the same options table entry.
 
 If this is installed, deactivate it first.
 

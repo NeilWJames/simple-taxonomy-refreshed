@@ -4,8 +4,8 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 * Contributors: nwjames, momo360modena
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category
-* Stable tag: 3.3.0
-* Tested up to: 6.7.1
+* Stable tag: 3.4.0
+* Tested up to: 7.0.2
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -32,9 +32,9 @@ For admin screens displaying multiple taxonomies it is possible to define their 
 A tool is provided to merge a number of terms within a taxonomy into a single one. All usages of the selected terms are changed to the merged one.
 
 Options are provided to add a selection dropdown in the admin list and to define term counts using posts of selected statuses (and not just "published").
-(The Term Count functionality requires version 1.3+ when WP 5.7+ is installed.) These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
+These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
 
-For those wishing to modidy its operation, this will require code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
+For those wishing to modify its operation, this will require code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
 
 For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed) page.
 
@@ -60,7 +60,7 @@ Enter just the Name (slug) whether Hierarchical or not and the Post Types used o
 
 ## Migration process
 
-Functionally replaces and extends [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) so if this is installed, deactivate it first.
+Functionally replaces and extends the now withdrawn [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) so if this is installed, deactivate it first.
 
 If you are an existing user of the Simple Taxonomy plugin as this plugin uses the Simple Taxonomy options data to save setting it up again completely, before starting you can use the Simple Taxonomy export function to first take a copy of your data.
 

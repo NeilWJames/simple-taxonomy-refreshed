@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 3.4.0  (08/08/2026)
+	* NEW: Blocks use API V3 and block.json.
+	* FIX: Correct type of Hierarchy Depth.
+	* FIX: Permit Term Controls to work for sub-set of possible post types.
+	* DEV: Tested against WP 7.0.
+	* DEV: Reviewed for WP Coding Standards 3.4.
+	* DEV: Reviewed for Plugin Check 2.0.
+
 ## Version 3.3.0  (06/12/2024)
 	* DEV: Ensure option autoloaded.
 	* DEV: Review of list_table ordering processing.
