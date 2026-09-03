@@ -110,7 +110,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @return bool
 	 */
-	public static function load_from_src() {
+	private static function load_from_src() {
 		// is the plugin source available. Normally it is not, but can be copied from GitHub.
 		$dir = dirname( __DIR__ ) . '/src';
 
@@ -126,7 +126,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	public function enqueue_admin_libs() {
 		// enqueue on staxo-settings page only.
 		$dir      = dirname( __DIR__ );
-		$source   = ( self::load_from_src() ) ? 'src' : 'build';
+		$source   = ( self::load_from_src() ? 'src' : 'build' ) . '/common';
 		$index_js = $source . '/staxo-admin.js';
 		wp_enqueue_script(
 			'staxo_admin',
@@ -165,12 +165,15 @@ class SimpleTaxonomyRefreshed_Admin {
 		self::$enqueue_client = true;
 		// enqueue on client pages only.
 		$dir      = dirname( __DIR__ );
-		$source   = ( self::load_from_src() ) ? 'src' : 'build';
+		$source   = ( self::load_from_src() ? 'src' : 'build' ) . '/common';
 		$index_js = $source . '/staxo-client.js';
+		$depend   = ( self::is_block_editor()
+			? array( 'wp-block-editor', 'wp-blocks', 'wp-core-data', 'wp-data', 'wp-dom', 'wp-dom-ready', 'wp-edit-post', 'wp-editor' )
+			: array() );
 		wp_enqueue_script(
 			'staxo_client',
 			plugins_url( $index_js, __DIR__ ),
-			array( 'wp-block-editor', 'wp-blocks', 'wp-core-data', 'wp-data', 'wp-dom', 'wp-dom-ready', 'wp-edit-post', 'wp-editor' ),
+			$depend,
 			filemtime( "$dir/$index_js" ),
 			false,
 		);
@@ -1044,8 +1047,9 @@ class SimpleTaxonomyRefreshed_Admin {
 				$taxonomy['args'] = $taxonomy['st_args'];
 			}
 		} else {
-			// Taxonomy array prepared before calling.
-			null;
+			// show_ui is not on external so add it locally Also put on screen as a hidden field later.
+			$tax_obj             = get_taxonomy( $taxonomy['name'] );
+			$taxonomy['show_ui'] = (int) $tax_obj->show_ui;
 		}
 		// If show_in_graphql is true, then set st_ variables from values (may have passed through a filter).
 		$taxonomy['st_show_in_graphql'] = ( isset( $taxonomy['show_in_graphql'] ) ? +$taxonomy['show_in_graphql'] : 0 );
@@ -1347,7 +1351,7 @@ class SimpleTaxonomyRefreshed_Admin {
 										self::option_label(
 											$taxonomy,
 											'desc_field_description',
-											esc_html__( 'Descriptiom Field Description', 'simple-taxonomy-refreshed' ),
+											esc_html__( 'Description Field Description', 'simple-taxonomy-refreshed' ),
 											''
 										);
 										self::option_label(
@@ -1456,7 +1460,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											$taxonomy,
 											'no_term',
 											esc_html__( 'No term', 'simple-taxonomy-refreshed' ),
-											esc_html__( 'Used by the plugin to select no term from this taxonomy should be used (where a checkbox has been changed to a radio button).', 'simple-taxonomy-refreshed' )
+											esc_html__( 'Used by the plugin to select that no term from this taxonomy should be used (and the choice is made with a radio button).', 'simple-taxonomy-refreshed' )
 										);
 									?>
 								</table>
@@ -1661,6 +1665,7 @@ class SimpleTaxonomyRefreshed_Admin {
 
 					<div id="wpgraphql" class="meta-box-sortabless is-hidden" role="tabpanel">
 					<?php } else { ?>
+					<input type="hidden" id="show_ui" name="show_ui" value="<?php echo esc_attr( $taxonomy['show_ui'] ); ?>" />
 					<div id="wpgraphql" class="meta-box-sortabless" role="tabpanel">
 					<input type="hidden" id="name" name="name" value="<?php echo esc_attr( $taxonomy['name'] ); ?>" />
 					<input type="hidden" id="hierarchical" name="hierarchical" value="<?php echo esc_attr( (int) $taxonomy['hierarchical'] ); ?>" />
@@ -2455,7 +2460,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @since 2.0.0
 	 *
-	 * @param array $taxonomy  taxonomy name.
+	 * @param array $taxonomy  taxonomy parameters.
 	 * @return void
 	 */
 	private static function update_external( $taxonomy ) {
@@ -2961,7 +2966,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			self::enqueue_client_libs();
 			wp_add_inline_script(
 				'staxo_client',
-				$text . 'document.addEventListener("DOMContentLoaded", dom_radio_client( "' . $tax_name . '" ))  ;'
+				$text . 'document.addEventListener("DOMContentLoaded", wait_for_editor_ready( dom_radio_client( "' . $tax_name . '" )))  ;'
 			);
 		}
 	}
@@ -2984,7 +2989,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		self::enqueue_client_libs();
 		wp_add_inline_script(
 			'staxo_client',
-			$text . 'document.addEventListener("DOMContentLoaded", dom_qe_cntl_check( "' . $tax_name . '", ' . (int) $hier . ' ));'
+			$text . 'document.addEventListener("DOMContentLoaded", wait_for_editor_ready( dom_qe_cntl_check( "' . $tax_name . '", ' . (int) $hier . ' )));'
 		);
 	}
 
@@ -3001,6 +3006,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 * @param bool   $hier      Whether taxonomy is hierarchical.
 	 * @param string $nt_label  The taxonomy label name for No term.
 	 * @param string $status    post status.
+	 * @return string
 	 */
 	private static function term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $hier, $nt_label, $status = '' ) {
 		$lock = ( 1 === $pstat ? esc_html__( 'Publishing is blocked.', 'simple-taxonomy-refreshed' ) : esc_html__( 'Saving is blocked.', 'simple-taxonomy-refreshed' ) );
@@ -3024,7 +3030,9 @@ class SimpleTaxonomyRefreshed_Admin {
 			$more .= ' ' . $lock;
 		}
 		$no_term = ( isset( $nt_label ) ? $nt_label : __( 'No term', 'simple-taxonomy-refreshed' ) );
-		return 'tax_cntl.push( [ "' . $tax_name . '", ' . $pstat . ', ' . $mib . ', "' . $less . '", ' . $mab . ', "' . $more . '", ' . (int) $hier . ', "' . $no_term . '", "' . $status . '" ] );' . "\n";
+		// translators: %1$s is the taxonomy label name.
+		$radio = esc_html( sprintf( __( 'More than one term for taxonomy (%1$s) has already been attached. List cannot be converted to a radio list', 'simple-taxonomy-refreshed' ), $tax_label ) );
+		return 'tax_cntl.push( [ "' . $tax_name . '", ' . $pstat . ', ' . $mib . ', "' . $less . '", ' . $mab . ', "' . $more . '", ' . (int) $hier . ', "' . $no_term . '", "' . $status . '", "' . $radio . '" ] );' . "\n";
 	}
 
 	/**

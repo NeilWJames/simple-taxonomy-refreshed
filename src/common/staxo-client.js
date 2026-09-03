@@ -19,6 +19,49 @@
 }
 
 /**
+ * Functions to determine which document to check (classic or block).
+ */
+
+/**
+ * Is the Block Editor on the screen.
+ * 
+ */
+function is_block_editor_screen() {
+	return document.body.classList.contains( 'block-editor-page' );
+}
+
+/**
+ * May take a moment to load the Block Editor iframe.
+ * 
+ */
+function wait_for_editor_ready( callback ) {
+	if ( ! is_block_editor_screen() ) {
+		callback(); // classic editor - nothing to wait for
+		return;
+	}
+	const frame = document.querySelector( 'iframe[name="editor-canvas"]' );
+	if ( frame && frame.contentDocument && frame.contentDocument.readyState !== 'loading' ) {
+		callback();
+		return;
+	}
+	setTimeout( function () {
+		wait_for_editor_ready( callback );
+	}, 50 );
+}
+
+/**
+ * Which is the document to process.
+ * 
+ */
+function get_post_doc() {
+	if ( ! is_block_editor_screen() ) {
+		return document;
+	}
+	const frame = document.querySelector( 'iframe[name="editor-canvas"]' );
+	return frame && frame.contentDocument ? frame.contentDocument : document;
+}
+
+/**
  * Functions to support No term option.
  */
 
@@ -69,9 +112,9 @@ function add_nt_element( tax, terms_found, no_term_str ) {
  * @param bool   terms_found Existing terms found ( so No Terms not checked).
  * @param string tax_slug    The taxonomy slug for the taxonomy.
  */
-function process_no_term( tax_id, terms_found, tax_slug ) {
+function process_no_term( tax_id, terms_found, tax_slug, doc ) {
 	// minimum is set to 0, add no term.
-	let tax = document.getElementById( tax_id );
+	let tax = doc.getElementById( tax_id );
 	if ( null === tax ) {
 		return false;
 	}
@@ -83,9 +126,10 @@ function process_no_term( tax_id, terms_found, tax_slug ) {
 /**
  * Add No Term.
  * 
- * @param string tax_slug The taxonomy slug for the taxonomy.
+ * @param string     tax_slug The taxonomy slug for the taxonomy.
+ * @param {Document} doc      The containing document.
  */
-function add_no_term( tax_slug ) {
+function add_no_term( tax_slug, doc ) {
 	cntl = get_cntl( tax_slug );
 	// bypass for non-zero minimum or non-hierarchical.
 	if ( 0 !== cntl[2] || 0 === cntl[6] ) {
@@ -94,7 +138,7 @@ function add_no_term( tax_slug ) {
 
 	// are there existing terms.
 	terms_count = false;
-	let terms = document.getElementsByName( "tax_input["+tax_slug+"][]" );
+	let terms = doc.getElementsByName( "tax_input["+tax_slug+"][]" );
 	for ( let item of terms ) {
 		if ( item.checked ) {
 			terms_count = true;
@@ -102,9 +146,9 @@ function add_no_term( tax_slug ) {
 	}
 	
 	// minimum is set to 0, add no term. Could either one list or two (popular and all).
-	process_no_term( tax_slug+"-pop", terms_count, tax_slug );
-	process_no_term( tax_slug+"-all", terms_count, tax_slug );
-	process_no_term( "taxonomy-"+tax_slug, terms_count, tax_slug );
+	process_no_term( tax_slug+"-pop", terms_count, tax_slug, doc );
+	process_no_term( tax_slug+"-all", terms_count, tax_slug, doc );
+	process_no_term( "taxonomy-"+tax_slug, terms_count, tax_slug, doc );
 }
 
 /**
@@ -114,10 +158,11 @@ function add_no_term( tax_slug ) {
 /**
  * Converts checkbox to radio buttons.
  * 
- * @param string tax_slug The taxonomy slug for the taxonomy.
+ * @param string     tax_slug The taxonomy slug for the taxonomy.
+ * @param {Document} doc      The containing document.
  */
-function chk_radio_client( tax_slug ) {
-		let tax = document.getElementById( "taxonomy-"+tax_slug );
+function chk_radio_client( tax_slug, doc ) {
+		let tax = doc.getElementById( "taxonomy-"+tax_slug );
 		let inp = tax.getElementsByTagName("input");
 		let changed = false;
 		for ( let item of inp ) {
@@ -126,29 +171,30 @@ function chk_radio_client( tax_slug ) {
 						item.type = "radio";
 						item.setAttribute('role', 'radio');
 						item.addEventListener('click', event => {
-								adj_radio_client( tax_slug, item.value );
+								adj_radio_client( tax_slug, item.value, doc );
 						});
 						item.addEventListener('keypress', event => {
-								adj_radio_client( tax_slug, item.value );
+								adj_radio_client( tax_slug, item.value, doc );
 						});
 						changed = true;
 				}
 		}
 		if ( changed ) {
 			// we would have got here initially or if one was added.
-			hier_cntl_check( tax_slug );
+			hier_cntl_check( tax_slug, doc );
 		}
 }
 
 /**
  * Keeps the popular and the all sub-panels in line.
  * 
- * @param string tax_slug The taxonomy slug for the taxonomy.
- * @param int    val      The term id being selected.
+ * @param string     tax_slug The taxonomy slug for the taxonomy.
+ * @param int        val      The term id being selected.
+ * @param {Document} doc      The containing document.
  */
-function adj_radio_client( tax_slug, val) {
+function adj_radio_client( tax_slug, val, doc ) {
 		// act over both lists.
-		let tax = document.getElementById( "taxonomy-"+tax_slug );
+		let tax = doc.getElementById( "taxonomy-"+tax_slug );
 		let inp = tax.getElementsByTagName("input");
 		for ( let i in inp ) {
 				inp[i].checked = false;
@@ -164,24 +210,25 @@ function adj_radio_client( tax_slug, val) {
  * @param string tax_slug The taxonomy slug for the taxonomy.
  */
 function dom_radio_client( tax_slug ) {
-	add_no_term( tax_slug );
-	chk_radio_client( tax_slug );
+	let doc = get_post_doc();
+	add_no_term( tax_slug, doc );
+	chk_radio_client( tax_slug, doc );
 
-	let tax_pop = document.getElementById( tax_slug+"-pop" );
+	let tax_pop = doc.getElementById( tax_slug+"-pop" );
 	tax_pop.setAttribute('role', 'radiogroup');//
-	let tax_all = document.getElementById( tax_slug+"-all" );
+	let tax_all = doc.getElementById( tax_slug+"-all" );
 	tax_all.setAttribute('role', 'radiogroup');//
 
-	let sub = document.getElementById( tax_slug+"-add-submit" );
+	let sub = doc.getElementById( tax_slug+"-add-submit" );
 	sub.addEventListener('click', event => {
-		adj_radio_client( tax_slug, -1);
+		adj_radio_client( tax_slug, -1, doc );
 	});
 	sub.addEventListener('keypress', event => {
-		adj_radio_client( tax_slug, -1);
+		adj_radio_client( tax_slug, -1, doc );
 	});
 
 	// Select the node that will be observed for mutations
-	const targetNode = document.getElementById( tax_slug+"-all" );
+	const targetNode = doc.getElementById( tax_slug+"-all" );
 
 	// Options for the observer (which mutations to observe)
 	const config = { childList: true, subtree: true };
@@ -189,7 +236,7 @@ function dom_radio_client( tax_slug ) {
 	// Callback function to execute when mutations are observed
 	const callback = function(mutationsList, observer) {
 		// on any change call the check code once.
-		chk_radio_client( tax_slug );
+		chk_radio_client( tax_slug, doc );
 	};
 
 	// Create an observer instance linked to the callback function
@@ -310,14 +357,19 @@ function qe_error_clear_msg( item, tag ) {
 			continue;
 		}
 
+		// clear any message (should be none).
+		qe_error_clear_msg( item, tax_slug );
+
 		// more than one on entry means we can't change to radio.
-		//let chg = taxs[0].getElementsByTagName("a").length;
 		const chg = item.querySelectorAll('input[name="tax_input[' + tax_slug + '][]"]:checked').length;
 		let cntl = get_cntl( tax_slug );
 		// If initial state more than one, then not radio,. Now need to look at actual taxonomy.
 		let lst = item.getElementsByClassName( tax_slug+"-checklist" );
 		if ( chg < 2 ) {
 			lst[0].setAttribute('role', 'radiogroup');
+		} else {
+			// cannot change to radio.
+			qe_error_set_msg( item, tax_slug, cntl[9] );
 		}
 		// process no term.
 		if ( 0 === cntl[2] ) {
@@ -408,11 +460,12 @@ function dom_qe_radio_client( tax_slug ) {
  /**
  * Function to count the number of taxonomy items checked on the post.
  * 
- * @param string tax_slug The taxonomy slug for the taxonomy.
+ * @param string     tax_slug The taxonomy slug for the taxonomy.
+ * @param {Document} doc      The containing document.
  * @return int Number of checked items for given taxonomy.
  */
-function hier_tax_count( tax_slug ) {
-	let tax = document.getElementById( "taxonomy-"+tax_slug );
+function hier_tax_count( tax_slug, doc ) {
+	let tax = doc.getElementById( "taxonomy-"+tax_slug );
 	let inp = tax.getElementsByTagName("input");
 	let i, v, arr = [];
 	for ( i in inp ) {
@@ -429,13 +482,14 @@ function hier_tax_count( tax_slug ) {
  /**
  * Function to count the number of taxonomy items checked on the post.
  * 
- * @param string  tax_slug The taxonomy slug for the taxonomy.
- * @param boolean bail     Whether to stop processing if outside bounds.
+ * @param string     tax_slug The taxonomy slug for the taxonomy.
+ * @param {Document} doc      The containing document.
+ * @param boolean    bail     Whether to stop processing if outside bounds.
  */
-function hier_cntl_check( tax_slug, bail = false ) {
+function hier_cntl_check( tax_slug, doc, bail = false ) {
 	const cntl = get_cntl( tax_slug );
 	// check post_status.
-	const stat = document.getElementById("post_status").value;
+	const stat = doc.getElementById("post_status").value;
 	if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
 		return;
 	}
@@ -445,7 +499,7 @@ function hier_cntl_check( tax_slug, bail = false ) {
 			return;
 		}
 	}
-	let cnt = hier_tax_count( tax_slug );
+	let cnt = hier_tax_count( tax_slug, doc );
 	let err = false;
 
 	// if minimum defined, check value.
@@ -459,7 +513,11 @@ function hier_cntl_check( tax_slug, bail = false ) {
 	// if maximum defined, check value.
 	if ( null !== cntl[4] ) {
 		if ( cnt > cntl[4] ) {
-			set_errblock( tax_slug, cntl[5] );
+			if ( 1 === cntl[4] ) {
+				set_errblock( tax_slug, cntl[9] );				
+			} else {
+				set_errblock( tax_slug, cntl[5] );
+			}
 			err = true;
 		}
 	}
@@ -480,26 +538,27 @@ function hier_cntl_check( tax_slug, bail = false ) {
  * @param string tax_slug The taxonomy slug for the taxonomy.
  */
 function dom_hier_cntl_check( tax_slug ) {
+	let doc = get_post_doc();
 	let tax = document.getElementById( "taxonomy-"+tax_slug );
 	let inp = tax.getElementsByTagName("input");
 	for( let item of inp) {
 		item.addEventListener('click', event => {
-			hier_cntl_check( tax_slug );
+			hier_cntl_check( tax_slug, doc );
 		});
 		item.addEventListener('blur', event => {
-			hier_cntl_check( tax_slug );
+			hier_cntl_check( tax_slug, doc );
 		});
 	}
-	document.getElementById("publish").addEventListener('click', event => {
-		hier_cntl_check( tax_slug, true);
+	doc.getElementById("publish").addEventListener('click', event => {
+		hier_cntl_check( tax_slug, doc, true );
 	});
 	var sp = document.getElementById("save-post");
 	if (sp) {
 		sp.addEventListener('click', event => {
-			hier_cntl_check( tax_slug, true);
+			hier_cntl_check( tax_slug, doc, true);
 		});
 		sp.addEventListener('keypress', event => {
-			hier_cntl_check( tax_slug, true);
+			hier_cntl_check( tax_slug, doc, true);
 		});
 	}
 }
@@ -507,12 +566,13 @@ function dom_hier_cntl_check( tax_slug ) {
 /**
  * Function to count the number of taxonomy items checked on the post.
  * 
- * @param string tax_slug The taxonomy slug for the taxonomy.
+ * @param string     tax_slug The taxonomy slug for the taxonomy.
+ * @param {Document} doc      The containing document.
  * @return int Number of checked items for given taxonomy.
  */
-function tag_tax_count( tax_slug ) {
+function tag_tax_count( tax_slug, doc ) {
 	// find taxonomy section.
-	const sect = document.getElementById( tax_slug );
+	const sect = doc.getElementById( tax_slug );
 	const list = sect.getElementsByTagName('ul')[0];
 	return list.getElementsByTagName('li').length;
 }
@@ -520,12 +580,13 @@ function tag_tax_count( tax_slug ) {
  /**
  * Function to count the number of taxonomy items checked on the post.
  * 
- * @param string  tax_slug The taxonomy slug for the taxonomy.
+ * @param string     tax_slug The taxonomy slug for the taxonomy.
+ * @param {Document} doc      The containing document.
  * @param boolean special  Whether to force stop processing if outside bounds.
  */
-  function tag_cntl_check( tax_slug, special = false ) {
+  function tag_cntl_check( tax_slug, doc, special = false ) {
 	// check post_status.
-	var stat = document.getElementById("post_status").value;
+	var stat = doc.getElementById("post_status").value;
 	if ( "new" === stat || "auto-draft" === stat || "trash" === stat ) {
 		return;
 	}
@@ -538,14 +599,14 @@ function tag_tax_count( tax_slug ) {
 	}
 
 	// Ensure tag add readonly attribute remove, unless explicitly wanted (cloud may not exist).
-	document.getElementById( "new-tag-"+tax_slug ).removeAttribute("readonly");
-	document.getElementById( "link-"+tax_slug ).removeAttribute("disabled");
-	let cloud = document.getElementById( "tagcloud-"+tax_slug );
+	doc.getElementById( "new-tag-"+tax_slug ).removeAttribute("readonly");
+	doc.getElementById( "link-"+tax_slug ).removeAttribute("disabled");
+	let cloud = doc.getElementById( "tagcloud-"+tax_slug );
 	if ( null !== cloud ) {
 		cloud.removeAttribute("disabled");
 	}
 
-	let cnt = tag_tax_count( tax_slug );
+	let cnt = tag_tax_count( tax_slug, doc );
 	let err = false;
 
 	// if minimum defined, check value.
@@ -559,14 +620,18 @@ function tag_tax_count( tax_slug ) {
 	// if maximum defined, check value.
 	if ( null !== cntl[4] ) {
 		if ( cnt >= cntl[4] ) {
-			document.getElementById( "new-tag-"+tax_slug ).setAttribute("readonly", 'readonly');
-			document.getElementById( "link-"+tax_slug ).setAttribute("disabled", 'disabled');
+			doc.getElementById( "new-tag-"+tax_slug ).setAttribute("readonly", 'readonly');
+			doc.getElementById( "link-"+tax_slug ).setAttribute("disabled", 'disabled');
 			if ( null !== cloud ) {
 				cloud.setAttribute("disabled", 'disabled');
 			}
 		}
 		if ( cnt > cntl[4] ) {
-			set_errblock( tax_slug, cntl[5] );
+			if ( 1 === cntl[4] ) {
+				set_errblock( tax_slug, cntl[9] );				
+			} else {
+				set_errblock( tax_slug, cntl[5] );
+			}
 			err = true;
 		}
 	}
@@ -593,18 +658,19 @@ function tag_tax_count( tax_slug ) {
  * @param string tax_slug The taxonomy slug for the taxonomy.
  */
 function dom_tag_cntl_check( tax_slug ) {
+	let doc = get_post_doc();
 	// call these with special = true to force error processing.
-	let elt = document.getElementById("publish");
+	let elt = doc.getElementById("publish");
 	if ( null !== elt ) {
-		elt.addEventListener('click', event => { tag_cntl_check( tax_slug, true ); });
+		elt.addEventListener('click', event => { tag_cntl_check( tax_slug, doc, true ); });
 	}
 	elt = document.getElementById("save-post");
 	if ( null !== elt ) {
-		elt.addEventListener('click', event => { tag_cntl_check( tax_slug, true ); });
-		elt.addEventListener('keypress', event => { tag_cntl_check( tax_slug, true ); });
+		elt.addEventListener('click', event => { tag_cntl_check( tax_slug, doc, true ); });
+		elt.addEventListener('keypress', event => { tag_cntl_check( tax_slug, doc, true ); });
 	}
 	// Select the node that will be observed for mutations
-	let tag = document.getElementById( tax_slug );
+	let tag = doc.getElementById( tax_slug );
 	const targetNode = tag.getElementsByTagName('ul')[0];
 
 	// Options for the observer (which mutations to observe)
@@ -612,7 +678,7 @@ function dom_tag_cntl_check( tax_slug ) {
 
 	// Callback function to execute when mutations are observed
 	const callback = function(mutationsList, observer) {
-		tag_cntl_check( tax_slug );
+		tag_cntl_check( tax_slug, doc );
 	};
 
 	// Create an observer instance linked to the callback function
@@ -662,7 +728,9 @@ function dom_tag_cntl_check( tax_slug ) {
 		}
 			// if maximum defined, check value.
 		if ( null !== cntl[4] ) {
-			if ( cnt > cntl[4] ) {
+			if ( 1 === cntl[4] ) {
+				err_text = cntl[9];
+			} else {
 				err_text = cntl[5];
 			}
 		}
@@ -672,6 +740,8 @@ function dom_tag_cntl_check( tax_slug ) {
 			var save = document.getElementsByClassName('editor-post-save-draft');
 			if (save.length > 0) save[0].disabled = true;
 			save = document.getElementsByClassName('editor-post-switch-to-draft');
+			if (save.length > 0) save[0].disabled = true;
+			save = document.getElementsByClassName('editor-post-saved-state');
 			if (save.length > 0) save[0].disabled = true;
 			// show notice.
 			dispatch( 'core/notices' ).createNotice(
@@ -703,6 +773,8 @@ function dom_tag_cntl_check( tax_slug ) {
 			var save = document.getElementsByClassName('editor-post-save-draft');
 			if (save.length > 0) save[0].disabled = false;
 			save = document.getElementsByClassName('editor-post-switch-to-draft');
+			if (save.length > 0) save[0].disabled = false;
+			save = document.getElementsByClassName('editor-post-saved-state');
 			if (save.length > 0) save[0].disabled = false;
 			// remove notice.
 			dispatch( 'core/notices' ).removeNotice( 'str_notice_'+tax_slug );
@@ -754,7 +826,8 @@ function dom_tag_cntl_check( tax_slug ) {
  * @return void.
  */
 function clear_errblock( tax_slug ) {
-	let errblock = document.getElementById( "err-"+tax_slug );
+	let doc      = get_post_doc();
+	let errblock = doc.getElementById( "err-"+tax_slug );
 	if ( null !== errblock ) {
 		// Hide and clear if block was showing.
 		if ( ! errblock.classList.contains( "hidden" ) ) {
@@ -772,7 +845,8 @@ function clear_errblock( tax_slug ) {
  * @return void.
  */
  function set_errblock( tax_slug, message ) {
-	let errblock = document.getElementById( "err-"+tax_slug );
+	let doc      = get_post_doc();
+	let errblock = doc.getElementById( "err-"+tax_slug );
 	if ( null !== errblock ) {
 		// Show it if hidden.
 		if ( errblock.classList.contains( "hidden" ) ) {

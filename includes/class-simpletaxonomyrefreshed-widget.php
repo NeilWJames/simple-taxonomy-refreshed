@@ -443,18 +443,12 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	 * @since 2.1.0
 	 */
 	public function staxo_widget_block() {
-		if ( ! function_exists( 'register_block_type' ) ) {
-			// Gutenberg is not active, e.g. Old WP version installed.
-			return;
-		}
-
-		$dir       = dirname( __DIR__ );
-		$build_dir = $dir . '/build/blocks/staxo-widget';
+		$block_dir = dirname( __DIR__ ) . '/build/blocks/staxo-widget';
 
 		// integrate the render callback into the parameters.
 		add_filter( 'block_type_metadata_settings', array( $this, 'update_settings' ), 10, 2 );
 
-		register_block_type_from_metadata( $build_dir );
+		register_block_type_from_metadata( $block_dir );
 
 		// Attach the taxonomy data to the editor script.
 		// WordPress auto-generates the script handle from the block name by converting slashes to hyphens.
@@ -496,6 +490,10 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	 * @since 2.1.0
 	 */
 	public function staxo_widget_display( $atts, $content = '' ) {
+		// need to wrapper the output with the display attributes.
+		$wrapper_attributes = get_block_wrapper_attributes();
+		$output             = '<div ' . $wrapper_attributes . '>';
+
 		// Create the two parameter sets.
 		$args     = array(
 			'before_widget' => '',
@@ -511,12 +509,12 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			$args['after_title']  = '</h2>';
 		}
 
-		// 'ordering' needs to be i='order'.
+		// 'ordering' needs to be 'order'.
 		$instance['order'] = $instance['ordering'];
 		unset( $instance['ordering'] );
 
 		global $strw;
-		$output = $strw->widget_gen( $args, $instance );
+		$output .= $strw->widget_gen( $args, $instance ) . '</div>';
 		return $output;
 	}
 }

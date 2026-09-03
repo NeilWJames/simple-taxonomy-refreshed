@@ -2,9 +2,9 @@
 
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 3.4.0
+Stable tag: 3.4.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -60,33 +60,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 == Changelog ==
 
-* Version 3.4.0  (08/08/2026)
-	* NEW: Blocks use API V3 and block.json.
-	* FIX: Correct type of Hierarchy Depth.
-	* FIX: Permit Term Controls to work for sub-set of possible post types.
-	* DEV: Tested against WP 7.0.
-	* DEV: Reviewed for WP Coding Standards 3.4.
-	* DEV: Reviewed for Plugin Check 2.0.
-
-* Version 3.3.1  (06/03/2026)
-	* FIX: Translations not always being called on init.
-	* DEV: Tested against WP 6.9.
-	* DEV: Reviewed for WP Coding Standards 3.3.
-	* DEV: Reviewed for Plugin Check 1.8.
-
-* Version 3.3.0  (06/12/2024)
-	* DEV: Ensure option autoloaded.
-	* DEV: Review of list_table ordering.
-	* DEV: Reviewed for WP Coding Standards 3.1.
-	* FIX: Register against CPT created after init process run.
-
-* Version 3.2.0  (29/11/2023)
-	* NEW: Taxonomies that have zero or one term will use radio buttons by using a "No term" selector.
-	* DEV: Reviewed for WP Coding Standards 3.0.
-	* DEV: Minimum supported version of PHP increased to 7.4.
-	* FIX: PHP 8.1 undefined array error.
-	* FIX: Tested with WP version 6.4.
-
+c
 For information on earlier version changes, see the [Simple Taxonomy Refreshed Changes](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/changelog.md) page.
 	
 == Migration Notice ==

@@ -7,7 +7,7 @@ import {
 	ToggleControl,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import ServerSideRender from '@wordpress/server-side-render';
+import { ServerSideRender } from '@wordpress/server-side-render';
 
 /* global staxo_data */
 
@@ -20,13 +20,7 @@ export default function Edit( { attributes, setAttributes } ) {
 	}
 
 	return (
-		<div { ...blockProps }>
-			{ /* Preview the block using its PHP render callback */ }
-			<ServerSideRender
-				block="simple-taxonomy-refreshed/cloud-widget"
-				attributes={ attributes }
-			/>
-
+		<>
 			<InspectorControls>
 				<PanelBody
 					title={ __( 'Taxonomy Cloud Settings', 'simple-taxonomy-refreshed' ) }
@@ -128,6 +122,14 @@ export default function Edit( { attributes, setAttributes } ) {
 					/>
 				</PanelBody>
 			</InspectorControls>
-		</div>
+			<div { ...blockProps }>
+				{ /* Preview the block using its PHP render callback */ }
+				<ServerSideRender
+					block="simple-taxonomy-refreshed/cloud-widget"
+					attributes={ attributes }
+					skipBlockSupportAttributes
+				/>
+			</div>
+		</>
 	);
 }

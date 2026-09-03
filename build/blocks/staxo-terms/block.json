@@ -15,9 +15,6 @@
   "attributes": {
     "tax": {
       "type": "string"
-    },
-    "align": {
-      "type": "string"
     }
   },
   "supports": {

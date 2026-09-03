@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 3.4.1  (03/09/2026)
+	* FIX: Taxonomy counts work within iFramed content.
+	* FIX: Restrict addition of terms to content/excerpt for main pages only.
+	* DEV: Tested against WP 7.1.
+	* DEV: Reviewed for Plugin Check 2.1.
+
 ## Version 3.4.0  (08/08/2026)
 	* NEW: Blocks use API V3 and block.json.
 	* FIX: Correct type of Hierarchy Depth.

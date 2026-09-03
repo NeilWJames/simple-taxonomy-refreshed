@@ -6,8 +6,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run build:blocks",
+    "build": "npm run build:blocks && npm run build:js && npm run build:css",
     "build:blocks": "wp-scripts build --webpack-src-dir=src/blocks --output-path=build/blocks",
+    "build:js": "terser src/common/staxo-admin.js -o build/common/staxo-admin.js -c -m && terser src/common/staxo-client.js -o build/common/staxo-client.js -c -m",
+    "build:css": "cleancss -o build/common/staxo-admin.css src/common/staxo-admin.css && cleancss -o build/common/staxo-widget.css src/common/staxo-widget.css",
     "start": "wp-scripts start --webpack-src-dir=src/blocks --output-path=build/blocks",
     "wp-env": "wp-env"
   },
@@ -22,7 +24,9 @@
   "author": "Neil W. James",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "@wordpress/env": "^11.12.0",
-    "@wordpress/scripts": "^34.0.0"
+    "@wordpress/env": "^11.14.0",
+    "@wordpress/scripts": "^34.2.0",
+    "clean-css-cli": "^5.6.3",
+    "terser": "^5.36.0"
   }
 }

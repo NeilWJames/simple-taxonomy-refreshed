@@ -4,8 +4,8 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 * Contributors: nwjames, momo360modena
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category
-* Stable tag: 3.4.0
-* Tested up to: 7.0.2
+* Stable tag: 3.4.1
+* Tested up to: 7.1.0
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 

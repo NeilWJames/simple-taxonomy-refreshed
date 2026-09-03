@@ -5,7 +5,7 @@ import { __ } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import { store as editorStore } from '@wordpress/editor';
 import { store as coreStore } from '@wordpress/core-data';
-import ServerSideRender from '@wordpress/server-side-render';
+import { ServerSideRender } from '@wordpress/server-side-render';
 
 /* global staxo_post */
 export default function Edit( { context, attributes, setAttributes } ) {
@@ -45,11 +45,7 @@ export default function Edit( { context, attributes, setAttributes } ) {
 	}
 
 	return (
-		<div { ...blockProps }>
-			<ServerSideRender
-				block="simple-taxonomy-refreshed/staxo-terms"
-				attributes={ attributes }
-			/>
+		<>
 			<InspectorControls>
 				<PanelBody title={ __( 'Post Terms', 'simple-taxonomy-refreshed' ) } initialOpen={ true }>
 					<RadioControl
@@ -60,6 +56,13 @@ export default function Edit( { context, attributes, setAttributes } ) {
 					/>
 				</PanelBody>
 			</InspectorControls>
-		</div>
+			<div { ...blockProps }>
+				<ServerSideRender
+					block="simple-taxonomy-refreshed/staxo-terms"
+					attributes={ attributes }
+					skipBlockSupportAttributes
+				/>
+			</div>
+		</>
 	);
 }

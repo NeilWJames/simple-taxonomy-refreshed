@@ -489,8 +489,9 @@ class SimpleTaxonomyRefreshed_Client {
 		$output = '';
 
 		foreach ( (array) $options['taxonomies'] as $taxonomy ) {
+			$slug = $taxonomy['name'];
 			// bypass if we want only a specific taxonomy and this isn't it.
-			if ( '' !== $tax && $tax !== $taxonomy['name'] ) {
+			if ( '' !== $tax && $tax !== $slug ) {
 				continue;
 			}
 			// Does the post_type uses this taxonomy.
@@ -498,7 +499,7 @@ class SimpleTaxonomyRefreshed_Client {
 				if ( 'both' === $taxonomy['auto'] || $type === $taxonomy['auto'] || 'arbitrary' === $type ) {
 					// Migration case - Not updated yet.
 					if ( ! array_key_exists( 'st_before', $taxonomy ) ) {
-						$taxonomy['st_before'] = '';
+						$taxonomy['st_before'] = $taxonomy['labels']['name'];
 						$taxonomy['st_sep']    = '';
 						$taxonomy['st_after']  = '';
 					}
@@ -538,13 +539,13 @@ class SimpleTaxonomyRefreshed_Client {
 						}
 						$suffix = $taxonomy['st_after'];
 					}
-					$terms = get_the_term_list( $post->ID, $taxonomy['name'], $prefix, $sep, $suffix );
+					$terms = get_the_term_list( $post->ID, $slug, $prefix, $sep, $suffix );
 					if ( ! empty( $terms ) ) {
-						$output .= "\t" . '<div class="taxonomy-' . $taxonomy['name'] . '">' . $terms . "</div>\n";
+						$output .= "\t" . '<div class="taxonomy-' . $slug . ' wp-block-post-terms">' . $terms . "</div>\n";
 					} else {
 						// On migration and before update, no value in 'not_found'.
 						$notfound = ( isset( $taxonomy['labels']['not_found'] ) ? $taxonomy['labels']['not_found'] : __( 'No Terms found', 'simple-taxonomy-refreshed' ) );
-						$output  .= "\t" . '<!-- Taxonomy : ' . $taxonomy['name'] . ' : ' . $notfound . ' -->' . "\n";
+						$output  .= "\t" . '<!-- Taxonomy : ' . $slug . ' : ' . $notfound . ' -->' . "\n";
 					}
 				}
 			}
@@ -566,7 +567,11 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @return string
 	 */
 	public static function the_content( $content = '' ) {
-		return self::taxonomy_filter( $content, 'content' );
+		// Check if we're inside the main loop in a single Post.
+		if ( is_singular() && in_the_loop() && is_main_query() ) {
+			return self::taxonomy_filter( $content, 'content' );
+		}
+		return $content;
 	}
 
 	/**
@@ -578,7 +583,11 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @return string
 	 */
 	public static function the_excerpt( $content = '' ) {
-		return self::taxonomy_filter( $content, 'excerpt' );
+		// Check if we're inside the main loop in a single Post.
+		if ( is_singular() && in_the_loop() && is_main_query() ) {
+			return self::taxonomy_filter( $content, 'excerpt' );
+		}
+		return $content;
 	}
 
 	/**
@@ -596,7 +605,11 @@ class SimpleTaxonomyRefreshed_Client {
 			),
 			$atts
 		);
-		return self::taxonomy_filter( '', 'arbitrary', $tax['tax'] );
+		// Check if we're inside the main loop in a single Post.
+		if ( is_singular() && in_the_loop() && is_main_query() ) {
+			return self::taxonomy_filter( '', 'arbitrary', $tax['tax'] );
+		}
+		return '';
 	}
 
 	/**
@@ -615,7 +628,11 @@ class SimpleTaxonomyRefreshed_Client {
 			),
 			$attributes
 		);
-		return self::taxonomy_filter( $content, 'arbitrary', $tax['tax'] );
+
+		// need to wrapper the output with the display attributes.
+		$output  = '<div ' . get_block_wrapper_attributes() . '>';
+		$output .= self::taxonomy_filter( $content, 'arbitrary', $tax['tax'] ) . '</div>';
+		return $output;
 	}
 
 	/**
@@ -647,24 +664,18 @@ class SimpleTaxonomyRefreshed_Client {
 		return $taxonomies;
 	}
 
-	/**
+		/**
 	 * Register terms block.
 	 *
 	 * @since 2.2.0
 	 */
 	public function staxo_terms_block() {
-		if ( ! function_exists( 'register_block_type' ) ) {
-			// Gutenberg is not active, e.g. Old WP version installed.
-			return;
-		}
-
-		$dir       = dirname( __DIR__ );
-		$build_dir = $dir . '/build/blocks/staxo-terms';
+		$block_dir = dirname( __DIR__ ) . '/build/blocks/staxo-terms';
 
 		// integrate the render callback into the parameters.
 		add_filter( 'block_type_metadata_settings', array( $this, 'update_settings' ), 10, 2 );
 
-		register_block_type_from_metadata( $build_dir );
+		register_block_type_from_metadata( $block_dir );
 
 		// Attach the taxonomy data to the editor script.
 		// WordPress auto-generates the script handle from the block name by converting slashes to hyphens.
@@ -1003,10 +1014,10 @@ class SimpleTaxonomyRefreshed_Client {
 					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
 						// potentially add to post types list.
 						if ( ! empty( $taxonomy['objects'] ) ) {
-							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) ? $taxonomy['st_cc_types'] : array() );
+							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) && ! empty( $taxonomy['st_cc_types'] ) ? $taxonomy['st_cc_types'] : $taxonomy['objects'] );
 							foreach ( $taxonomy['objects'] as $post_type ) {
-								// check the post type is in the list. (List not exists or is empty counts as in the list).
-								if ( empty( $cc_post_types ) || in_array( $post_type, $cc_post_types, true ) ) {
+								// check the post type is in the list.
+								if ( in_array( $post_type, $cc_post_types, true ) ) {
 									$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
 										'st_cc_type'   => $taxonomy['st_cc_type'],
 										'st_cc_hard'   => $taxonomy['st_cc_hard'],
@@ -1034,15 +1045,16 @@ class SimpleTaxonomyRefreshed_Client {
 				// Identify if term count control limits wanted.
 				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
 					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
+						// need to get some properties from external taxonomy.
+						$tax_obj             = get_taxonomy( $key );
+						$taxonomy['objects'] = (array) $tax_obj->object_type;
 						// add to post types list.
 						if ( ! empty( $taxonomy['objects'] ) ) {
-							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) ? $taxonomy['st_cc_types'] : array() );
-							// need to get some properties from external taxonomy.
-							$tax_obj = get_taxonomy( $taxonomy );
+							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) ? $taxonomy['st_cc_types'] : $taxonomy['objects'] );
 							foreach ( $taxonomy['objects'] as $post_type ) {
-								// check the post type is in the list. (List not exists or is empty counts as in the list).
-								if ( empty( $cc_post_types ) || in_array( $post_type, $cc_post_types, true ) ) {
-									$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
+								// check the post type is in the list.
+								if ( in_array( $post_type, $cc_post_types, true ) ) {
+									$cntl_post_types[ $post_type ][ $key ] = array(
 										'st_cc_type'   => $taxonomy['st_cc_type'],
 										'st_cc_hard'   => $taxonomy['st_cc_hard'],
 										'st_cc_umin'   => $taxonomy['st_cc_umin'],
@@ -1053,6 +1065,7 @@ class SimpleTaxonomyRefreshed_Client {
 										'rest_base'    => ( empty( $tax_obj->rest_base ) ? $tax_obj->name : $tax_obj->rest_base ),
 										'label_name'   => $tax_obj->labels->name,
 										'hierarchical' => $tax_obj->hierarchical,
+										'no_term'      => __( 'No term', 'simple-taxonomy-refreshed' ),
 									);
 								}
 							}
@@ -1061,7 +1074,6 @@ class SimpleTaxonomyRefreshed_Client {
 				}
 			}
 		}
-
 		set_transient( $cache_key, $cntl_post_types, WEEK_IN_SECONDS );
 
 		return $cntl_post_types;
