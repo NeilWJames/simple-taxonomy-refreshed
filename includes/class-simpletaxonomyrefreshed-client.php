@@ -664,7 +664,7 @@ class SimpleTaxonomyRefreshed_Client {
 		return $taxonomies;
 	}
 
-		/**
+	/**
 	 * Register terms block.
 	 *
 	 * @since 2.2.0

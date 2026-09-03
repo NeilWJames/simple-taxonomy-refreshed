@@ -1,4 +1,4 @@
-name: Build Blocks
+name: Build Blocks and Compress JS/CSS
 
 on:
   workflow_dispatch:
