@@ -60,7 +60,26 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 
 == Changelog ==
 
-c
+* Version 3.4.1  (03/09/2026)
+	* FIX: Taxonomy counts work within iFramed content.
+	* FIX: Restrict addition of terms to content/excerpt for main pages only.
+	* DEV: Tested against WP 7.1.
+	* DEV: Reviewed for Plugin Check 2.1.
+
+* Version 3.4.0  (08/08/2026)
+	* NEW: Blocks use API V3 and block.json.
+	* FIX: Correct type of Hierarchy Depth.
+	* FIX: Permit Term Controls to work for sub-set of possible post types.
+	* DEV: Tested against WP 7.0.
+	* DEV: Reviewed for WP Coding Standards 3.4.
+	* DEV: Reviewed for Plugin Check 2.0.
+
+* Version 3.3.0  (06/12/2024)
+	* DEV: Ensure option autoloaded.
+	* DEV: Review of list_table ordering processing.
+	* DEV: Reviewed for WP Coding Standards 3.1.
+	* FIX: Register against CPT created after init process run.
+
 For information on earlier version changes, see the [Simple Taxonomy Refreshed Changes](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/changelog.md) page.
 	
 == Migration Notice ==
