@@ -1,0 +1,16 @@
+# PHPStan configuration. Run with: bin/phpstan analyse
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+    # Analyse against the minimum supported PHP version.
+    phpVersion: 80200
+    paths:
+        - simple-taxonomy-refreshed.php
+        - includes/
+    bootstrapFiles:
+        - tests/phpstan-bootstrap.php
+    # Baseline entries that get fixed should not fail the build.
+    reportUnmatchedIgnoredErrors: false

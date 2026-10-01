@@ -1,0 +1,29 @@
+# Files and folders not shipped to WordPress.org.
+# Used by `wp dist-archive` and SVN deploy tools.
+# src/ is shipped so the human-readable source of the minified build/ files is included.
+
+/.git
+/.github
+/.distignore
+/.gitattributes
+/.gitignore
+/bin
+/docs
+/images
+/node_modules
+/script
+/tests
+/vendor
+
+composer.json
+composer.lock
+coverage.xml
+eslint.config.cjs
+junit.xml
+package.json
+package-lock.json
+phpcs.ruleset.xml
+phpstan-baseline.neon
+phpstan.neon.dist
+phpunit9.xml
+webpack.config.js.txt
