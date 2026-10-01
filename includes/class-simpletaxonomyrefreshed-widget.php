@@ -50,7 +50,6 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	 */
 	public function __construct() {
 		// Do translation stuff in str_widgets_init.
-		null;
 	}
 
 	/**
@@ -105,8 +104,6 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		$args      = wp_parse_args( $args, $dflt_args );
 		$instance  = wp_parse_args( (array) $instance, self::$defaults );
 
-		// phpcs:ignore
-		extract( $args );
 		$current_taxonomy = $this->get_current_taxonomy( $instance );
 
 		// Build or not the name of the widget.
@@ -114,7 +111,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			$title = $instance['title'];
 		} else {
 			$tax   = get_taxonomy( $current_taxonomy );
-			$title = $tax->labels->name;
+			$title = ( false === $tax ? '' : $tax->labels->name );
 		}
 
 		/*
@@ -131,10 +128,10 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		ob_start();
 
 		// phpcs:ignore WordPress.Security.EscapeOutput
-		echo $before_widget;
+		echo $args['before_widget'];
 		if ( $title ) {
 			// phpcs:ignore WordPress.Security.EscapeOutput
-			echo $before_title . esc_html( $title ) . $after_title;
+			echo $args['before_title'] . esc_html( $title ) . $args['after_title'];
 		}
 
 		// if we request a tag cloud, check that it has been allowed.
@@ -199,7 +196,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			add_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 10, 3 );
 			$terms = get_terms( $list_args );
 			remove_filter( 'terms_clauses', array( __CLASS__, 'filter_terms' ), 10 );
-			if ( false === $terms ) {
+			if ( is_wp_error( $terms ) || empty( $terms ) ) {
 				echo '<p>' . esc_html__( 'No terms available for this taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>';
 			} else {
 				echo '<ul class="staxo-terms-list" role="grid">' . "\n";
@@ -219,7 +216,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		}
 
 		// phpcs:ignore WordPress.Security.EscapeOutput
-		echo $after_widget;
+		echo $args['after_widget'];
 
 		// return buffer contents and remove it.
 		return ob_get_clean();
@@ -233,12 +230,13 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	 * @param array    $args       An array of term query arguments.
 	 */
 	public static function filter_terms( $pieces, $taxonomies, $args ) {
-		if ( $args['filter_min'] > 0 ) {
+		$filter_min = ( isset( $args['filter_min'] ) ? absint( $args['filter_min'] ) : 0 );
+		if ( $filter_min > 0 ) {
 			$pieces['where']  = str_replace( ' AND tt.count > 0', '', $pieces['where'] );
-			$pieces['where'] .= ' AND tt.count >= ' . $args['filter_min'];
+			$pieces['where'] .= ' AND tt.count >= ' . $filter_min;
 		}
 		// tag_cloud is always DESC, so must be list.
-		if ( 'RAND' === $args['order'] ) {
+		if ( isset( $args['order'] ) && 'RAND' === $args['order'] ) {
 			$pieces['orderby'] = 'ORDER BY RAND()';
 		}
 		return $pieces;
@@ -266,8 +264,8 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	/**
 	 * Callback to display widget contents in classic widget.
 	 *
-	 * @param array  $args the widget arguments.
-	 * @param object $instance the WP Widget instance.
+	 * @param array $args     the widget arguments.
+	 * @param array $instance the widget settings.
 	 */
 	public function widget( $args, $instance ) {
 
@@ -288,8 +286,13 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		$instance = $old_instance;
 
 		// String.
-		foreach ( array( 'title', 'taxonomy', 'small', 'big', 'alignment', 'numdisp', 'disptype', 'orderby', 'order', 'minposts' ) as $val ) {
-			$instance[ $val ] = wp_strip_all_tags( $new_instance[ $val ] );
+		foreach ( array( 'title', 'taxonomy', 'alignment', 'disptype', 'orderby', 'order' ) as $val ) {
+			$instance[ $val ] = ( isset( $new_instance[ $val ] ) ? sanitize_text_field( $new_instance[ $val ] ) : self::$defaults[ $val ] );
+		}
+
+		// Numeric.
+		foreach ( array( 'small', 'big', 'numdisp', 'minposts' ) as $val ) {
+			$instance[ $val ] = ( isset( $new_instance[ $val ] ) ? absint( $new_instance[ $val ] ) : self::$defaults[ $val ] );
 		}
 
 		// Checkbox.
@@ -302,7 +305,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	 * Control for widget admin
 	 *
 	 * @param array $instance current settings.
-	 * @return void
+	 * @return string Empty string, so the standard Save button is shown.
 	 */
 	public function form( $instance ) {
 		$instance = wp_parse_args( (array) $instance, self::$defaults );
@@ -410,6 +413,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			<input id="<?php echo esc_html( $this->get_field_id( 'minposts' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'minposts' ) ); ?>" type="number" value="<?php echo (int) $instance['minposts']; ?>" min="0" class="widefat" />
 		</p>
 		<?php
+		return '';
 	}
 
 	/**

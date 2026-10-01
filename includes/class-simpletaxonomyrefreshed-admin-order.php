@@ -21,7 +21,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 	/**
 	 * Instance variable to ensure singleton.
 	 *
-	 * @var int
+	 * @var self|null
 	 */
 	private static $instance = null;
 
@@ -288,7 +288,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 				'multiple' => $multiple,
 			);
 
-			wp_cache_set( 'staxo_orderings', $orderings, 300 );
+			wp_cache_set( 'staxo_orderings', $orderings, '', 300 );
 		}
 		return $orderings;
 	}

@@ -2,9 +2,10 @@
 
 Contributors: nwjames, momo360modena
 Tags: tags, taxonomies, custom taxonomies, taxonomy, category
+Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 3.4.1
+Stable tag: 4.0.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -14,7 +15,7 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 Supports adding one or more taxonomies (either hierarchical or tag) to any objects registered on your installation.
 
-This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) (now closed) and developed on WordPress 5.1-7.0 with PHP 7.2-8.4.
+This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) (now closed). It requires WordPress 6.9 or later and PHP 8.2 or later, and is tested up to WordPress 7.1.
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 
@@ -59,6 +60,33 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
 
 == Changelog ==
+
+* Version 4.0.0  (xx/xx/2026)
+	* NEW: Filter `staxo_can_edit_callbacks` controls who may edit the callback fields.
+	* FIX: Terms Merge now merges and deletes every selected source term, not just the first.
+	* FIX: Block editor notices no longer break when a label or translation contains a quote.
+	* FIX: Editor scripts wait for the page and the block editor iframe to be ready.
+	* FIX: Block editor term limits only report too many terms when the maximum is exceeded.
+	* FIX: Publish sidebar is disabled and re-enabled correctly when term limits are not met.
+	* FIX: REST term-limit check uses the request data, falling back to the post's existing terms.
+	* FIX: Editing an external taxonomy now loads its saved settings.
+	* FIX: Terms Merge shows the terms-control warning.
+	* FIX: Spacing check for the "after" text of post terms.
+	* FIX: Taxonomy List Order page script error that stopped sorting.
+	* FIX: Taxonomy List Order cache used the wrong cache group, so it was never reused.
+	* FIX: Bold text in the Flush & Delete warning on the settings screen.
+	* FIX: Widget no longer raises PHP warnings when its taxonomy is not registered, and shows a message for an empty list.
+	* FIX: Term counts for external taxonomies that are not yet registered no longer raise PHP warnings.
+	* FIX: Changing Hierarchical now updates the Admin List Filter options in all browsers, not just Firefox.
+	* DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
+	* DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
+	* DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.
+	* DEV: Widget numeric settings are sanitised.
+	* DEV: Notice about the original Simple Taxonomy plugin is shown only to administrators in admin.
+	* DEV: Minimum WordPress version increased to 6.9.
+	* DEV: Removed term-count code for WordPress before 5.7, including `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version`.
+	* DEV: JavaScript reviewed with wp-scripts lint-js.
+	* DEV: Code checked with PHPStan (level 5).
 
 * Version 3.4.1  (03/09/2026)
 	* FIX: Taxonomy counts work within iFramed content.

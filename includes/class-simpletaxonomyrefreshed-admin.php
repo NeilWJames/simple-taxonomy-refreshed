@@ -22,16 +22,24 @@ class SimpleTaxonomyRefreshed_Admin {
 	const ADD_SLUG   = 'staxo_settings&action=add';
 
 	/**
-	 * Admin URL variable.
+	 * Option fields holding PHP callback or class names.
 	 *
-	 * @var string
+	 * These are executed by WordPress, so changing them is equivalent to running code.
+	 *
+	 * @since 4.0.0
 	 */
-	private $admin_url = '';
+	const CALLBACK_FIELDS = array(
+		'update_count_callback',
+		'rest_controller_class',
+		'st_update_count_callback',
+		'st_meta_box_cb',
+		'st_meta_box_sanitize_cb',
+	);
 
 	/**
 	 * Instance variable to ensure singleton.
 	 *
-	 * @var int
+	 * @var self|null
 	 */
 	private static $instance = null;
 
@@ -50,7 +58,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Use of block editor.
 	 *
-	 * @var bool $use_block_editor.
+	 * @var bool|null $use_block_editor null until determined.
 	 */
 	public static $use_block_editor = null;
 
@@ -224,12 +232,13 @@ class SimpleTaxonomyRefreshed_Admin {
 					<?php
 					foreach ( (array) $options['taxonomies'] as $taxonomy ) {
 						$taxo = get_taxonomy( $taxonomy['name'] );
-						if ( false === $taxo || is_wp_error( $taxo ) ) {
+						if ( false === $taxo ) {
 							continue;
 						}
+						$count = wp_count_terms( array( 'taxonomy' => $taxo->name ) );
 						?>
 						<tr>
-							<td class="first b b-<?php echo esc_attr( $taxo->name ); ?>"><a href="edit-tags.php?taxonomy=<?php echo esc_attr( $taxo->name ); ?>"><?php echo esc_html( wp_count_terms( $taxo->name ) ); ?></a></td>
+							<td class="first b b-<?php echo esc_attr( $taxo->name ); ?>"><a href="edit-tags.php?taxonomy=<?php echo esc_attr( $taxo->name ); ?>"><?php echo esc_html( is_wp_error( $count ) ? '0' : (string) $count ); ?></a></td>
 							<td class="t <?php echo esc_attr( $taxo->name ); ?>"><a href="edit-tags.php?taxonomy=<?php echo esc_attr( $taxo->name ); ?>"><?php echo esc_attr( $taxo->labels->name ); ?></a></td>
 						</tr>
 						<?php
@@ -423,7 +432,7 @@ class SimpleTaxonomyRefreshed_Admin {
 						echo esc_html( sprintf( __( 'Your post needs to have less terms for taxonomy - %s.', 'simple-taxonomy-refreshed' ), $label ) );
 						break;
 					default:
-						null;
+						break;
 				}
 				?>
 				</p>
@@ -501,25 +510,82 @@ class SimpleTaxonomyRefreshed_Admin {
 
 
 	/**
+	 * Whether the current user may change the callback fields of a taxonomy.
+	 *
+	 * Callback fields name PHP functions/classes that WordPress will execute, so by default
+	 * only users trusted with unfiltered HTML (super admins on multisite) may change them.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param string $taxonomy taxonomy name (may be empty for a new taxonomy).
+	 * @return bool
+	 */
+	public static function can_edit_callbacks( $taxonomy ) {
+		$allowed = ( is_multisite() ? is_super_admin() : current_user_can( 'unfiltered_html' ) );
+
+		/**
+		 * Filters whether the current user may change taxonomy callback fields.
+		 *
+		 * Fields: update_count_callback, rest_controller_class, st_update_count_callback,
+		 * st_meta_box_cb and st_meta_box_sanitize_cb.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param bool    $allowed  Default: unfiltered_html capability (is_super_admin() on multisite).
+		 * @param WP_User $user     Current user.
+		 * @param string  $taxonomy Taxonomy name (empty when adding a new taxonomy).
+		 */
+		return (bool) apply_filters( 'staxo_can_edit_callbacks', $allowed, wp_get_current_user(), (string) $taxonomy );
+	}
+
+	/**
+	 * Replace callback fields with their currently stored values when the user may not change them.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array  $taxonomy taxonomy data about to be saved.
+	 * @param array  $stored   currently stored data for the same taxonomy (empty if new).
+	 * @param string $name     taxonomy name used for the permission check.
+	 * @return array
+	 */
+	public static function protect_callback_fields( $taxonomy, $stored, $name ) {
+		if ( self::can_edit_callbacks( $name ) ) {
+			return $taxonomy;
+		}
+		foreach ( self::CALLBACK_FIELDS as $field ) {
+			if ( isset( $stored[ $field ] ) ) {
+				$taxonomy[ $field ] = $stored[ $field ];
+			} elseif ( array_key_exists( $field, $taxonomy ) ) {
+				$taxonomy[ $field ] = '';
+			}
+		}
+		return $taxonomy;
+	}
+
+	/**
 	 * Helper function to display a text option on admin
 	 *
-	 * @param array  $taxonomy taxonomy array.
-	 * @param string $name     target option name.
-	 * @param string $label    display label.
-	 * @param string $descr    sanitized description field.
+	 * @param array  $taxonomy  taxonomy array.
+	 * @param string $name      target option name.
+	 * @param string $label     display label.
+	 * @param string $descr     sanitized description field.
+	 * @param bool   $read_only display the field as read-only.
 	 * @return void
 	 */
-	private static function option_text( &$taxonomy, $name, $label, $descr ) {
+	private static function option_text( &$taxonomy, $name, $label, $descr, $read_only = false ) {
 		// Sanitize the data before calling.
 		// phpcs:disable  WordPress.Security.EscapeOutput
 		?>
 		<tr>
 			<th scope="row"><label for="<?php echo $name; ?>"><?php echo $label; ?></label></th>
 			<td>
-				<input name="<?php echo $name; ?>" type="text" id="<?php echo $name; ?>" value="<?php echo esc_attr( $taxonomy[ $name ] ); ?>" class="regular-text" />
+				<input name="<?php echo $name; ?>" type="text" id="<?php echo $name; ?>" value="<?php echo esc_attr( $taxonomy[ $name ] ); ?>" class="regular-text"<?php echo ( $read_only ? ' readonly="readonly" aria-readonly="true"' : '' ); ?> />
 				<?php
 				if ( '' !== $descr ) {
 					echo '<br /><span class="description">' . $descr . '</span>';
+				}
+				if ( $read_only ) {
+					echo '<br /><span class="description">' . esc_html__( 'Read-only: you do not have permission to change callback settings.', 'simple-taxonomy-refreshed' ) . '</span>';
 				}
 				?>
 			</td>
@@ -662,44 +728,47 @@ class SimpleTaxonomyRefreshed_Admin {
 			$tax_name = sanitize_text_field( wp_unslash( $_GET['taxonomy_name'] ) ); // phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 			// Get existing options if exist.
 			$options = get_option( OPTION_STAXO );
-			if ( isset( $options['externals'] ) && is_array( $options['externals'] && array_key_exists( $tax_name, $options['externals'] ) ) ) {
-				$taxonomy = $options['externals'][ $tax_name ];
-			} else {
-				// set defaults.
-				$taxonomy = array(
-					'name'               => $tax_name,
-					'st_show_in_graphql' => 0,
-					'st_graphql_single'  => '',
-					'st_graphql_plural'  => '',
-					'st_adm_types'       => array(),
-					'st_adm_hier'        => 0,
-					'st_adm_depth'       => 0,
-					'st_adm_count'       => 0,
-					'st_adm_h_e'         => 0,
-					'st_adm_h_i_e'       => 0,
-					'st_cb_type'         => 0,
-					'st_cb_pub'          => 0,
-					'st_cb_fut'          => 0,
-					'st_cb_dft'          => 0,
-					'st_cb_pnd'          => 0,
-					'st_cb_prv'          => 0,
-					'st_cb_tsh'          => 0,
-					'st_cc_type'         => 0,
-					'st_cc_types'        => array(),
-					'st_cc_hard'         => 0,
-					'st_cc_umin'         => 0,
-					'st_cc_umax'         => 0,
-					'st_cc_min'          => 0,
-					'st_cc_max'          => 0,
-					'st_feed'            => 0,
-				);
-				// add data from taxonomy . Not stored.
-				$tax_obj                              = get_taxonomy( $tax_name );
-				$taxonomy['labels']                   = (array) $tax_obj->labels;
-				$taxonomy['objects']                  = (array) $tax_obj->object_type;
-				$taxonomy['hierarchical']             = $tax_obj->hierarchical;
-				$taxonomy['st_update_count_callback'] = $tax_obj->update_count_callback;
+			if ( ! taxonomy_exists( $tax_name ) ) {
+				wp_die( esc_html__( "You are trying to edit a taxonomy that doesn't exist...", 'simple-taxonomy-refreshed' ) );
 			}
+			// set defaults.
+			$taxonomy = array(
+				'name'               => $tax_name,
+				'st_show_in_graphql' => 0,
+				'st_graphql_single'  => '',
+				'st_graphql_plural'  => '',
+				'st_adm_types'       => array(),
+				'st_adm_hier'        => 0,
+				'st_adm_depth'       => 0,
+				'st_adm_count'       => 0,
+				'st_adm_h_e'         => 0,
+				'st_adm_h_i_e'       => 0,
+				'st_cb_type'         => 0,
+				'st_cb_pub'          => 0,
+				'st_cb_fut'          => 0,
+				'st_cb_dft'          => 0,
+				'st_cb_pnd'          => 0,
+				'st_cb_prv'          => 0,
+				'st_cb_tsh'          => 0,
+				'st_cc_type'         => 0,
+				'st_cc_types'        => array(),
+				'st_cc_hard'         => 0,
+				'st_cc_umin'         => 0,
+				'st_cc_umax'         => 0,
+				'st_cc_min'          => 0,
+				'st_cc_max'          => 0,
+				'st_feed'            => 0,
+			);
+			// overlay any saved settings for this external taxonomy.
+			if ( isset( $options['externals'] ) && is_array( $options['externals'] ) && array_key_exists( $tax_name, $options['externals'] ) ) {
+				$taxonomy = array_merge( $taxonomy, (array) $options['externals'][ $tax_name ] );
+			}
+			// add data from taxonomy . Not stored.
+			$tax_obj                              = get_taxonomy( $tax_name );
+			$taxonomy['labels']                   = (array) $tax_obj->labels;
+			$taxonomy['objects']                  = (array) $tax_obj->object_type;
+			$taxonomy['hierarchical']             = $tax_obj->hierarchical;
+			$taxonomy['st_update_count_callback'] = $tax_obj->update_count_callback;
 			self::page_form( $taxonomy, false );
 			return;
 		}
@@ -718,7 +787,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				<p>
 				<?php
 				// phpcs:ignore  WordPress.Security.EscapeOutput
-				echo wp_kses( __( '<strong>Warning :</strong> Flush & Delete a taxonomy will also delete all terms of the taxonomy and all object relations.', 'simple-taxonomy-refreshed' ), array( 'strong' ) );
+				echo wp_kses( __( '<strong>Warning :</strong> Flush & Delete a taxonomy will also delete all terms of the taxonomy and all object relations.', 'simple-taxonomy-refreshed' ), array( 'strong' => array() ) );
 				?>
 				</p>
 			</div>
@@ -915,13 +984,16 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Build HTML for form custom taxonomy, add with list on right column
 	 *
-	 * @param array   $taxonomy  taxonomy name.
-	 * @param boolean $custom    taxonomy is custom.
+	 * @param array|null $taxonomy taxonomy data (null when adding a new taxonomy).
+	 * @param boolean    $custom   taxonomy is custom.
 	 * @return void
 	 */
 	private static function form_merge_custom_type( $taxonomy, $custom ) {
 		// Admin URL.
 		$admin_url = admin_url( 'admin.php?page=' . self::ADMIN_SLUG );
+
+		// Callback fields are shown read-only to users who may not change them.
+		$cb_readonly = ! self::can_edit_callbacks( ( is_array( $taxonomy ) && isset( $taxonomy['name'] ) ) ? $taxonomy['name'] : '' );
 
 		if ( null === $taxonomy ) {
 			$taxonomy                 = SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields();
@@ -1122,7 +1194,6 @@ class SimpleTaxonomyRefreshed_Admin {
 												<?php
 												foreach ( self::get_true_false() as $type_key => $type_name ) {
 													echo '<option ' . selected( (int) $taxonomy['hierarchical'], $type_key, false );
-													echo ' onclick="linkH(event, ' . esc_attr( $type_key ) . ')"';
 													echo ' value="' . esc_attr( $type_key ) . '">' . esc_html( $type_name ) . '</option>' . "\n";
 												}
 												?>
@@ -1588,7 +1659,8 @@ class SimpleTaxonomyRefreshed_Admin {
 											$taxonomy,
 											'rest_controller_class',
 											esc_html__( 'REST Controller Class', 'simple-taxonomy-refreshed' ),
-											esc_html__( "REST API Controller class name. Default is 'WP_REST_Terms_Controller'.", 'simple-taxonomy-refreshed' )
+											esc_html__( "REST API Controller class name. Default is 'WP_REST_Terms_Controller'.", 'simple-taxonomy-refreshed' ),
+											$cb_readonly
 										);
 									?>
 								</table>
@@ -1612,20 +1684,23 @@ class SimpleTaxonomyRefreshed_Admin {
 											$taxonomy,
 											'st_update_count_callback',
 											esc_html__( 'Update Count Callback', 'simple-taxonomy-refreshed' ),
-											esc_html__( 'Works much like a hook, in that it will be called when the count is updated.', 'simple-taxonomy-refreshed' ) . '<br/>' .
-											esc_html__( 'Set to the text false to not display the metabox.', 'simple-taxonomy-refreshed' )
+											esc_html__( 'Works much like a hook, in that it will be called when the count is updated.', 'simple-taxonomy-refreshed' ),
+											$cb_readonly
 										);
 										self::option_text(
 											$taxonomy,
 											'st_meta_box_cb',
 											esc_html__( 'Meta Box Callback', 'simple-taxonomy-refreshed' ),
-											esc_html__( 'Provide a callback function for the meta box display.', 'simple-taxonomy-refreshed' )
+											esc_html__( 'Provide a callback function for the meta box display.', 'simple-taxonomy-refreshed' ) . '<br/>' .
+											esc_html__( 'Set to the text false to not display the metabox.', 'simple-taxonomy-refreshed' ),
+											$cb_readonly
 										);
 										self::option_text(
 											$taxonomy,
 											'st_meta_box_sanitize_cb',
 											esc_html__( 'Meta Box Sanitize Callback', 'simple-taxonomy-refreshed' ),
-											esc_html__( 'Callback function for sanitizing taxonomy data saved from a meta box.', 'simple-taxonomy-refreshed' )
+											esc_html__( 'Callback function for sanitizing taxonomy data saved from a meta box.', 'simple-taxonomy-refreshed' ),
+											$cb_readonly
 										);
 										self::option_yes_no(
 											$taxonomy,
@@ -2049,6 +2124,15 @@ class SimpleTaxonomyRefreshed_Admin {
 				// Clean sanitize value.
 				$taxonomy['name'] = sanitize_title( $taxonomy['name'] );
 
+				// Users who may not change callbacks keep the stored values, whatever was posted.
+				$stored_options = get_option( OPTION_STAXO );
+				$stored_group   = ( 'merge-external' === $action ? 'externals' : 'taxonomies' );
+				$stored         = ( isset( $stored_options[ $stored_group ][ $taxonomy['name'] ] ) ? (array) $stored_options[ $stored_group ][ $taxonomy['name'] ] : array() );
+				if ( 'add-taxonomy' === $action ) {
+					$stored = array();
+				}
+				$taxonomy = self::protect_callback_fields( $taxonomy, $stored, $taxonomy['name'] );
+
 				// Allow plugin to filter data...
 				/**
 				 *
@@ -2100,6 +2184,9 @@ class SimpleTaxonomyRefreshed_Admin {
 
 			// check nonce.
 			check_admin_referer( 'staxo_export_php-' . $taxonomy_name );
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
+			}
 
 			// Get taxo data.
 			$current_options = get_option( OPTION_STAXO );
@@ -2305,6 +2392,9 @@ class SimpleTaxonomyRefreshed_Admin {
 			$taxonomy_name = sanitize_text_field( wp_unslash( $_GET['taxonomy_name'] ) );
 
 			check_admin_referer( 'staxo_delete_' . $taxonomy_name );
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
+			}
 
 			$taxonomy         = array();
 			$taxonomy['name'] = stripslashes( $taxonomy_name );
@@ -2317,6 +2407,9 @@ class SimpleTaxonomyRefreshed_Admin {
 		} elseif ( isset( $_GET['action'] ) && isset( $_GET['taxonomy_name'] ) && 'flush-delete' === sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 			$taxonomy_name = sanitize_text_field( wp_unslash( $_GET['taxonomy_name'] ) );
 			check_admin_referer( 'staxo_flush_delete-' . $taxonomy_name );
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
+			}
 
 			$taxonomy         = array();
 			$taxonomy['name'] = stripslashes( $taxonomy_name );
@@ -2776,25 +2869,8 @@ class SimpleTaxonomyRefreshed_Admin {
 						if ( self::is_block_editor() ) {
 							// Show in rest needed and hard error will put out message later.
 							if ( $cntl['show_in_rest'] && $cntl['st_cc_hard'] < 2 ) {
-								// phpcs:disable Squiz.Strings.DoubleQuoteUsage
-								$script =
-									"( function( wp ) { " . PHP_EOL .
-									"	wp.data.dispatch( 'core/notices' ).createNotice(" . PHP_EOL .
-									"  '" . $err . "'," . PHP_EOL .
-									"  '" . $text_1 . '  ' . $text_2 . '  ' . $text_3 . "'," . PHP_EOL .
-									"  { isDismissible: true, id: 'str_notice_{$tax}' }" . PHP_EOL .
-									" );" . PHP_EOL .
-									"} )( window.wp );" . PHP_EOL .
-									"window.onload = function() {" . PHP_EOL .
-									" var sub = document.getElementsByClassName('edit-post-header__settings');" . PHP_EOL .
-									" if (sub.length > 0) {" . PHP_EOL .
-									"  sub[0].addEventListener('click', event => {" . PHP_EOL .
-									"	  wp.data.dispatch( 'core/notices' ).removeNotice( 'str_notice_{$tax}' );" . PHP_EOL .
-									"  });" . PHP_EOL .
-									" };" . PHP_EOL .
-									"};";
-								// phpcs:enable Squiz.Strings.DoubleQuoteUsage
-								wp_add_inline_script( 'staxo_placeholder', $script, 'after' );
+								// Message and ids are JSON-encoded so quotes in labels or translations cannot break the script.
+								wp_add_inline_script( 'staxo_placeholder', self::notice_script( $err, $text_1 . '  ' . $text_2 . '  ' . $text_3, $tax ), 'after' );
 							}
 						} else {
 							$err_notice = true;
@@ -2812,7 +2888,7 @@ class SimpleTaxonomyRefreshed_Admin {
 					// check maximum if test is needed.
 					if ( $vmx && $num_terms > $max ) {
 						$err = $err_msg;
-						// translators: %1$s is the taxonomy label; %2$d is the required maximum number of terms.
+						// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
 						$text_1 = sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $label, $max );
 						$text_3 = '';
 						if ( $user_change ) {
@@ -2827,25 +2903,8 @@ class SimpleTaxonomyRefreshed_Admin {
 						if ( self::is_block_editor() ) {
 							// Show in rest needed and hard error will put out message later.
 							if ( $cntl['show_in_rest'] && $cntl['st_cc_hard'] < 2 ) {
-								// phpcs:disable Squiz.Strings.DoubleQuoteUsage
-								$script =
-									'( function( wp ) { ' . PHP_EOL .
-									"	wp.data.dispatch( 'core/notices' ).createNotice(" . PHP_EOL .
-									"  '" . $err . "'," . PHP_EOL .
-									"  '" . $text_1 . '  ' . $text_2 . '  ' . $text_3 . "'," . PHP_EOL .
-									"  { isDismissible: true, id: 'str_notice_{$tax}' }" . PHP_EOL .
-									" );" . PHP_EOL .
-									"} )( window.wp );" . PHP_EOL .
-									"window.onload = function() {" . PHP_EOL .
-									" var sub = document.getElementsByClassName('edit-post-header__settings');" . PHP_EOL .
-									" if (sub.length > 0) {" . PHP_EOL .
-									"  sub[0].addEventListener('click', event => {" . PHP_EOL .
-									"	  wp.data.dispatch( 'core/notices' ).removeNotice( 'str_notice_{$tax}' );" . PHP_EOL .
-									"  });" . PHP_EOL .
-									" };" . PHP_EOL .
-									"};";
-								// phpcs:enable Squiz.Strings.DoubleQuoteUsage
-								wp_add_inline_script( 'staxo_placeholder', $script, 'after' );
+								// Message and ids are JSON-encoded so quotes in labels or translations cannot break the script.
+								wp_add_inline_script( 'staxo_placeholder', self::notice_script( $err, $text_1 . '  ' . $text_2 . '  ' . $text_3, $tax ), 'after' );
 							}
 						} else {
 							$err_notice = true;
@@ -2891,13 +2950,14 @@ class SimpleTaxonomyRefreshed_Admin {
 						// Block editor is the same. N.B. This should be called elsewhere.
 						$funct = 'block_limit( window.wp, ';
 					} elseif ( (bool) $tax_obj->hierarchical ) {
-						$funct = 'dom_hier_cntl_check(';
+						$funct = 'dom_hier_cntl_check( ';
 					} else {
-						$funct = 'dom_tag_cntl_check(';
+						$funct = 'dom_tag_cntl_check( ';
 					}
+					// Pass a function to the listener; calling it directly would run it before the DOM is ready.
 					wp_add_inline_script(
 						'staxo_client',
-						$parm . 'document.addEventListener("DOMContentLoaded", ' . $funct . ' "' . $tax . '" ));'
+						$parm . self::on_dom_ready( $funct . wp_json_encode( $tax ) . ' )', false )
 					);
 				}
 			}
@@ -2905,16 +2965,67 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Build the inline script for a block editor notice.
+	 *
+	 * All variable parts are JSON-encoded, so quotes in labels or translations cannot break the script.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param string $type    notice type (error, warning, ...).
+	 * @param string $message notice text (plain text).
+	 * @param string $tax     taxonomy slug (used for the notice id).
+	 * @return string
+	 */
+	private static function notice_script( $type, $message, $tax ) {
+		$id = wp_json_encode( 'str_notice_' . $tax );
+		return '( function( wp ) {' . PHP_EOL .
+			'	wp.data.dispatch( "core/notices" ).createNotice( ' . wp_json_encode( (string) $type ) . ', ' . wp_json_encode( (string) $message ) . ', { isDismissible: true, id: ' . $id . ' } );' . PHP_EOL .
+			'	window.addEventListener( "load", function() {' . PHP_EOL .
+			'		var sub = document.querySelector( ".editor-header__settings, .edit-post-header__settings" );' . PHP_EOL .
+			'		if ( sub ) {' . PHP_EOL .
+			'			sub.addEventListener( "click", function() {' . PHP_EOL .
+			'				wp.data.dispatch( "core/notices" ).removeNotice( ' . $id . ' );' . PHP_EOL .
+			'			} );' . PHP_EOL .
+			'		}' . PHP_EOL .
+			'	} );' . PHP_EOL .
+			'} )( window.wp );';
+	}
+
+	/**
+	 * Build a script that runs a client call once the DOM (and optionally the editor canvas) is ready.
+	 *
+	 * The call is wrapped in a function so it is not executed when the listener is registered.
+	 * If the DOM has already loaded (script printed in the footer), it runs straight away.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param string $call        JS call expression, with arguments already JSON-encoded.
+	 * @param bool   $wait_editor wait for the block editor iframe via wait_for_editor_ready().
+	 * @return string
+	 */
+	private static function on_dom_ready( $call, $wait_editor ) {
+		$body = ( $wait_editor ? 'wait_for_editor_ready( function() { ' . $call . '; } );' : $call . ';' );
+		return '( function() {' . PHP_EOL .
+			'	var run = function() { ' . $body . ' };' . PHP_EOL .
+			'	if ( "loading" === document.readyState ) {' . PHP_EOL .
+			'		document.addEventListener( "DOMContentLoaded", run );' . PHP_EOL .
+			'	} else {' . PHP_EOL .
+			'		run();' . PHP_EOL .
+			'	}' . PHP_EOL .
+			'} )();' . "\n";
+	}
+
+	/**
 	 * Output the javascript to change the taxonomy display to use radio buttons on quick edit screens.
 	 *
 	 * @since 3.4.0
 	 *
-	 * @param string $tax_name  The taxonomy name.
-	 * @param string $tax_label The taxonomy label name.
-	 * @param int    $pstat     Post status control type.
-	 * @param int    $min_bound minimum number of terms (null if no minimum).
-	 * @param bool   $hier      taxonomy is hierarchical.
-	 * @param string $nt_label  The taxonomy label name for No term.
+	 * @param string   $tax_name  The taxonomy name.
+	 * @param string   $tax_label The taxonomy label name.
+	 * @param int      $pstat     Post status control type.
+	 * @param int|null $min_bound minimum number of terms (null if no minimum).
+	 * @param bool     $hier      taxonomy is hierarchical.
+	 * @param string   $nt_label  The taxonomy label name for No term.
 	 */
 	private static function script_radio_edit( $tax_name, $tax_label, $pstat, $min_bound, $hier, $nt_label ) {
 		global $post;
@@ -2929,7 +3040,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		self::enqueue_client_libs();
 		wp_add_inline_script(
 			'staxo_client',
-			$text . 'document.addEventListener("DOMContentLoaded", dom_qe_radio_client( "' . $tax_name . '" ));'
+			$text . self::on_dom_ready( 'dom_qe_radio_client( ' . wp_json_encode( $tax_name ) . ' )', false )
 		);
 	}
 
@@ -2958,7 +3069,7 @@ class SimpleTaxonomyRefreshed_Admin {
 		if ( self::is_block_editor() ) {
 			// not yet supported.
 			// look for stuff within editor-post-taxonomies__hierarchical-terms-list with aria-label of the Taxonomy Name.
-			null;
+			return;
 		} else {
 			global $post;
 			if ( is_null( $post ) || ! isset( $post->post_status ) ) {
@@ -2970,7 +3081,7 @@ class SimpleTaxonomyRefreshed_Admin {
 			self::enqueue_client_libs();
 			wp_add_inline_script(
 				'staxo_client',
-				$text . 'document.addEventListener("DOMContentLoaded", wait_for_editor_ready( dom_radio_client( "' . $tax_name . '" )))  ;'
+				$text . self::on_dom_ready( 'dom_radio_client( ' . wp_json_encode( $tax_name ) . ' )', true )
 			);
 		}
 	}
@@ -2980,20 +3091,20 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @since 3.4.0
 	 *
-	 * @param string $tax_name  taxonomy name.
-	 * @param string $tax_label taxonomy label name.
-	 * @param int    $pstat     post status control type.
-	 * @param int    $min_bound minimum number of terms (null if no minimum).
-	 * @param int    $max_bound maximum number of terms (null if no maximum).
-	 * @param bool   $hier      Whether taxonomy is hierarchical.
-	 * @param string $nt_label  The taxonomy label name for No term.
+	 * @param string   $tax_name  taxonomy name.
+	 * @param string   $tax_label taxonomy label name.
+	 * @param int      $pstat     post status control type.
+	 * @param int|null $min_bound minimum number of terms (null if no minimum).
+	 * @param int|null $max_bound maximum number of terms (null if no maximum).
+	 * @param bool     $hier      Whether taxonomy is hierarchical.
+	 * @param string   $nt_label  The taxonomy label name for No term.
 	 */
 	private static function hard_term_limits_edit( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $hier, $nt_label ) {
 		$text = self::term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $hier, $nt_label );
 		self::enqueue_client_libs();
 		wp_add_inline_script(
 			'staxo_client',
-			$text . 'document.addEventListener("DOMContentLoaded", wait_for_editor_ready( dom_qe_cntl_check( "' . $tax_name . '", ' . (int) $hier . ' )));'
+			$text . self::on_dom_ready( 'dom_qe_cntl_check( ' . wp_json_encode( $tax_name ) . ', ' . (int) $hier . ' )', true )
 		);
 	}
 
@@ -3002,33 +3113,33 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param string $tax_name  Taxonomy name.
-	 * @param string $tax_label Taxonomy label name.
-	 * @param int    $pstat     post status control type.
-	 * @param int    $min_bound minimum number of terms (null if no minimum).
-	 * @param int    $max_bound maximum number of terms (null if no maximum).
-	 * @param bool   $hier      Whether taxonomy is hierarchical.
-	 * @param string $nt_label  The taxonomy label name for No term.
-	 * @param string $status    post status.
+	 * @param string      $tax_name  Taxonomy name.
+	 * @param string      $tax_label Taxonomy label name.
+	 * @param int         $pstat     post status control type.
+	 * @param int|null    $min_bound minimum number of terms (null if no minimum).
+	 * @param int|null    $max_bound maximum number of terms (null if no maximum).
+	 * @param bool        $hier      Whether taxonomy is hierarchical.
+	 * @param string|null $nt_label The taxonomy label name for No term (null for the default).
+	 * @param string      $status    post status.
 	 * @return string
 	 */
 	private static function term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, $max_bound, $hier, $nt_label, $status = '' ) {
 		$lock = ( 1 === $pstat ? esc_html__( 'Publishing is blocked.', 'simple-taxonomy-refreshed' ) : esc_html__( 'Saving is blocked.', 'simple-taxonomy-refreshed' ) );
 		if ( is_null( $min_bound ) ) {
-			$mib  = 'null';
+			$mib  = null;
 			$less = '';
 		} else {
 			// can be set to zero when the intent that it is set as 1 (i.e. Show No terms.).
-			$mib = esc_html( $min_bound );
+			$mib = (int) $min_bound;
 			// translators: %1$s is the taxonomy label name; %2$d is the required minimum number of terms.
 			$less  = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is less than the required minimum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, max( $min_bound, 1 ) ) );
 			$less .= ' ' . $lock;
 		}
 		if ( is_null( $max_bound ) ) {
-			$mab  = 'null';
+			$mab  = null;
 			$more = '';
 		} else {
-			$mab = esc_html( $max_bound );
+			$mab = (int) $max_bound;
 			// translators: %1$s is the taxonomy label name; %2$d is the required maximum number of terms.
 			$more  = esc_html( sprintf( __( 'The number of terms for taxonomy (%1$s) is greater than the required maximum number %2$d.', 'simple-taxonomy-refreshed' ), $tax_label, $max_bound ) );
 			$more .= ' ' . $lock;
@@ -3036,7 +3147,9 @@ class SimpleTaxonomyRefreshed_Admin {
 		$no_term = ( isset( $nt_label ) ? $nt_label : __( 'No term', 'simple-taxonomy-refreshed' ) );
 		// translators: %1$s is the taxonomy label name.
 		$radio = esc_html( sprintf( __( 'More than one term for taxonomy (%1$s) has already been attached. List cannot be converted to a radio list', 'simple-taxonomy-refreshed' ), $tax_label ) );
-		return 'tax_cntl.push( [ "' . $tax_name . '", ' . $pstat . ', ' . $mib . ', "' . $less . '", ' . $mab . ', "' . $more . '", ' . (int) $hier . ', "' . $no_term . '", "' . $status . '", "' . $radio . '" ] );' . "\n";
+		// Messages stay HTML-escaped (the client writes some with innerHTML); JSON encoding makes them safe as JS strings.
+		$entry = array( (string) $tax_name, (int) $pstat, $mib, $less, $mab, $more, (int) $hier, (string) $no_term, (string) $status, $radio );
+		return 'tax_cntl.push( ' . wp_json_encode( $entry ) . ' );' . "\n";
 	}
 
 	/**
@@ -3144,11 +3257,11 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @since 1.3.0
 	 *
-	 * @param stdClass        $prepared_post An object representing a single post prepared
-	 *                                       for inserting or updating the database.
-	 * @param WP_REST_Request $request       Request object.
+	 * @param stdClass|WP_Error $prepared_post An object representing a single post prepared
+	 *                                         for inserting or updating the database.
+	 * @param WP_REST_Request   $request       Request object.
 	 */
-	public function check_taxonomy_value_rest( $prepared_post, $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+	public function check_taxonomy_value_rest( $prepared_post, $request ) {
 		// previous filter has invalidated it.
 		if ( is_wp_error( $prepared_post ) ) {
 			return $prepared_post;
@@ -3158,8 +3271,8 @@ class SimpleTaxonomyRefreshed_Admin {
 		if ( isset( $prepared_post->post_status ) ) {
 			$post_status = $prepared_post->post_status;
 		} else {
-			$post = get_post( $prepared_post->ID );
-			if ( false === $post ) {
+			$post = ( empty( $prepared_post->ID ) ? null : get_post( $prepared_post->ID ) );
+			if ( ! $post instanceof WP_Post ) {
 				$post_status = 'new';
 			} else {
 				$post_status = $post->post_status;
@@ -3170,10 +3283,6 @@ class SimpleTaxonomyRefreshed_Admin {
 		if ( in_array( $post_status, array( 'new', 'auto-draft', 'trash' ), true ) ) {
 			return $prepared_post;
 		}
-
-		// it would be wonderful to be able to read $request, but object is entirely protected.
-		$json = file_get_contents( 'php://input' );
-		$data = json_decode( $json, true );
 
 		// find out which checks are needed.
 		global $strc;
@@ -3191,8 +3300,14 @@ class SimpleTaxonomyRefreshed_Admin {
 				}
 
 				// count the number of terms.
-				if ( isset( $data[ $cntl['rest_base'] ] ) ) {
-					$terms_count = ( empty( $data[ $cntl['rest_base'] ] ) ? 0 : count( $data[ $cntl['rest_base'] ] ) );
+				// Use the request parameter if sent (works for JSON, form and internal/batch requests);
+				// otherwise the terms are unchanged, so count those already on the post.
+				$terms_param = $request->get_param( $cntl['rest_base'] );
+				if ( null !== $terms_param ) {
+					$terms_count = ( empty( $terms_param ) ? 0 : count( (array) $terms_param ) );
+				} elseif ( ! empty( $prepared_post->ID ) ) {
+					$existing    = wp_get_object_terms( $prepared_post->ID, $tax, array( 'fields' => 'ids' ) );
+					$terms_count = ( is_wp_error( $existing ) ? 0 : count( $existing ) );
 				} else {
 					$terms_count = 0;
 				}
@@ -3242,7 +3357,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	public static function is_block_editor() {
 		if ( is_null( self::$use_block_editor ) ) {
 			$screen = get_current_screen();
-			if ( ( ! is_null( $screen ) ) && method_exists( $screen, 'is_block_editor' ) ) {
+			if ( ! is_null( $screen ) ) {
 				self::$use_block_editor = $screen->is_block_editor();
 			} elseif ( function_exists( 'use_block_editor_for_post' ) ) {
 				global $post;
@@ -3287,9 +3402,9 @@ class SimpleTaxonomyRefreshed_Admin {
 	/**
 	 * Use for build selector - convert number to string.
 	 *
-	 * @param string $key    index into true/false type.
-	 * @param string $dfault optional default value.
-	 * @return string/array
+	 * @param string|int  $key    index into true/false type.
+	 * @param string|null $dfault optional default value.
+	 * @return string|array
 	 */
 	private static function get_true_false( $key = '', $dfault = null ) {
 		$types = array(

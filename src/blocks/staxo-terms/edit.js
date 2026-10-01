@@ -8,21 +8,23 @@ import { store as coreStore } from '@wordpress/core-data';
 import { ServerSideRender } from '@wordpress/server-side-render';
 
 /* global staxo_post */
-export default function Edit( { context, attributes, setAttributes } ) {
-	const { postType_c, postId } = context;
+export default function Edit( { attributes, setAttributes } ) {
 	const blockProps = useBlockProps();
 
 	const postType = useSelect(
 		( select ) => select( editorStore ).getCurrentPostType(),
 		[]
-	)
+	);
 
 	const taxonomies = useSelect(
 		( select ) => {
 			if ( ! postType ) {
 				return null; // still resolving postType itself
 			}
-			return select( coreStore ).getTaxonomies( { type: postType, per_page: -1 } );
+			return select( coreStore ).getTaxonomies( {
+				type: postType,
+				per_page: -1,
+			} );
 		},
 		[ postType ]
 	);
@@ -36,10 +38,14 @@ export default function Edit( { context, attributes, setAttributes } ) {
 	const validSlugs = new Set( taxonomies.map( ( tax ) => tax.slug ) );
 
 	const filteredStaxoPost = Object.fromEntries(
-	    Object.entries( staxo_post ).filter( ( [ slug ] ) => validSlugs.has( slug ) )
+		Object.entries( staxo_post ).filter( ( [ slug ] ) =>
+			validSlugs.has( slug )
+		)
 	);
 
-	const opts = [ { label: __( 'All Custom', 'simple-taxonomy-refreshed' ), value: '' } ];
+	const opts = [
+		{ label: __( 'All Custom', 'simple-taxonomy-refreshed' ), value: '' },
+	];
 	for ( const slug in filteredStaxoPost ) {
 		opts.push( { label: filteredStaxoPost[ slug ], value: slug } );
 	}
@@ -47,7 +53,10 @@ export default function Edit( { context, attributes, setAttributes } ) {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={ __( 'Post Terms', 'simple-taxonomy-refreshed' ) } initialOpen={ true }>
+				<PanelBody
+					title={ __( 'Post Terms', 'simple-taxonomy-refreshed' ) }
+					initialOpen={ true }
+				>
 					<RadioControl
 						label={ __( 'Taxonomy', 'simple-taxonomy-refreshed' ) }
 						selected={ attributes.tax }

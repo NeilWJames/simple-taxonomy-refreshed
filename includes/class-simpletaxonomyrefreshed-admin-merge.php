@@ -21,7 +21,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 	/**
 	 * Instance variable to ensure singleton.
 	 *
-	 * @var int
+	 * @var self|null
 	 */
 	private static $instance = null;
 
@@ -68,30 +68,29 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 		if ( isset( $_POST['action'] ) && self::MERGE_SLUG === $_POST['action'] ) {
 			check_admin_referer( self::MERGE_SLUG );
 
+			// Validate the taxonomy and the user's right to manage its terms (all phases).
+			$taxonomy = ( isset( $_POST['taxonomy'] ) ? sanitize_text_field( wp_unslash( $_POST['taxonomy'] ) ) : '' );
+			$tax_obj  = get_taxonomy( $taxonomy );
+			if ( false === $tax_obj ) {
+				wp_die( esc_html__( 'Invalid taxonomy.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 400 ) );
+			}
+			if ( ! ( current_user_can( 'manage_options' ) || current_user_can( $tax_obj->cap->manage_terms ) ) ) {
+				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
+			}
+
 			// Taxonomy chosen - output the terms as a radio group.
 			if ( isset( $_POST['phase'] ) && 'one' === $_POST['phase'] ) {
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$taxonomy = wp_unslash( $_POST['taxonomy'] );
-
-				// Selected taxonomy.
-				$tax_obj = get_taxonomy( $taxonomy );
-
 				// is terms control configured for this taxonomy with a minimum.
+				$options       = get_option( OPTION_STAXO );
 				$terms_control = false;
-				if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-					if ( in_array( $taxonomy, $options['taxonomies'], true ) ) {
-						$parms = $options['taxonomies'][ $taxonomy ];
-						if ( isset( $parms['st_cc_type'] ) && $parms['st_cc_type'] > 0 ) {
-							$terms_control = (bool) $parms['st_cc_umin'] && $parms['st_cc_min'] > 0;
-						}
-					}
-				} elseif ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
-					if ( in_array( $taxonomy, $options['externals'], true ) ) {
-						$parms = $options['externals'][ $taxonomy ];
-						if ( isset( $parms['st_cc_type'] ) && $parms['st_cc_type'] > 0 ) {
-							$terms_control = (bool) $parms['st_cc_umin'] && $parms['st_cc_min'] > 0;
-						}
-					}
+				$parms         = null;
+				if ( isset( $options['taxonomies'][ $taxonomy ] ) && is_array( $options['taxonomies'][ $taxonomy ] ) ) {
+					$parms = $options['taxonomies'][ $taxonomy ];
+				} elseif ( isset( $options['externals'][ $taxonomy ] ) && is_array( $options['externals'][ $taxonomy ] ) ) {
+					$parms = $options['externals'][ $taxonomy ];
+				}
+				if ( isset( $parms['st_cc_type'] ) && $parms['st_cc_type'] > 0 ) {
+					$terms_control = ! empty( $parms['st_cc_umin'] ) && isset( $parms['st_cc_min'] ) && $parms['st_cc_min'] > 0;
 				}
 
 				ob_start();
@@ -125,14 +124,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 
 			// Taxonomy chosen; Destination chosen - output the terms as checkboxes. Allow multiple.
 			if ( isset( $_POST['phase'] ) && 'two' === $_POST['phase'] ) {
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$taxonomy = wp_unslash( $_POST['taxonomy'] );
-
-				// Selected taxonomy.
-				$tax_obj = get_taxonomy( $taxonomy );
-
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$destination = (int) wp_unslash( $_POST['term'] );
+				$destination = ( isset( $_POST['term'] ) ? absint( wp_unslash( $_POST['term'] ) ) : 0 );
 
 				ob_start();
 
@@ -160,31 +152,18 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 
 			// All input selected - Confirm.
 			if ( isset( $_POST['phase'] ) && 'three' === $_POST['phase'] ) {
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$taxonomy = wp_unslash( $_POST['taxonomy'] );
-
-				// Selected taxonomy.
-				$tax_obj = get_taxonomy( $taxonomy );
-
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$destination = wp_unslash( $_POST['destination'] );
-				$dest_obj    = get_term( $destination );
-
-				$sources = array();
-				$tt_ids  = array();
-				if ( isset( $_POST['term'] ) ) {
-					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-					$terms = wp_unslash( $_POST['term'] );
-					if ( is_array( $terms ) ) {
-						foreach ( $terms as $var => $val ) {
-							$sources[ $var ] = $val;
-							$tt_ids[ $var ]  = get_term( $sources[ $var ] )->term_taxonomy_id;
-						}
-					} else {
-						$sources = array( $terms );
-						$tt_ids  = array( get_term( $sources[0] )->term_taxonomy_id );
-					}
+				$destination = ( isset( $_POST['destination'] ) ? absint( wp_unslash( $_POST['destination'] ) ) : 0 );
+				$dest_obj    = get_term( $destination, $taxonomy );
+				if ( ! $dest_obj instanceof WP_Term ) {
+					wp_die( esc_html__( 'Invalid destination term.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 400 ) );
 				}
+
+				// Source terms must be distinct from the destination and belong to the taxonomy.
+				$terms = ( isset( $_POST['term'] ) ? (array) wp_unslash( $_POST['term'] ) : array() ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- absint below.
+				$terms = self::valid_source_terms( $terms, $destination, $taxonomy );
+
+				$sources = array_keys( $terms );
+				$tt_ids  = array_values( $terms );
 				ob_start();
 				// translators: %s is the taxonomy name.
 				echo '<p>' . esc_html( sprintf( __( 'Selected Taxonomy : %s', 'simple-taxonomy-refreshed' ), $tax_obj->labels->name ) ) . '</p>';
@@ -192,8 +171,8 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				echo '<p>' . esc_html( sprintf( __( 'Destination Term  : %s', 'simple-taxonomy-refreshed' ), $dest_obj->name ) ) . '</p>';
 				echo '<p>' . esc_html__( 'Source Term(s)    : ', 'simple-taxonomy-refreshed' ) . '</p>';
 				foreach ( $sources as $source ) {
-					$name = get_term( $source )->name;
-					echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . esc_attr( $name ) . '<br/>';
+					$name = get_term( $source, $taxonomy )->name;
+					echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . esc_html( $name ) . '<br/>';
 				}
 				echo '<p><strong>' . esc_html__( 'This will change all posts to link to the destination term and delete the source term(s).', 'simple-taxonomy-refreshed' ) . '</strong></p>';
 				echo '<p><strong>' . esc_html__( 'Any source term metadata will be deleted.', 'simple-taxonomy-refreshed' ) . '</strong></p>';
@@ -208,41 +187,53 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 
 			// All input selected - go for it.
 			if ( isset( $_POST['phase'] ) && 'four' === $_POST['phase'] ) {
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$taxonomy = wp_unslash( $_POST['taxonomy'] );
+				$destination = ( isset( $_POST['destination'] ) ? absint( wp_unslash( $_POST['destination'] ) ) : 0 );
+				$dest_obj    = get_term( $destination, $taxonomy );
+				if ( ! $dest_obj instanceof WP_Term ) {
+					wp_die( esc_html__( 'Invalid destination term.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 400 ) );
+				}
 
-				// Selected taxonomy.
-				$tax_obj = get_taxonomy( $taxonomy );
-
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$destination = wp_unslash( $_POST['destination'] );
-				$dest_obj    = get_term( $destination );
-
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$sources = array( wp_unslash( $_POST['sources'] ) );
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-				$stt_ids = array( wp_unslash( $_POST['stt_ids'] ) );
+				// Sources arrive as a comma-separated list of term ids.
+				// Term taxonomy ids are re-derived here rather than trusting the posted stt_ids.
+				$sources = ( isset( $_POST['sources'] ) ? explode( ',', sanitize_text_field( wp_unslash( $_POST['sources'] ) ) ) : array() );
+				$terms   = self::valid_source_terms( $sources, $destination, $taxonomy );
+				$sources = array_keys( $terms );
+				$stt_ids = array_values( $terms );
 
 				ob_start();
 
+				if ( empty( $stt_ids ) ) {
+					echo '<p>' . esc_html__( 'No valid Source Terms were selected.', 'simple-taxonomy-refreshed' ) . '</p>';
+					echo '<input type="hidden" name="phase" id="phase" value="five" />';
+					// phpcs:ignore WordPress.Security.EscapeOutput
+					echo ob_get_clean();
+					wp_die();
+				}
+
+				// One %d placeholder per term taxonomy id.
+				$in_list = implode( ', ', array_fill( 0, count( $stt_ids ), '%d' ) );
+
 				// update the taxonomy terms.
 				global $wpdb;
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 				$tt_ids = $wpdb->get_results(
 					$wpdb->prepare(
-						"
-							SELECT `{$wpdb->prefix}term_relationships`.`object_id`, `{$wpdb->prefix}term_relationships`.`term_taxonomy_id`
-				 			FROM `{$wpdb->prefix}term_relationships` 
-							WHERE `{$wpdb->prefix}term_relationships`.`term_taxonomy_id` IN ( %s )",
+						"SELECT `{$wpdb->prefix}term_relationships`.`object_id`, `{$wpdb->prefix}term_relationships`.`term_taxonomy_id`
+						 FROM `{$wpdb->prefix}term_relationships`
+						 WHERE `{$wpdb->prefix}term_relationships`.`term_taxonomy_id` IN ( $in_list )",
 						$stt_ids
 					),
 					ARRAY_A
 				);
+				// phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+
 				// if the object is already linked to destination, the update will fail with duplicate index.
 				$wpdb->suppress_errors( true );
-				$i      = 0;
-				$failed = array();
+				$i          = 0;
+				$failed     = array();
+				$object_ids = array();
 				foreach ( $tt_ids as $p => $row ) {
+					$object_ids[ (int) $row['object_id'] ] = (int) $row['object_id'];
 					// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 					$updated = $wpdb->query(
 						$wpdb->prepare(
@@ -270,14 +261,20 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				if ( $i < count( $tt_ids ) ) {
 					// Some updates may have failed because there was already the destination term linked to the object.
 					echo '<p><strong>' . esc_html__( 'Some posts were already linked to the destination term.', 'simple-taxonomy-refreshed' ) . '</strong></p>';
-					// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+					// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 					$wpdb->query(
 						$wpdb->prepare(
-							"	DELETE FROM `{$wpdb->prefix}term_relationships`
-							WHERE `{$wpdb->prefix}term_relationships`.`term_taxonomy_id` IN ( %s )",
+							"DELETE FROM `{$wpdb->prefix}term_relationships`
+							 WHERE `{$wpdb->prefix}term_relationships`.`term_taxonomy_id` IN ( $in_list )",
 							$stt_ids
 						)
 					);
+					// phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+				}
+
+				// Relationships were changed directly, so clear the object term caches.
+				if ( ! empty( $object_ids ) ) {
+					clean_object_term_cache( array_values( $object_ids ), $tax_obj->object_type );
 				}
 
 				// Update Destination count. Uses the taxonomy counting method.
@@ -286,9 +283,10 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				// Delete source terms. There are no objects using them.
 				foreach ( $sources as $source ) {
 					// use the standard function. This will delete metadata, clean cache and call standard hooks.
-					if ( ! wp_delete_term( $source, $taxonomy ) ) {
+					$deleted = wp_delete_term( $source, $taxonomy );
+					if ( true !== $deleted ) {
 						// should not happen, but...
-						echo '<p>' . esc_html__( 'Problem to delete Source Term(s) with id: ', 'simple-taxonomy-refreshed' ) . esc_attr( $source ) . '</p>';
+						echo '<p>' . esc_html__( 'Problem to delete Source Term(s) with id: ', 'simple-taxonomy-refreshed' ) . esc_html( $source ) . '</p>';
 					}
 				}
 
@@ -296,14 +294,41 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				clean_taxonomy_cache( $taxonomy );
 
 				// Output result.
-				$dest_obj = get_term( $destination );
-				echo '<p>' . esc_html__( 'All objects updated, destination term count is now : ', 'simple-taxonomy-refreshed' ) . esc_attr( $dest_obj->count ) . '</p>';
+				$dest_obj = get_term( $destination, $taxonomy );
+				echo '<p>' . esc_html__( 'All objects updated, destination term count is now : ', 'simple-taxonomy-refreshed' ) . esc_html( $dest_obj->count ) . '</p>';
 				echo '<input type="hidden" name="phase" id="phase" value="five" />';
 				// phpcs:ignore WordPress.Security.EscapeOutput
 				echo ob_get_clean();
 			}
 			wp_die(); // this is required to terminate immediately and return a proper response.
 		}
+	}
+
+	/**
+	 * Validate posted source term ids for a merge.
+	 *
+	 * Keeps only terms that exist in the taxonomy and are not the destination.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array  $terms       posted term ids.
+	 * @param int    $destination destination term id.
+	 * @param string $taxonomy    taxonomy name.
+	 * @return int[] term_taxonomy_id keyed by term_id.
+	 */
+	private static function valid_source_terms( $terms, $destination, $taxonomy ) {
+		$valid = array();
+		foreach ( (array) $terms as $term_id ) {
+			$term_id = absint( $term_id );
+			if ( 0 === $term_id || $term_id === (int) $destination ) {
+				continue;
+			}
+			$term = get_term( $term_id, $taxonomy );
+			if ( $term instanceof WP_Term ) {
+				$valid[ $term_id ] = (int) $term->term_taxonomy_id;
+			}
+		}
+		return $valid;
 	}
 
 	/**
@@ -459,10 +484,8 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 					// sort the list and output.
 					ksort( $taxos );
 					foreach ( $taxos as $taxo => $value ) {
-							// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped
-							echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . $value . '" value="' . $value . '" onclick="str_t(\'' . $value . '\')" >';
-							echo '<label for="' . $value . '" >' . esc_html( $taxo ) . '</label><br />';
-							// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
+							echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . esc_attr( $value ) . '" value="' . esc_attr( $value ) . '" onclick="' . esc_attr( 'str_t(' . wp_json_encode( $value ) . ')' ) . '" >';
+							echo '<label for="' . esc_attr( $value ) . '" >' . esc_html( $taxo ) . '</label><br />';
 					}
 					?>
 					</div>
@@ -532,25 +555,6 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 		<?php
 	}
 
-
-	/**
-	 * Use for build selector - convert number to string.
-	 *
-	 * @param string $key  index into true/false type.
-	 * @return string/array
-	 */
-	private static function get_true_false( $key = '' ) {
-		$types = array(
-			'0' => __( 'False', 'simple-taxonomy-refreshed' ),
-			'1' => __( 'True', 'simple-taxonomy-refreshed' ),
-		);
-
-		if ( isset( $types[ $key ] ) ) {
-			return $types[ $key ];
-		}
-
-		return $types;
-	}
 
 	/**
 	 * Adds help tabs to help tab API.

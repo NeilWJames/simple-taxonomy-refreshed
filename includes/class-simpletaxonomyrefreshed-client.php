@@ -32,20 +32,6 @@ class SimpleTaxonomyRefreshed_Client {
 	public static $wp_decoded_labels = array();
 
 	/**
-	 * Has the js taxonomy data been downloaded.
-	 *
-	 * @var bool
-	 */
-	private static $js_downloaded = false;
-
-	/**
-	 * Current WP version.
-	 *
-	 * @var string
-	 */
-	public static $wp_version;
-
-	/**
 	 * Constructor
 	 *
 	 * @since 1.0.0
@@ -53,11 +39,6 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @return void
 	 */
 	public function __construct() {
-		// get the wp version - used for version dependent features.
-		global $wp_version;
-		$vers             = strpos( $wp_version, '-' );
-		self::$wp_version = $vers ? substr( $wp_version, 0, $vers ) : $wp_version;
-
 		add_action( 'rest_api_init', array( __CLASS__, 'rest_api_init' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'init' ), 1 );
 		add_action( 'init', array( __CLASS__, 'init' ), 1 );
@@ -117,13 +98,6 @@ class SimpleTaxonomyRefreshed_Client {
 	 * @return void
 	 */
 	public static function init() {
-		// determine whether to invoke old or new count method (Change with WP 5.7 #38843).
-		if ( version_compare( self::$wp_version, '5.7' ) >= 0 ) {
-			// core method introduced with version 5.7.
-			$count_method = 'new';
-		} else {
-			$count_method = 'old';
-		}
 		// get default taxonomy labels.
 		self::get_wp_default_labels();
 		$options = get_option( OPTION_STAXO );
@@ -135,11 +109,7 @@ class SimpleTaxonomyRefreshed_Client {
 
 				// Update callback if term count callback wanted.
 				if ( '' === $args['update_count_callback'] && isset( $taxonomy['st_cb_type'] ) && $taxonomy['st_cb_type'] > 0 ) {
-					if ( 'new' === $count_method ) {
-						$terms_count = true;
-					} else {
-						$args['update_count_callback'] = array( __CLASS__, 'term_count_cb_sel' );
-					}
+					$terms_count = true;
 				}
 
 				register_taxonomy( $taxonomy['name'], $taxonomy['objects'], $args );
@@ -157,10 +127,8 @@ class SimpleTaxonomyRefreshed_Client {
 
 					// Update callback if term count callback wanted.
 					// If not yet registered, go via init_2 to update.
-					if ( ! isset( $taxonomy ) || '' === $taxonomy->update_count_callback ) {
-						if ( 'new' === $count_method ) {
-							$terms_count = true;
-						}
+					if ( false === $taxonomy || empty( $taxonomy->update_count_callback ) ) {
+						$terms_count = true;
 					}
 				}
 			}
@@ -179,7 +147,7 @@ class SimpleTaxonomyRefreshed_Client {
 	}
 
 	/**
-	 * Ensure taxonomies registered and process count for old method for external plugin taxonomies.
+	 * Ensure taxonomies registered against their object types.
 	 *
 	 * @return void
 	 */
@@ -192,28 +160,6 @@ class SimpleTaxonomyRefreshed_Client {
 				if ( ! empty( $taxonomy['objects'] ) ) {
 					foreach ( $taxonomy['objects'] as $cpt ) {
 						register_taxonomy_for_object_type( $taxonomy['name'], $cpt );
-					}
-				}
-			}
-		}
-
-		// determine whether to invoke old or new count method.
-		if ( version_compare( self::$wp_version, '5.7' ) >= 0 ) {
-			// core method introduced with version 5.7.
-			return;
-		}
-
-		// Only concerned for old method, i.e. version < 5.7.
-		// Set update method if using default.
-		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
-			foreach ( (array) $options['externals'] as $key => $args ) {
-				if ( isset( $args['st_cb_type'] ) && $args['st_cb_type'] > 0 ) {
-					$taxonomy = get_taxonomy( $key );
-
-					// Update callback if term count callback wanted.
-					if ( '' === $taxonomy->update_count_callback ) {
-						global $wp_taxonomies;
-						$wp_taxonomies[ $key ]->update_count_callback = array( __CLASS__, 'term_count_cb_sel' );
 					}
 				}
 			}
@@ -269,7 +215,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 *
 	 * @param array  $taxonomies  taxonomy name list.
 	 * @param string $post_type   post type.
-	 * @return string[].
+	 * @return string[]
 	 */
 	public static function reorder_admin_list( $taxonomies, $post_type ) {
 		$options = get_option( OPTION_STAXO );
@@ -480,9 +426,7 @@ class SimpleTaxonomyRefreshed_Client {
 		$p_type = ( is_null( $post_type ) ? $post->post_type : $post_type );
 
 		$options = get_option( OPTION_STAXO );
-		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-			null; // Drop through.
-		} else {
+		if ( ! isset( $options['taxonomies'] ) || ! is_array( $options['taxonomies'] ) ) {
 			return $content;
 		}
 
@@ -525,7 +469,7 @@ class SimpleTaxonomyRefreshed_Client {
 						} else {
 							$sep = $taxonomy['st_sep'];
 						}
-						if ( ! empty( $taxonomy['st_after'] ) && ' ' !== substr( $taxonomy['st_after'], 1 ) ) {
+						if ( ! empty( $taxonomy['st_after'] ) && ' ' !== substr( $taxonomy['st_after'], 0, 1 ) ) {
 							$suffix = ' ' . $taxonomy['st_after'];
 						} else {
 							$suffix = $taxonomy['st_after'];
@@ -617,7 +561,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 *
 	 * @since 3.4.0
 	 *
-	 * @param object $attributes attributes (not currently used).
+	 * @param array  $attributes block attributes.
 	 * @param string $content    block content.
 	 * @return string
 	 */
@@ -724,9 +668,7 @@ class SimpleTaxonomyRefreshed_Client {
 		}
 
 		$options = get_option( OPTION_STAXO );
-		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
-			null; // Drop through.
-		} else {
+		if ( ! isset( $options['taxonomies'] ) || ! is_array( $options['taxonomies'] ) ) {
 			return $the_list;
 		}
 
@@ -854,8 +796,7 @@ class SimpleTaxonomyRefreshed_Client {
 				$source = 'externals'; // Drop through.
 			} else {
 				$tax_details = array(
-					'statuses'  => array(),  // empty means pass though values.
-					'in_string' => '',
+					'statuses' => array(),  // empty means pass though values.
 				);
 				set_transient( 'staxo_sel_' . $taxonomy, $tax_details, ( WP_DEBUG ? 10 : HOUR_IN_SECONDS ) );
 
@@ -863,9 +804,10 @@ class SimpleTaxonomyRefreshed_Client {
 			}
 
 			$taxo     = $options[ $source ][ $taxonomy ];
-			$callback = get_taxonomy( $taxonomy )->update_count_callback;
+			$tax_obj  = get_taxonomy( $taxonomy );
+			$callback = ( false === $tax_obj ? '' : $tax_obj->update_count_callback );
 			$statuses = array();
-			if ( '' === $callback && isset( $taxo['st_cb_type'] ) ) {
+			if ( empty( $callback ) && isset( $taxo['st_cb_type'] ) ) {
 				switch ( $taxo['st_cb_type'] ) {
 					case '1':
 						$statuses = get_post_stati();
@@ -895,25 +837,21 @@ class SimpleTaxonomyRefreshed_Client {
 						}
 						break;
 					default:
-						null; // leave empty.
+						break; // leave empty.
 				}
 
 				/**
 				 * Filter to manage additional post_statuses for Terms Control entered on the screen.
 				 *
 				 * @param  array  $statuses standard post_statuses entered via screen.
-				 * @param  array  $taxonomy taxonomy name.
+				 * @param  string $taxonomy taxonomy name.
 				 * @return array  $types    post_status slugs to be controlled.
 				 */
 				$statuses = apply_filters( 'staxo_term_count_statuses', $statuses, $taxonomy );
 			}
 
-			// create the string.
-			$in_string = "IN ('" . implode( "','", $statuses ) . "') ";
-
 			$tax_details = array(
-				'statuses'  => $statuses,
-				'in_string' => $in_string,
+				'statuses' => $statuses,
 			);
 
 			set_transient( 'staxo_sel_' . $taxonomy, $tax_details, ( WP_DEBUG ? 10 : HOUR_IN_SECONDS ) );
@@ -921,48 +859,6 @@ class SimpleTaxonomyRefreshed_Client {
 
 		return $tax_details;
 	}
-
-	/**
-	 * Term Count Callback that applies custom filter
-	 * Allows taxonomy term counts to include user-specified post statuses.
-	 *
-	 * @since 1.1
-	 * @param array  $terms    the terms to filter.
-	 * @param object $taxonomy the taxonomy slug.
-	 */
-	public static function term_count_cb_sel( $terms, $taxonomy ) {
-		add_filter( 'query', array( __CLASS__, 'term_count_query_filter_sel' ) );
-		_update_post_term_count( $terms, $taxonomy );
-		remove_filter( 'query', array( __CLASS__, 'term_count_query_filter_sel' ) );
-	}
-
-	/**
-	 * Alters term count query to include selected list of post statuses.
-	 * See generally, #17548
-	 *
-	 * @since 1.1
-	 * @param string $query the query object.
-	 * @return string the modified query
-	 */
-	public static function term_count_query_filter_sel( $query ) {
-		if ( 'SELECT COUNT(*)' !== substr( $query, 0, 15 ) ) {
-			return $query;
-		}
-		global $wpdb;
-
-		// Target string. Find taxonomy via taxonomy term.
-		$term_tax_id = (int) substr( $query, strpos( $query, 'term_taxonomy_id = ' ) + 19 );
-		// phpcs:ignore
-		$taxonomy = $wpdb->get_var( $wpdb->prepare( "SELECT taxonomy FROM $wpdb->term_taxonomy WHERE term_taxonomy_id = %d", $term_tax_id ) );
-		$filter   = self::term_count_sel_cache( $taxonomy );
-
-		if ( empty( $filter['statuses'] ) ) {
-			return $query;
-		}
-
-		return str_replace( "= 'publish'", $filter['in_string'], $query );
-	}
-
 
 	/**
 	 * Modifies the term count query looking at different list of post statuses.
@@ -1206,24 +1102,6 @@ class SimpleTaxonomyRefreshed_Client {
 		$labels['name']           = '';
 		$labels['menu_name']      = '';
 		$labels['name_admin_bar'] = '';
-
-		// Add defaults for 5.8 and 5.9 if running earlier versions.
-		// phpcs:disable WordPress.WP.I18n.MissingArgDomain
-		if ( ! isset( $labels['item_link'] ) ) {
-			$labels['item_link']             = __( 'Category Link' );
-			$labels['item_link_description'] = __( 'A link to a category' );
-		}
-		if ( ! isset( $labels['name_field_description'] ) ) {
-			$labels['name_field_description'] = __( 'The name is how it appears on your site.' );
-			if ( $hier ) {
-				$labels['parent_field_description'] = __( 'Assign a parent term to create a hierarchy. The term Jazz, for example, would be the parent of Bebop and Big Band.' );
-			} else {
-				$labels['parent_field_description'] = null;
-			}
-			$labels['slug_field_description'] = __( 'The &#8220;slug&#8221; is the URL-friendly version of the name. It is usually all lowercase and contains only letters, numbers, and hyphens.' );
-			$labels['desc_field_description'] = __( 'The description is not prominent by default; however, some themes may show it.' );
-		}
-		// phpcs:enable WordPress.WP.I18n.MissingArgDomain
 
 		// label used for No term with radio.
 		$labels['no_term'] = __( 'No term', 'simple-taxonomy-refreshed' );

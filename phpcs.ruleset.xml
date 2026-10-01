@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ruleset name="WordPress Coding Standards">
 
-	<extensions>*/php</extensions>
+	<extensions>php</extensions>
 
 	<rule ref="WordPress.WP.I18n">
 		<properties>
@@ -13,7 +13,7 @@
 
 	<rule ref="WordPress"/>
 
-	<config name="testVersion" value="7.4-"/>
+	<config name="testVersion" value="8.2-"/>
 
 	<rule ref="PHPCompatibilityWP"/>
 

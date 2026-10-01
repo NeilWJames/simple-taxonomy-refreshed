@@ -21,7 +21,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 	/**
 	 * Instance variable to ensure singleton.
 	 *
-	 * @var int
+	 * @var self|null
 	 */
 	private static $instance = null;
 
@@ -68,8 +68,13 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 		if ( isset( $_POST['action'] ) && self::CONVERT_SLUG === $_POST['action'] ) {
 			check_admin_referer( self::CONVERT_SLUG );
 
+			// Same capability as the Terms Migrate page.
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
+			}
+
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-			$names = wp_unslash( $_POST['name'] );
+			$names = ( isset( $_POST['name'] ) ? array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['name'] ) ) : array() );
 
 			// Find how many elements.
 			$num = count( $names );
@@ -90,6 +95,10 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 
 			// Destination taxo.
 			$destination_taxo = get_taxonomy( $oput );
+
+			if ( false === $source_taxo || false === $destination_taxo ) {
+				wp_die( esc_html__( 'Invalid taxonomy.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 400 ) );
+			}
 
 			// Hierarchical or not? (Both need to be).
 			$hierarchical = (bool) $source_taxo->hierarchical && (bool) $destination_taxo->hierarchical;
@@ -285,7 +294,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 							$i         = 0;
 							foreach ( get_taxonomies(
 								$selectors,
-								'object'
+								'objects'
 							) as $taxonomy ) {
 								?>
 								<tr id="taxonomy-<?php echo esc_attr( $i ); ?>">
@@ -386,8 +395,8 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 	/**
 	 * Use for build selector - convert number to string.
 	 *
-	 * @param string $key  index into true/false type.
-	 * @return string/array
+	 * @param string|int|bool $key index into true/false type.
+	 * @return string|array
 	 */
 	private static function get_true_false( $key = '' ) {
 		$types = array(

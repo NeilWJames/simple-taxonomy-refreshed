@@ -4,8 +4,10 @@ This plugin provides a no-code facility to manage your taxonomies - either by de
 
 * Contributors: nwjames, momo360modena
 * Tags: tags, taxonomies, custom taxonomies, taxonomy, category
-* Stable tag: 3.4.1
-* Tested up to: 7.1.0
+* Requires at least: 6.9
+* Tested up to: 7.1
+* Requires PHP: 8.2
+* Stable tag: 4.0.0
 * License: GPLv3 or later
 * License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -15,7 +17,7 @@ This plugin provides a no-code process to manage your taxonomies - either by def
 
 Supports adding one or more taxonomies (either hierarchical or tag) to any post type registered on your installation.
 
-This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) and developed on WordPress 5.1-6.7 and PHP 7.2-8.2.
+This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) (now closed). It requires WordPress 6.9 or later and PHP 8.2 or later, and is tested up to WordPress 7.1.
 
 This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
 

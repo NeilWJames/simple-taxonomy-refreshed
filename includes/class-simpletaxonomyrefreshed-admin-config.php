@@ -23,7 +23,7 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 	/**
 	 * Instance variable to ensure singleton.
 	 *
-	 * @var int
+	 * @var self|null
 	 */
 	private static $instance = null;
 
@@ -72,6 +72,9 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 		if ( isset( $_POST['action'] ) && self::EXP_FILE_SLUG === $_POST['action'] ) {
 			check_admin_referer( self::EXP_FILE_SLUG );
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
+			}
 
 			// remove any spurious buffered output.
 			while ( ob_get_level() ) {
@@ -113,6 +116,9 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 		if ( isset( $_POST[ self::IMP_FILE_SLUG ] ) && isset( $_FILES['config_file'] ) ) {
 			check_admin_referer( self::IMP_FILE_SLUG );
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
+			}
 
 			// phpcs:ignore
 			if ( $_FILES['config_file']['error'] > 0 ) {
@@ -132,6 +138,21 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 					// looks as though it is OK so load it.
 					// clear caches (need to do first as values could be different).
 					$options = get_option( OPTION_STAXO );
+
+					// Callback fields cannot be changed by import unless the user may edit them.
+					foreach ( array( 'taxonomies', 'externals' ) as $group ) {
+						if ( isset( $config_file[ $group ] ) && is_array( $config_file[ $group ] ) ) {
+							foreach ( $config_file[ $group ] as $tax_name => $tax_data ) {
+								if ( ! is_array( $tax_data ) ) {
+									unset( $config_file[ $group ][ $tax_name ] );
+									continue;
+								}
+								$stored = ( isset( $options[ $group ][ $tax_name ] ) ? (array) $options[ $group ][ $tax_name ] : array() );
+
+								$config_file[ $group ][ $tax_name ] = SimpleTaxonomyRefreshed_Admin::protect_callback_fields( $tax_data, $stored, (string) $tax_name );
+							}
+						}
+					}
 					if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
 						foreach ( (array) $options['taxonomies'] as $taxonomy => $tax_data ) {
 							wp_cache_delete( 'staxo_sel_' . $taxonomy );

@@ -1,13 +1,12 @@
 #!/bin/bash
 
+# Regenerate the translation template with WP-CLI.
+# Scans the PHP, the JS sources in src/ and the block.json files.
+# The version in the POT header comes from the plugin header (Version:).
+
 set -e
 
-VERSION=$(grep -i "Stable tag:" readme.txt | awk -F' ' '{print $NF}' | tr -d '\r')
-
-wp-pot \
-  --domain simple-taxonomy-refreshed \
-  --dest-file languages/simple-taxonomy-refreshed.pot \
-  --src "simple-taxonomy-refreshed.php" --src "includes/*.php" \
-  --package "simple-taxonomy-refreshed $VERSION" \
-  --relative-to "." \
-  --comment-keyword "translators:"
+wp i18n make-pot . languages/simple-taxonomy-refreshed.pot \
+  --slug=simple-taxonomy-refreshed \
+  --domain=simple-taxonomy-refreshed \
+  --exclude=bin,build,docs,images,languages,node_modules,script,tests,vendor

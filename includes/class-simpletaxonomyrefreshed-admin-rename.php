@@ -21,7 +21,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 	/**
 	 * Instance variable to ensure singleton.
 	 *
-	 * @var int
+	 * @var self|null
 	 */
 	private static $instance = null;
 
@@ -82,13 +82,28 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				wp_die( esc_html__( 'You are trying to rename the slug on a taxonomy that does not exist.', 'simple-taxonomy-refreshed' ) );
 			}
 
-			$new_slug    = ( isset( $_POST['new_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['new_slug'] ) ) : '' );
-			$new_query   = ( isset( $_POST['new_query'] ) ? sanitize_text_field( wp_unslash( $_POST['new_query'] ) ) : '' );
+			// Taxonomy names are keys: lower case alphanumerics, dashes and underscores.
+			$new_slug  = ( isset( $_POST['new_slug'] ) ? sanitize_key( wp_unslash( $_POST['new_slug'] ) ) : '' );
+			$new_query = ( isset( $_POST['new_query'] ) ? sanitize_key( wp_unslash( $_POST['new_query'] ) ) : '' );
+			// Rewrite slugs may contain slashes, so sanitize each path segment.
 			$new_rewrite = ( isset( $_POST['new_rewrite'] ) ? sanitize_text_field( wp_unslash( $_POST['new_rewrite'] ) ) : '' );
+			$new_rewrite = implode( '/', array_filter( array_map( 'sanitize_title', explode( '/', $new_rewrite ) ) ) );
+
+			// register_taxonomy() refuses names that are empty or longer than 32 characters.
+			if ( '' === $new_slug || strlen( $new_slug ) > 32 || $new_slug === $taxonomy ) {
+				wp_die( esc_html__( 'The new taxonomy slug must be different, non-empty and at most 32 characters (lower case letters, numbers, dashes and underscores).', 'simple-taxonomy-refreshed' ) );
+			}
+
 			// test that new slug does not exist.
 			$taxonomy_obj = get_taxonomy( $new_slug );
 			if ( is_object( $taxonomy_obj ) ) {
 				wp_die( esc_html__( 'The desired taxonomy slug already exists.', 'simple-taxonomy-refreshed' ) );
+			}
+
+			// Only taxonomies defined by this plugin can be renamed.
+			$current_options = get_option( OPTION_STAXO );
+			if ( ! isset( $current_options['taxonomies'][ $taxonomy ] ) ) {
+				wp_die( esc_html__( 'Only taxonomies created by Simple Taxonomy Refreshed can be renamed.', 'simple-taxonomy-refreshed' ) );
 			}
 
 			$taxonomy_obj = get_taxonomy( $taxonomy );
@@ -97,7 +112,6 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			}
 
 			// Modify the taxonomy settings.
-			$current_options      = get_option( OPTION_STAXO );
 			$new_taxonomy         = $current_options['taxonomies'][ $taxonomy ];
 			$new_taxonomy['name'] = $new_slug;
 
@@ -171,7 +185,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				ARRAY_A
 			);
 			foreach ( (array) $terms as $term ) {
-				wp_cache_delete( $term->term_id, 'terms' );
+				wp_cache_delete( (int) $term['term_id'], 'terms' );
 			}
 			wp_cache_delete( 'all_ids', $taxonomy );
 			wp_cache_delete( 'get', $taxonomy );
@@ -249,13 +263,14 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 						}
 					}
 				}
+				// Raw values; escaped at output (HTML attributes or JSON for scripts).
 				$taxo = array(
 					'n'         => $i,
 					'label'     => $taxonomy['labels']['name'],
-					'name'      => esc_attr( $taxonomy['name'] ),
-					'objects'   => '"' . implode( ', ', $objs ) . ( $oth ? '  ' . __( 'plus currently invalid Post Type(s)', 'simple-taxonomy-refreshed' ) : '' ) . '"',
-					'slug'      => ( ( false === (bool) $args['rewrite'] ) ? '""' : '"' . $args['rewrite']['slug'] . '"' ),
-					'query_var' => '"' . $taxonomy['query_var'] . '"',
+					'name'      => $taxonomy['name'],
+					'objects'   => implode( ', ', $objs ) . ( $oth ? '  ' . __( 'plus currently invalid Post Type(s)', 'simple-taxonomy-refreshed' ) : '' ),
+					'slug'      => ( ( false === (bool) $args['rewrite'] ) ? '' : (string) $args['rewrite']['slug'] ),
+					'query_var' => (string) $taxonomy['query_var'],
 				);
 				++$i;
 				$taxos[ $taxo['label'] ] = $taxo;
@@ -277,10 +292,8 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 					<div role="radiogroup">
 					<?php
 					foreach ( $taxos as $taxo ) {
-						// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped
-						echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . $taxo['name'] . '" value="' . $taxo['name'] . '" onclick="c' . $taxo['n'] . '()" >';
-						echo '<label for="' . $taxo['name'] . '" >' . esc_html( $taxo['label'] ) . '</label><br />';
-						// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
+						echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . esc_attr( $taxo['name'] ) . '" value="' . esc_attr( $taxo['name'] ) . '" onclick="c' . (int) $taxo['n'] . '()" >';
+						echo '<label for="' . esc_attr( $taxo['name'] ) . '" >' . esc_html( $taxo['label'] ) . '</label><br />';
 					}
 					?>
 					</div>
@@ -316,18 +329,19 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 		<script type="text/javascript">
 			<?php
 			foreach ( $taxos as $taxo ) {
+				// Values are JSON-encoded and written with textContent so they cannot inject script or markup.
 				// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped
-				echo 'function c' . $taxo['n'] . '() {' . "\n";
-				echo ' document.getElementById("curr_objects").innerHTML = ' . $taxo['objects'] . ";\n";
-				echo ' document.getElementById("curr_slug").innerHTML = "' . $taxo['name'] . '";' . "\n";
+				echo 'function c' . (int) $taxo['n'] . '() {' . "\n";
+				echo ' document.getElementById("curr_objects").textContent = ' . wp_json_encode( $taxo['objects'] ) . ";\n";
+				echo ' document.getElementById("curr_slug").textContent = ' . wp_json_encode( $taxo['name'] ) . ";\n";
 				echo ' document.getElementById("new_slug").value = "";' . "\n";
-				echo ' document.getElementById("curr_query").innerHTML = ' . $taxo['query_var'] . ";\n";
+				echo ' document.getElementById("curr_query").textContent = ' . wp_json_encode( $taxo['query_var'] ) . ";\n";
 				echo ' document.getElementById("new_query").value = "";' . "\n";
-				echo ' document.getElementById("curr_rewrite").innerHTML = ' . $taxo['slug'] . ";\n";
+				echo ' document.getElementById("curr_rewrite").textContent = ' . wp_json_encode( $taxo['slug'] ) . ";\n";
 				echo ' document.getElementById("new_rewrite").value = "";' . "\n";
 				// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
 				echo ' document.getElementById("' . esc_html( self::RENAME_SLUG ) . '").disabled = true;' . "\n";
-				if ( '""' === $taxo['slug'] ) {
+				if ( '' === $taxo['slug'] ) {
 					// Hide rewrite section.
 					echo ' document.getElementById("rewrite_block").style.display = "none";' . "\n";
 				} else {

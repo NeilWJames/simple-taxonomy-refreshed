@@ -21,7 +21,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 	/**
 	 * Instance variable to ensure singleton.
 	 *
-	 * @var int
+	 * @var self|null
 	 */
 	private static $instance = null;
 
@@ -216,7 +216,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 							 *
 							 * Filters the default get_taxonomies selector.
 							 *
-							 * @param array array default list of taxonomy selection criteria
+							 * @param array $selectors default list of taxonomy selection criteria.
 							 */
 							apply_filters(
 								'staxo_taxo_import_convert_select',
@@ -225,7 +225,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 									'public'  => true,
 								)
 							),
-							'object'
+							'objects'
 						) as $taxonomy ) {
 							// phpcs:ignore WordPress.Security.NonceVerification.Missing
 							echo '<option value="' . esc_attr( $taxonomy->name ) . '" ' . selected( sanitize_text_field( wp_unslash( $_POST['taxonomy'] ) ), $taxonomy->name, false ) . '> ' . esc_html( $taxonomy->label ) . ' (' . esc_html( $taxonomy->name ) . ')</option>' . "\n";
