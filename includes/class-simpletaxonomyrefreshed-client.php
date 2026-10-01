@@ -792,7 +792,7 @@ class SimpleTaxonomyRefreshed_Client {
 			$options = get_option( OPTION_STAXO );
 			if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) && isset( $options['taxonomies'][ $taxonomy ] ) ) {
 				$source = 'taxonomies'; // Drop through.
-			} elseif ( isset( $options['taxonomies'] ) && is_array( $options['externals'] ) && isset( $options['externals'][ $taxonomy ] ) ) {
+			} elseif ( isset( $options['externals'] ) && is_array( $options['externals'] ) && isset( $options['externals'][ $taxonomy ] ) ) {
 				$source = 'externals'; // Drop through.
 			} else {
 				$tax_details = array(

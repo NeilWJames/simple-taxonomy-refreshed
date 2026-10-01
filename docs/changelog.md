@@ -3,6 +3,7 @@
 ## Version 4.0.0  (xx/xx/2026)
 
 * NEW: Filter `staxo_can_edit_callbacks` controls who may edit the callback fields.
+* NEW: Terms Import lists any lines it skips, with the line number, term and reason.
 * FIX: Terms Merge now merges and deletes every selected source term, not just the first.
 * FIX: Block editor notices no longer break when a label or translation contains a quote.
 * FIX: Editor scripts wait for the page and the block editor iframe to be ready.
@@ -18,6 +19,12 @@
 * FIX: Widget no longer raises PHP warnings when its taxonomy is not registered, and shows a message for an empty list.
 * FIX: Term counts for external taxonomies that are not yet registered no longer raise PHP warnings.
 * FIX: Changing Hierarchical now updates the Admin List Filter options in all browsers, not just Firefox.
+* FIX: Terms Import places terms correctly when the first line is indented or a line skips a level.
+* FIX: Terms Import no longer stops with a fatal error when WordPress refuses a term.
+* FIX: Deleting a taxonomy removes it from the admin list orderings.
+* FIX: Rename reports the correct number of migrated terms.
+* FIX: Terms Merge term labels select their checkbox or radio button for hierarchical taxonomies.
+* FIX: No PHP warning when counting terms on a site with no external taxonomies configured.
 * DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
 * DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
 * DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.
@@ -27,6 +34,7 @@
 * DEV: Removed term-count code for WordPress before 5.7, including `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version`.
 * DEV: JavaScript reviewed with wp-scripts lint-js.
 * DEV: Code checked with PHPStan (level 5).
+* DEV: PHPUnit test suite with shared fixtures covering configuration import, Terms Import, Terms Merge and term counts.
 
 ## Version 3.4.1  (03/09/2026)
 
