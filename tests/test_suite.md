@@ -10,9 +10,9 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 119 in 9 classes (A–H + the original main test) |
-| Run in CI | H not yet run. A–G: all 102 pass (PHP 8.2–8.4, WP 6.9/latest, single site and multisite); phpcs and PHPStan clean — 1 Oct 2026 |
-| Still to write | I, J, K (see "Planned") |
+| Tests written | 140 in 10 classes (A–I + the original main test) |
+| Run in CI | I not yet run. A–H: all 119 pass (PHP 8.2–8.4, WP 6.9/latest, single site and multisite); phpcs and PHPStan clean — 1 Oct 2026 |
+| Still to write | J, K (see "Planned") |
 
 ## Running
 
@@ -24,7 +24,7 @@ vendor/bin/phpunit -c phpunit9.xml --group merge    # one area
 WP_MULTISITE=1 vendor/bin/phpunit -c phpunit9.xml   # multisite
 ```
 
-Groups: `config`, `import`, `merge`, `assignment`, `taxonomy`, `convert`, `rename`, `control`.
+Groups: `config`, `import`, `merge`, `assignment`, `taxonomy`, `convert`, `rename`, `control`, `frontend`.
 
 CI (`.github/workflows/ci.yml`) runs the suite on PHP 8.2–8.4 × WP 6.9/latest, plus multisite on PHP 8.4 / WP latest.
 
@@ -126,6 +126,10 @@ Rename moves definition, `term_taxonomy` rows and posts' terms, hierarchy kept, 
 
 Control cache (values as integers; posts only; none when hard control off or post type not selected). Classic editor (`check_taxonomy_value_set()`): minimum and maximum redirect with `staxo_error`; 1–2 terms accepted; hidden `0` and "No term" `-1` not counted, comma list counted; type 2 checks drafts, type 1 only published/scheduled; new/auto-draft/trash, empty title and other post types not checked; quick edit outputs the error and stops; through `wp_update_post()` the save is stopped and terms unchanged. REST (`check_taxonomy_value_rest()`): create with too few / too many terms refused (403 `rest_minimum_terms` / `rest_maximum_terms`); update without the taxonomy uses the current terms (review M7); removing all terms refused; type 1 vs 2 on drafts; batch requests checked per item. Error notice after a refused save, and none without a valid nonce.
 
+### I. Front-end output — `class-test-staxo-front-end.php` (`@group frontend`, 21)
+
+Terms after the content (taxonomies set to content/both) and excerpt (excerpt/both) of a single post in the main loop, not elsewhere; pages only get page taxonomies; "not found" HTML comment for a post without terms; plain-text before/separator/after get spaces at the joins and are escaped; a plain-text separator with end spaces stays plain text; HTML before/after limited to post HTML (no `<script>`). Shortcode `[staxo_post_terms tax="…"]` (any display setting; empty for an unknown taxonomy or outside a single post's loop); Display Post Terms block. Feeds (rss2, atom, rdf) for taxonomies set to show in feeds. Admin list filter dropdown for the selected post types; unregistered external taxonomy ignored. Widget list (counts, terms without posts hidden), minimum posts incl. non-numeric values (review M3), cloud (minimum posts, no font sizes for equal counts), escaped title, fallback to tags, settings sanitised on save; Taxonomy Cloud block, and block display without the ordering attribute. The two block tests are skipped if `build/blocks` is missing.
+
 ### Main — `class-test-staxo-refreshed-main.php` (2)
 
 Multisite flag as expected; plugin loaded.
@@ -134,7 +138,6 @@ Multisite flag as expected; plugin loaded.
 
 | Ref | Area | Notes |
 |---|---|---|
-| I | Front-end output | the_content/excerpt, shortcode, block, feed, admin filter, widget `filter_min` |
 | J | Admin list ordering | |
 | K | Security sweep | Capability + nonce on every state-changing handler |
 
@@ -144,6 +147,7 @@ Multisite flag as expected; plugin loaded.
 - Terms control minimum (decided 1 Oct 2026): phase three lists the posts whose term count the merge would reduce below the minimum, and offers "Do not merge" (default) or "Merge anyway". Posts already below the minimum and not changed by the merge are not listed. Type 1 controls count published/scheduled posts only.
 - Terms Import: an indented first line is top level; skipped terms are reported with line numbers.
 - Rename query_var: an empty value or one equal to the new slug means the default (the new taxonomy name); any other value entered is stored.
+- Post terms display: before/separator/after text with no `<` is plain text (escaped, spaces added at the joins); anything else is HTML filtered with `wp_kses_post()`.
 - Flush-delete leaves a taxonomy's default term (WordPress `wp_delete_term()` refuses to delete it).
 
 ## Change log
@@ -158,3 +162,5 @@ Multisite flag as expected; plugin loaded.
 - **1 Oct 2026** — First CI run of B, F, G: 97 of 101 passed. The 4 conversion failures were a real plugin bug: the list put `&#013;` between terms and it was escaped again, so the browser showed one line with literal `&#013;`. The conversion now lists one term per line with real line breaks and `esc_textarea()`, and decodes stored entities (`&amp;`) so names are shown as typed. Also fixed: "false to array" deprecation when adding the first taxonomy (or editing an external one) with no saved settings; the Export PHP refusal test now asserts the messages (was risky). Conversion tests: 8.
 - **1 Oct 2026** — CI clean: 102 tests pass on the full matrix; phpcs and PHPStan clean.
 - **1 Oct 2026** — Class H (terms control, 17). Plugin fixes made for it: the control cache stores `st_cc_type`, `st_cc_hard`, `st_cc_min`, `st_cc_max` as integers and the checks compare as integers (type 1 was never recognised because the setting is stored as text, so drafts were always checked); classic-editor term counting moved to `count_input_terms()` (no PHP warning when all terms are removed; comma lists counted); the classic check uses the parent's status for revisions; external taxonomies that are not registered, or have an empty post-type list, no longer cause PHP errors in the control cache.
+- **1 Oct 2026** — CI clean: 119 tests pass on the full matrix, including all 17 Terms Control tests on the first run; phpcs and PHPStan clean.
+- **1 Oct 2026** — Class I (front end, 21). Plugin fixes made for it: post terms display treated text with spaces at the ends (such as the default ", " separator) as HTML, so no space was added after the "before" text; plain text is now detected by the absence of `<`, escaped with `esc_html()`, and HTML before/separator/after is filtered with `wp_kses_post()` when shown; taxonomy name escaped in the class attribute and the "not found" comment; admin list filter skips an external taxonomy that is not registered; Taxonomy Cloud block display works without the `ordering` attribute.

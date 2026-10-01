@@ -95,6 +95,9 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* FIX: Terms Control "published and scheduled only" (type 1) is applied; drafts were being checked as for type 2.
 	* FIX: Terms Control no longer raises a PHP warning when all terms are removed in the classic editor.
 	* FIX: Terms Control no longer raises PHP errors for external taxonomies that are not registered or have no post types selected.
+	* FIX: Post terms display adds the space after the "before" text when the separator has spaces (such as the default ", ").
+	* FIX: Post terms "before", separator and "after" text is escaped (plain text) or filtered as post HTML when displayed.
+	* FIX: Admin list filter no longer raises a PHP warning for an external taxonomy that is not registered.
 	* DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
 	* DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
 	* DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.
@@ -104,7 +107,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* DEV: Removed term-count code for WordPress before 5.7, including `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version`.
 	* DEV: JavaScript reviewed with wp-scripts lint-js.
 	* DEV: Code checked with PHPStan (level 5).
-	* DEV: PHPUnit test suite with shared fixtures covering configuration import, Terms Import, Terms Merge, term counts, taxonomy add/update/delete, Export PHP, Terms Conversion, Rename Slug and Terms Control.
+	* DEV: PHPUnit test suite with shared fixtures covering configuration import, Terms Import, Terms Merge, term counts, taxonomy add/update/delete, Export PHP, Terms Conversion, Rename Slug, Terms Control and front-end output.
 	* DEV: Export PHP code is built by `SimpleTaxonomyRefreshed_Admin::build_php_export()`.
 
 * Version 3.4.1  (03/09/2026)

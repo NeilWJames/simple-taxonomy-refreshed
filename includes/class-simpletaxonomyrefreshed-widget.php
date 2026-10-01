@@ -514,8 +514,10 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		}
 
 		// 'ordering' needs to be 'order'.
-		$instance['order'] = $instance['ordering'];
-		unset( $instance['ordering'] );
+		if ( isset( $instance['ordering'] ) ) {
+			$instance['order'] = $instance['ordering'];
+			unset( $instance['ordering'] );
+		}
 
 		global $strw;
 		$output .= $strw->widget_gen( $args, $instance ) . '</div>';

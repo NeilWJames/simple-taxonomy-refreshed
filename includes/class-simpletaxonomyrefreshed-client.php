@@ -447,17 +447,8 @@ class SimpleTaxonomyRefreshed_Client {
 						$taxonomy['st_sep']    = '';
 						$taxonomy['st_after']  = '';
 					}
-					// Simple text or html tags.
-					$simple = true;
-					if ( sanitize_text_field( $taxonomy['st_before'] ) !== $taxonomy['st_before'] ) {
-						$simple = false;
-					}
-					if ( isset( $taxonomy['st_sep'] ) && sanitize_text_field( $taxonomy['st_sep'] ) !== $taxonomy['st_sep'] ) {
-						$simple = false;
-					}
-					if ( sanitize_text_field( $taxonomy['st_after'] ) !== $taxonomy['st_after'] ) {
-						$simple = false;
-					}
+					// Simple text (no HTML) or html tags. Spaces at either end are allowed in simple text.
+					$simple = ( false === strpos( $taxonomy['st_before'] . ( isset( $taxonomy['st_sep'] ) ? $taxonomy['st_sep'] : '' ) . $taxonomy['st_after'], '<' ) );
 					if ( $simple ) {
 						if ( ! empty( $taxonomy['st_before'] ) && ' ' !== substr( $taxonomy['st_before'], -1 ) ) {
 							$prefix = $taxonomy['st_before'] . ' ';
@@ -474,22 +465,27 @@ class SimpleTaxonomyRefreshed_Client {
 						} else {
 							$suffix = $taxonomy['st_after'];
 						}
+						// Plain text: escape it for HTML.
+						$prefix = esc_html( $prefix );
+						$sep    = esc_html( $sep );
+						$suffix = esc_html( $suffix );
 					} else {
-						$prefix = $taxonomy['st_before'];
+						// HTML: allow what a post may contain (as when the settings are saved).
+						$prefix = wp_kses_post( $taxonomy['st_before'] );
 						if ( empty( $taxonomy['st_sep'] ) ) {
 							$sep = ', ';
 						} else {
-							$sep = $taxonomy['st_sep'];
+							$sep = wp_kses_post( $taxonomy['st_sep'] );
 						}
-						$suffix = $taxonomy['st_after'];
+						$suffix = wp_kses_post( $taxonomy['st_after'] );
 					}
 					$terms = get_the_term_list( $post->ID, $slug, $prefix, $sep, $suffix );
 					if ( ! empty( $terms ) ) {
-						$output .= "\t" . '<div class="taxonomy-' . $slug . ' wp-block-post-terms">' . $terms . "</div>\n";
+						$output .= "\t" . '<div class="taxonomy-' . esc_attr( $slug ) . ' wp-block-post-terms">' . $terms . "</div>\n";
 					} else {
 						// On migration and before update, no value in 'not_found'.
 						$notfound = ( isset( $taxonomy['labels']['not_found'] ) ? $taxonomy['labels']['not_found'] : __( 'No Terms found', 'simple-taxonomy-refreshed' ) );
-						$output  .= "\t" . '<!-- Taxonomy : ' . $slug . ' : ' . $notfound . ' -->' . "\n";
+						$output  .= "\t" . '<!-- Taxonomy : ' . esc_html( $slug . ' : ' . str_replace( '--', '- -', $notfound ) ) . ' -->' . "\n";
 					}
 				}
 			}
@@ -768,8 +764,11 @@ class SimpleTaxonomyRefreshed_Client {
 				if ( ! in_array( $post_type, (array) $taxonomy['st_adm_types'], true ) ) {
 					continue;
 				}
-				// Add fields from the defined taxonomy.
-				$tax_obj                         = get_taxonomy( $taxonomy['name'] );
+				// Add fields from the defined taxonomy (it may not be registered).
+				$tax_obj = get_taxonomy( $taxonomy['name'] );
+				if ( false === $tax_obj ) {
+					continue;
+				}
 				$taxonomy['query_var']           = $tax_obj->query_var;
 				$taxonomy['labels']['all_items'] = $tax_obj->labels->all_items;
 				// Add the filter.
