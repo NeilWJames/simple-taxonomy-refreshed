@@ -2195,167 +2195,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				return false;
 			}
 
-			$taxo_data = $current_options['taxonomies'][ $taxo_name ];
-
-			// Get proper args.
-			$args = SimpleTaxonomyRefreshed_Client::prepare_args( $taxo_data );
-
-			// Get args to code.
-			if ( is_array( $taxo_data['objects'] ) && ! empty( $taxo_data['objects'] ) ) {
-				// phpcs:ignore
-				$taxo_cpt = var_export( $taxo_data['objects'], true );
-			} else {
-				$taxo_cpt = 'null';
-			}
-			// phpcs:ignore
-			$code = $taxo_cpt . ",\n  " . var_export( $args, true ) . ' );';
-
-			$output = implode(
-				"\n",
-				array(
-					'<?php',
-					'/*',
-					'Plugin Name: XXX - %TAXO_LABEL%',
-					'Version: x.y.z',
-					'Plugin URI: http://www.example.com',
-					'Description: XXX - Taxonomy %TAXO_LABEL%',
-					'Author: XXX - Simple Taxonomy Refreshed Generator',
-					'Author URI: http://www.example.com',
-					'',
-					'----',
-					'',
-					'Copyright %TAXO_YEAR% - XXX-Author',
-					'',
-					'This program is free software; you can redistribute it and/or modify',
-					'it under the terms of the GNU General Public License as published by',
-					'the Free Software Foundation; either version 3 of the License, or',
-					'(at your option) any later version.',
-					'',
-					'This program is distributed in the hope that it will be useful,',
-					'but WITHOUT ANY WARRANTY; without even the implied warranty of',
-					'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the',
-					'GNU General Public License for more details.',
-					'',
-					'You should have received a copy of the GNU General Public License',
-					'along with this program; if not, write to the Free Software',
-					'Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA',
-					'*/',
-					'',
-					"add_action( 'init', 'register_staxo_%TAXO_NAME%', 10 );",
-					'',
-					'function register_staxo_%TAXO_NAME%() {',
-					'register_taxonomy( "' . $taxo_data['name'] . '", ',
-					'  %TAXO_CODE%',
-					'}',
-				)
-			);
-
-			// Replace marker by variables ($code has line feeds).
-			$output = str_replace( '%TAXO_YEAR%', gmdate( 'Y' ), $output );
-			$output = str_replace( '%TAXO_LABEL%', $args['labels']['name'], $output );
-			$output = str_replace( '%TAXO_NAME%', str_replace( '-', '_', $taxo_name ), $output );
-			$output = str_replace( '%TAXO_CODE%', $code, $output );
-
-			// Set display as comment as not in parameters.
-			if ( ! array_key_exists( 'st_before', $taxo_data ) ) {
-				$taxo_data['st_before'] = '';
-			}
-			if ( ! array_key_exists( 'st_sep', $taxo_data ) ) {
-				$taxo_data['st_sep'] = ', ';
-			}
-			if ( ! array_key_exists( 'st_after', $taxo_data ) ) {
-				$taxo_data['st_after'] = '';
-			}
-			$display  = "\n" . '// ' . esc_html__( 'Display Terms with Posts', 'simple-taxonomy-refreshed' ) . ': ';
-			$display .= ( 'both' === $taxo_data['auto'] ? 'content, excerpt' : $taxo_data['auto'] );
-			$display .= "\n" . '// ' . esc_html__( 'Display Terms Before text', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_before'];
-			$display .= "\n" . '// ' . esc_html__( 'Display Terms Separator', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_sep'];
-			$display .= "\n" . '// ' . esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_after'];
-			$display .= "\n" . '// ' . esc_html__( 'Show Terms in Feeds', 'simple-taxonomy-refreshed' ) . ': ' . $taxo_data['st_feed'];
-
-			$output .= $display . "\n";
-
-			if ( array_key_exists( 'st_adm_types', $taxo_data ) && ! empty( $taxo_data['st_adm_types'] ) ) {
-				// output admin filter parameters.
-				$display = "\n" . '/**' . esc_html__( 'Admin List screens for these post type(s) will have a filter list dropdown:', 'simple-taxonomy-refreshed' );
-				foreach ( $taxo_data['st_adm_types'] as $post_type ) {
-					$display .= "\n  " . $post_type;
-				}
-				$display .= "\n" . esc_html__( 'with wp_dropdown_categories parameters:', 'simple-taxonomy-refreshed' );
-
-				// phpcs:ignore
-				$taxo_filter = SimpleTaxonomyRefreshed_Client::prepare_filter_args( $taxo_data );
-				// modify selected back to text version; not value.
-				$taxo_filter['selected'] = 'filter_input( INPUT_GET, \'' . $taxo_data['query_var'] . '\', FILTER_SANITIZE_STRING )';
-				// phpcs:ignore
-				$exp = var_export( $taxo_filter, true );
-				$exp = str_replace( "'filter_input", 'filter_input', $exp );
-				$exp = str_replace( "_STRING )'", '_STRING )', $exp );
-
-				$output .= "\n" . $display . "\n" . $exp . "\n" . '**/' . "\n";
-			}
-
-			if ( array_key_exists( 'st_cb_type', $taxo_data ) && ! empty( $taxo_data['st_cb_type'] ) ) {
-				$display = "\n" . '/**' . esc_html__( 'Term count callback modified.', 'simple-taxonomy-refreshed' ) . "\n";
-				if ( ! empty( $args['update_count_callback'] ) ) {
-					$display .= esc_html__( 'N.B. Callback parameter update_count_callback set, so will be ineffective', 'simple-taxonomy-refreshed' ) . "\n";
-				}
-				$display .= esc_html__( 'Applies to posts with status: ', 'simple-taxonomy-refreshed' );
-				if ( 1 === (int) $taxo_data['st_cb_type'] ) {
-					$display .= esc_html__( 'All except trash', 'simple-taxonomy-refreshed' );
-				} else {
-					$display .= ( true === (bool) $taxo_data['st_cb_pub'] ? "\n " . esc_html__( 'Published', 'simple-taxonomy-refreshed' ) : '' );
-					$display .= ( true === (bool) $taxo_data['st_cb_fut'] ? "\n " . esc_html__( 'Future', 'simple-taxonomy-refreshed' ) : '' );
-					$display .= ( true === (bool) $taxo_data['st_cb_dft'] ? "\n " . esc_html__( 'Default', 'simple-taxonomy-refreshed' ) : '' );
-					$display .= ( true === (bool) $taxo_data['st_cb_pnd'] ? "\n " . esc_html__( 'Pending', 'simple-taxonomy-refreshed' ) : '' );
-					$display .= ( true === (bool) $taxo_data['st_cb_prv'] ? "\n " . esc_html__( 'Private', 'simple-taxonomy-refreshed' ) : '' );
-					$display .= ( true === (bool) $taxo_data['st_cb_tsh'] ? "\n " . esc_html__( 'Trash', 'simple-taxonomy-refreshed' ) : '' );
-				}
-				$output .= $display . "\n" . '**/' . "\n";
-			}
-
-			if ( array_key_exists( 'st_cc_type', $taxo_data ) && ! empty( $taxo_data['st_cc_type'] ) ) {
-				$display = "\n" . '/**' . esc_html__( 'Terms control parameters set.', 'simple-taxonomy-refreshed' ) . "\n";
-				// output all post types parameters.
-				if ( ! array_key_exists( 'st_cc_types', $taxo_data ) || empty( $taxo_data['st_cc_types'] ) ) {
-					$display .= esc_html__( 'Applies to all valid post type(s)', 'simple-taxonomy-refreshed' );
-				} else {
-					$display .= esc_html__( 'Applies to these post type(s)', 'simple-taxonomy-refreshed' );
-					foreach ( $taxo_data['st_cc_types'] as $post_type ) {
-						$display .= "\n  " . $post_type;
-					}
-				}
-				$display .= "\n" . esc_html__( 'Applies to posts with status:', 'simple-taxonomy-refreshed' );
-				if ( 1 === (int) $taxo_data['st_cc_type'] ) {
-					$display .= '  ' . esc_html__( 'Published and Future only', 'simple-taxonomy-refreshed' );
-				} else {
-					$display .= '  ' . esc_html__( 'All statuses except Trash.', 'simple-taxonomy-refreshed' );
-				}
-
-				if ( 0 === (int) $taxo_data['st_cc_hard'] ) {
-					$hard = esc_html__( 'Notifications only if outside bounds will be given and user cannot change terms.', 'simple-taxonomy-refreshed' );
-				} elseif ( 1 === (int) $taxo_data['st_cc_hard'] ) {
-					$hard = esc_html__( 'Hard tests. I.e. Controls will apply during Form Editing and on saving.', 'simple-taxonomy-refreshed' );
-				} else {
-					$hard = esc_html__( 'Soft tests. I.e. Controls will apply on saving.', 'simple-taxonomy-refreshed' );
-				}
-
-				if ( true === (bool) $taxo_data['st_cc_umin'] ) {
-					// translators: %d is the minimum number of terms.
-					$min = esc_html( sprintf( __( 'Minimum number of terms set to %d.', 'simple-taxonomy-refreshed' ), $taxo_data['st_cc_min'] ) );
-				} else {
-					$min = esc_html__( 'No minimum number of terms.', 'simple-taxonomy-refreshed' );
-				}
-
-				if ( true === (bool) $taxo_data['st_cc_umax'] ) {
-					// translators: %d is the minimum number of terms.
-					$max = esc_html( sprintf( __( 'Maximum number of terms set to %d.', 'simple-taxonomy-refreshed' ), $taxo_data['st_cc_max'] ) );
-				} else {
-					$max = esc_html__( 'No maximum number of terms.', 'simple-taxonomy-refreshed' );
-				}
-
-				$output .= $display . "\n\n" . $hard . "\n\n" . $min . "\n" . $max . "\n" . '**/' . "\n";
-			}
+			$output = self::build_php_export( $current_options['taxonomies'][ $taxo_name ] );
 
 			// No cache.
 			header( 'Expires: ' . gmdate( 'D, d M Y H:i:s', time() + ( 24 * 60 * 60 ) ) . ' GMT' );
@@ -2377,6 +2217,208 @@ class SimpleTaxonomyRefreshed_Admin {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Build the PHP code that registers a taxonomy, for "Export PHP".
+	 *
+	 * Values that end up in comments are made safe so they cannot end the comment
+	 * and become code; the taxonomy name is exported as a PHP string literal.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array $taxo_data taxonomy settings as stored by this plugin.
+	 * @return string PHP code.
+	 */
+	public static function build_php_export( $taxo_data ) {
+		// Function name suffix: letters, digits and underscores only.
+		$func_name = preg_replace( '/[^a-z0-9_]/', '_', strtolower( (string) $taxo_data['name'] ) );
+
+		// Get proper args.
+		$args = SimpleTaxonomyRefreshed_Client::prepare_args( $taxo_data );
+
+		// Get args to code.
+		if ( is_array( $taxo_data['objects'] ) && ! empty( $taxo_data['objects'] ) ) {
+			// phpcs:ignore
+			$taxo_cpt = var_export( $taxo_data['objects'], true );
+		} else {
+			$taxo_cpt = 'null';
+		}
+		// phpcs:ignore
+		$code = $taxo_cpt . ",\n  " . var_export( $args, true ) . ' );';
+
+		$output = implode(
+			"\n",
+			array(
+				'<?php',
+				'/*',
+				'Plugin Name: XXX - %TAXO_LABEL%',
+				'Version: x.y.z',
+				'Plugin URI: http://www.example.com',
+				'Description: XXX - Taxonomy %TAXO_LABEL%',
+				'Author: XXX - Simple Taxonomy Refreshed Generator',
+				'Author URI: http://www.example.com',
+				'',
+				'----',
+				'',
+				'Copyright %TAXO_YEAR% - XXX-Author',
+				'',
+				'This program is free software; you can redistribute it and/or modify',
+				'it under the terms of the GNU General Public License as published by',
+				'the Free Software Foundation; either version 3 of the License, or',
+				'(at your option) any later version.',
+				'',
+				'This program is distributed in the hope that it will be useful,',
+				'but WITHOUT ANY WARRANTY; without even the implied warranty of',
+				'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the',
+				'GNU General Public License for more details.',
+				'',
+				'You should have received a copy of the GNU General Public License',
+				'along with this program; if not, write to the Free Software',
+				'Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA',
+				'*/',
+				'',
+				"add_action( 'init', 'register_staxo_%TAXO_NAME%', 10 );",
+				'',
+				'function register_staxo_%TAXO_NAME%() {',
+				'register_taxonomy( ' . var_export( (string) $taxo_data['name'], true ) . ', ', // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export
+				'  %TAXO_CODE%',
+				'}',
+			)
+		);
+
+		// Replace marker by variables ($code has line feeds).
+		$output = str_replace( '%TAXO_YEAR%', gmdate( 'Y' ), $output );
+		$output = str_replace( '%TAXO_LABEL%', self::export_comment_line( $args['labels']['name'] ), $output );
+		$output = str_replace( '%TAXO_NAME%', $func_name, $output );
+		$output = str_replace( '%TAXO_CODE%', $code, $output );
+
+		// Set display as comment as not in parameters.
+		if ( ! array_key_exists( 'st_before', $taxo_data ) ) {
+			$taxo_data['st_before'] = '';
+		}
+		if ( ! array_key_exists( 'st_sep', $taxo_data ) ) {
+			$taxo_data['st_sep'] = ', ';
+		}
+		if ( ! array_key_exists( 'st_after', $taxo_data ) ) {
+			$taxo_data['st_after'] = '';
+		}
+		$display  = "\n" . '// ' . esc_html__( 'Display Terms with Posts', 'simple-taxonomy-refreshed' ) . ': ';
+		$display .= self::export_comment_line( 'both' === $taxo_data['auto'] ? 'content, excerpt' : $taxo_data['auto'] );
+		$display .= "\n" . '// ' . esc_html__( 'Display Terms Before text', 'simple-taxonomy-refreshed' ) . ': ' . self::export_comment_line( $taxo_data['st_before'] );
+		$display .= "\n" . '// ' . esc_html__( 'Display Terms Separator', 'simple-taxonomy-refreshed' ) . ': ' . self::export_comment_line( $taxo_data['st_sep'] );
+		$display .= "\n" . '// ' . esc_html__( 'Display Terms After text', 'simple-taxonomy-refreshed' ) . ': ' . self::export_comment_line( $taxo_data['st_after'] );
+		$display .= "\n" . '// ' . esc_html__( 'Show Terms in Feeds', 'simple-taxonomy-refreshed' ) . ': ' . self::export_comment_line( isset( $taxo_data['st_feed'] ) ? $taxo_data['st_feed'] : '' );
+
+		$output .= $display . "\n";
+
+		if ( array_key_exists( 'st_adm_types', $taxo_data ) && ! empty( $taxo_data['st_adm_types'] ) ) {
+			// output admin filter parameters.
+			$display = "\n" . '/**' . esc_html__( 'Admin List screens for these post type(s) will have a filter list dropdown:', 'simple-taxonomy-refreshed' );
+			foreach ( $taxo_data['st_adm_types'] as $post_type ) {
+				$display .= "\n  " . $post_type;
+			}
+			$display .= "\n" . esc_html__( 'with wp_dropdown_categories parameters:', 'simple-taxonomy-refreshed' );
+
+			// phpcs:ignore
+			$taxo_filter = SimpleTaxonomyRefreshed_Client::prepare_filter_args( $taxo_data );
+			// modify selected back to text version; not value.
+			$taxo_filter['selected'] = 'filter_input( INPUT_GET, \'' . $taxo_data['query_var'] . '\', FILTER_SANITIZE_STRING )';
+			// phpcs:ignore
+			$exp = var_export( $taxo_filter, true );
+			$exp = str_replace( "'filter_input", 'filter_input', $exp );
+			$exp = str_replace( "_STRING )'", '_STRING )', $exp );
+
+			$output .= "\n" . self::export_comment_block( $display . "\n" . $exp ) . "\n" . '**/' . "\n";
+		}
+
+		if ( array_key_exists( 'st_cb_type', $taxo_data ) && ! empty( $taxo_data['st_cb_type'] ) ) {
+			$display = "\n" . '/**' . esc_html__( 'Term count callback modified.', 'simple-taxonomy-refreshed' ) . "\n";
+			if ( ! empty( $args['update_count_callback'] ) ) {
+				$display .= esc_html__( 'N.B. Callback parameter update_count_callback set, so will be ineffective', 'simple-taxonomy-refreshed' ) . "\n";
+			}
+			$display .= esc_html__( 'Applies to posts with status: ', 'simple-taxonomy-refreshed' );
+			if ( 1 === (int) $taxo_data['st_cb_type'] ) {
+				$display .= esc_html__( 'All except trash', 'simple-taxonomy-refreshed' );
+			} else {
+				$display .= ( true === (bool) $taxo_data['st_cb_pub'] ? "\n " . esc_html__( 'Published', 'simple-taxonomy-refreshed' ) : '' );
+				$display .= ( true === (bool) $taxo_data['st_cb_fut'] ? "\n " . esc_html__( 'Future', 'simple-taxonomy-refreshed' ) : '' );
+				$display .= ( true === (bool) $taxo_data['st_cb_dft'] ? "\n " . esc_html__( 'Default', 'simple-taxonomy-refreshed' ) : '' );
+				$display .= ( true === (bool) $taxo_data['st_cb_pnd'] ? "\n " . esc_html__( 'Pending', 'simple-taxonomy-refreshed' ) : '' );
+				$display .= ( true === (bool) $taxo_data['st_cb_prv'] ? "\n " . esc_html__( 'Private', 'simple-taxonomy-refreshed' ) : '' );
+				$display .= ( true === (bool) $taxo_data['st_cb_tsh'] ? "\n " . esc_html__( 'Trash', 'simple-taxonomy-refreshed' ) : '' );
+			}
+			$output .= self::export_comment_block( $display ) . "\n" . '**/' . "\n";
+		}
+
+		if ( array_key_exists( 'st_cc_type', $taxo_data ) && ! empty( $taxo_data['st_cc_type'] ) ) {
+			$display = "\n" . '/**' . esc_html__( 'Terms control parameters set.', 'simple-taxonomy-refreshed' ) . "\n";
+			// output all post types parameters.
+			if ( ! array_key_exists( 'st_cc_types', $taxo_data ) || empty( $taxo_data['st_cc_types'] ) ) {
+				$display .= esc_html__( 'Applies to all valid post type(s)', 'simple-taxonomy-refreshed' );
+			} else {
+				$display .= esc_html__( 'Applies to these post type(s)', 'simple-taxonomy-refreshed' );
+				foreach ( $taxo_data['st_cc_types'] as $post_type ) {
+					$display .= "\n  " . $post_type;
+				}
+			}
+			$display .= "\n" . esc_html__( 'Applies to posts with status:', 'simple-taxonomy-refreshed' );
+			if ( 1 === (int) $taxo_data['st_cc_type'] ) {
+				$display .= '  ' . esc_html__( 'Published and Future only', 'simple-taxonomy-refreshed' );
+			} else {
+				$display .= '  ' . esc_html__( 'All statuses except Trash.', 'simple-taxonomy-refreshed' );
+			}
+
+			if ( 0 === (int) $taxo_data['st_cc_hard'] ) {
+				$hard = esc_html__( 'Notifications only if outside bounds will be given and user cannot change terms.', 'simple-taxonomy-refreshed' );
+			} elseif ( 1 === (int) $taxo_data['st_cc_hard'] ) {
+				$hard = esc_html__( 'Hard tests. I.e. Controls will apply during Form Editing and on saving.', 'simple-taxonomy-refreshed' );
+			} else {
+				$hard = esc_html__( 'Soft tests. I.e. Controls will apply on saving.', 'simple-taxonomy-refreshed' );
+			}
+
+			if ( true === (bool) $taxo_data['st_cc_umin'] ) {
+				// translators: %d is the minimum number of terms.
+				$min = esc_html( sprintf( __( 'Minimum number of terms set to %d.', 'simple-taxonomy-refreshed' ), $taxo_data['st_cc_min'] ) );
+			} else {
+				$min = esc_html__( 'No minimum number of terms.', 'simple-taxonomy-refreshed' );
+			}
+
+			if ( true === (bool) $taxo_data['st_cc_umax'] ) {
+				// translators: %d is the minimum number of terms.
+				$max = esc_html( sprintf( __( 'Maximum number of terms set to %d.', 'simple-taxonomy-refreshed' ), $taxo_data['st_cc_max'] ) );
+			} else {
+				$max = esc_html__( 'No maximum number of terms.', 'simple-taxonomy-refreshed' );
+			}
+
+			$output .= self::export_comment_block( $display . "\n\n" . $hard . "\n\n" . $min . "\n" . $max ) . "\n" . '**/' . "\n";
+		}
+
+		return $output;
+	}
+
+	/**
+	 * Make a value safe for a single-line (//) comment in exported PHP.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param mixed $text value.
+	 * @return string
+	 */
+	private static function export_comment_line( $text ) {
+		return str_replace( array( "\r", "\n", '*/' ), array( ' ', ' ', '*\/' ), (string) $text );
+	}
+
+	/**
+	 * Make text safe inside a block (/* ... * /) comment in exported PHP.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param string $text text.
+	 * @return string
+	 */
+	private static function export_comment_block( $text ) {
+		return str_replace( '*/', '*\/', (string) $text );
 	}
 
 	/**

@@ -115,11 +115,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			$new_taxonomy         = $current_options['taxonomies'][ $taxonomy ];
 			$new_taxonomy['name'] = $new_slug;
 
-			// deal with query_var.
-			if ( $taxonomy === $new_taxonomy['query_var'] ) {
-				// default value - query_var == name - reset old.
-				$new_query = '';
-			}
+			// deal with query_var: an empty value, or one equal to the new slug, means the default (the taxonomy name).
 			if ( '' !== $new_query && $new_query === $new_slug ) {
 				// default value - query_var == name - reset new.
 				$new_query = '';
@@ -161,19 +157,16 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			// Force cache refresh.
 			wp_cache_delete( 'staxo_own_taxos', '' );
 
-			// Appears to be some taxonomy structure data held in the options table.
+			// The term hierarchy is held in the option <taxonomy>_children.
+			// Use the options API so that the options cache stays consistent.
 			global $wpdb;
-			$post_table = "{$wpdb->prefix}options";
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$children = $wpdb->update(
-				$post_table,
-				array(
-					'option_name' => $new_slug . '_children',
-				),
-				array(
-					'option_name' => $taxonomy . '_children',
-				)
-			);
+			$children       = 0;
+			$children_value = get_option( $taxonomy . '_children' );
+			if ( false !== $children_value ) {
+				update_option( $new_slug . '_children', $children_value );
+				delete_option( $taxonomy . '_children' );
+				$children = 1;
+			}
 
 			// clean taxonomy cache.
 			// Do not use clean_taxonomy_cache as it rebuilds the hierarchy - which we already have.
@@ -203,18 +196,12 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				)
 			);
 
-			// Update the Taxonomy default term (if it exists).
-			$opt_table = "{$wpdb->prefix}options";
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->update(
-				$opt_table,
-				array(
-					'option_name' => 'default_taxonomy_' . $new_slug,
-				),
-				array(
-					'option_name' => 'default_taxonomy_' . $taxonomy,
-				)
-			);
+			// Move the taxonomy's default term setting (if it exists). WordPress stores it as default_term_<taxonomy>.
+			$default_term = get_option( 'default_term_' . $taxonomy );
+			if ( false !== $default_term ) {
+				update_option( 'default_term_' . $new_slug, $default_term );
+				delete_option( 'default_term_' . $taxonomy );
+			}
 
 			add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Taxonomy slug changed.', 'simple-taxonomy-refreshed' ), 'updated' );
 			if ( empty( $updated ) ) {

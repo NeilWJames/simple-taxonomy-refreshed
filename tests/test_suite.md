@@ -10,9 +10,9 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 64 in 5 classes (A, C, D, E + the original main test) |
+| Tests written | 101 in 8 classes (A–G + the original main test) |
 | Run in CI | Not yet confirmed for the new classes (first CI run pending) |
-| Still to write | B, F, G, H, I, J, K (see "Planned") |
+| Still to write | H, I, J, K (see "Planned") |
 
 ## Running
 
@@ -24,7 +24,7 @@ vendor/bin/phpunit -c phpunit9.xml --group merge    # one area
 WP_MULTISITE=1 vendor/bin/phpunit -c phpunit9.xml   # multisite
 ```
 
-Groups: `config`, `import`, `merge`, `assignment`.
+Groups: `config`, `import`, `merge`, `assignment`, `taxonomy`, `convert`, `rename`.
 
 CI (`.github/workflows/ci.yml`) runs the suite on PHP 8.2–8.4 × WP 6.9/latest, plus multisite on PHP 8.4 / WP latest.
 
@@ -98,6 +98,10 @@ Other config files: `staxo-config-test-hier.json` (single taxonomy), `staxo-conf
 
 Import saves the option; taxonomy registered with its settings; suite file registers all four taxonomies (rest_base, default term, terms-control cache); a second import replaces the first; bad file rejected; editor refused; callback fields kept/cleared by `staxo_can_edit_callbacks`.
 
+### B. Taxonomy admin — `class-test-staxo-taxonomy-admin.php` (`@group taxonomy`, 19)
+
+Add taxonomy (stored, registered at next init, redirect `message=added`); form values sanitised (name via `sanitize_title`, labels, `st_before` via kses); default WP labels not stored; core/STR names refused; update (labels, count type, status choices cleared unless type 2); update of unknown refused; callback fields protected; editor and bad nonce refused. Delete keeps terms and relationships; flush-delete removes terms, relationships and meta (but WordPress keeps a taxonomy's default term); delete updates `list_order`; unknown / editor / bad nonce refused. Export PHP (`build_php_export()`): valid PHP for all fixture taxonomies (`token_get_all( …, TOKEN_PARSE )`); values in comments cannot become code (review L3); name exported as a string literal and safe function name; editor / unknown taxonomy refused.
+
 ### C. Terms Import — `class-test-staxo-terms-import.php` (`@group import`, 15)
 
 Flat list; tab and space hierarchies; re-import creates nothing; same name under two parents; blank lines ignored (flat and hierarchical); hierarchy into flat taxonomy rejected; indented first line → top level; skipped level → nearest ancestor; skipped-line warning notice (line number, term, reason; children of a skipped term skipped; name escaped); term named `0`; unknown taxonomy, subscriber and bad nonce rejected.
@@ -110,6 +114,14 @@ Fixture matrix check; add term (published / draft); remove term; remove last ter
 
 Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources and warns that children move (hierarchical only); single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move under the destination); parent and child together; destination below a source (moved up first, no loop); flat across posts and pages (object cache cleared); count rules respected; terms control kept; posts the merge would take below the terms-control minimum listed in phase three with a Do not merge / Merge anyway choice (default: do not merge), merge refused or done accordingly, type 1 ignores drafts; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce.
 
+### F. Terms Conversion — `class-test-staxo-convert.php` (`@group convert`, 7)
+
+Hierarchical → hierarchical (space-indented tree, imported tree identical); hierarchical → flat (sorted flat list); flat → hierarchical (top level, includes default term); posts not moved; names escaped in the response; unknown taxonomy and editor refused.
+
+### G. Rename slug — `class-test-staxo-rename.php` (`@group rename`, 11)
+
+Rename moves definition, `term_taxonomy` rows and posts' terms, hierarchy kept, "Done, 10 terms were migrated."; query_var (empty / equal to new slug → default; a new value is kept even when the old one was the default); `<taxonomy>_children` and `default_term_<taxonomy>` options move; `list_order` updated; new rewrite slug stored and flush scheduled; term cache cleared; invalid new slugs refused (empty, > 32, same, existing — review M6); core and unknown taxonomies refused; subscriber and bad nonce refused.
+
 ### Main — `class-test-staxo-refreshed-main.php` (2)
 
 Multisite flag as expected; plugin loaded.
@@ -118,9 +130,6 @@ Multisite flag as expected; plugin loaded.
 
 | Ref | Area | Notes |
 |---|---|---|
-| B | Create / update / delete taxonomy via admin form | Delete vs flush-delete; `list_order` cleanup (fixed 1 Oct); Export PHP |
-| F | Terms conversion (copy between taxonomies) | Output feeds Terms Import; posts not moved |
-| G | Rename taxonomy slug | Known bug: moves `default_taxonomy_<slug>` instead of `default_term_<slug>` |
 | H | Terms control on save (classic and REST) | Note: `st_cc_type` compared with `===` to int 1 — check stored type |
 | I | Front-end output | the_content/excerpt, shortcode, block, feed, admin filter, widget `filter_min` |
 | J | Admin list ordering | |
@@ -131,6 +140,8 @@ Multisite flag as expected; plugin loaded.
 - Merging a parent term moves its children under the destination term (decided 1 Oct 2026). If the destination is below a source, it is first moved up to the source's parent.
 - Terms control minimum (decided 1 Oct 2026): phase three lists the posts whose term count the merge would reduce below the minimum, and offers "Do not merge" (default) or "Merge anyway". Posts already below the minimum and not changed by the merge are not listed. Type 1 controls count published/scheduled posts only.
 - Terms Import: an indented first line is top level; skipped terms are reported with line numbers.
+- Rename query_var: an empty value or one equal to the new slug means the default (the new taxonomy name); any other value entered is stored.
+- Flush-delete leaves a taxonomy's default term (WordPress `wp_delete_term()` refuses to delete it).
 
 ## Change log
 
@@ -139,3 +150,4 @@ Multisite flag as expected; plugin loaded.
 - **1 Oct 2026** — First CI run of the new classes. `test_fixture_matrix` exposed a plugin bug: `term_count_sel_cache()` read `$options['externals']` when no external taxonomies were configured ("Undefined array key" warning whenever a taxonomy STR doesn't manage, such as `category`, was counted). Fixed in `class-simpletaxonomyrefreshed-client.php`; every fixture-based test (classes D and E) depends on it.
 - **1 Oct 2026** — Terms Merge now moves the children of each source term under the destination (`SimpleTaxonomyRefreshed_Admin_Merge::move_children()`); phase three says so for hierarchical taxonomies. Merge tests updated and 3 added (parent and child together, destination below a source, no notice for flat).
 - **1 Oct 2026** — Terms Merge checks the terms-control minimum: lists affected posts, "Do not merge" / "Merge anyway" choice (`min_control()`, `posts_below_minimum()`, `list_posts_below()`). 5 merge tests added.
+- **1 Oct 2026** — Classes B (taxonomy admin, 19), F (conversion, 7), G (rename, 11). Plugin changes made for them: rename moves `default_term_<slug>` (was `default_taxonomy_<slug>`) and the `<slug>_children` option through the options API (cache-safe); rename keeps an entered query_var when the old one was the default; Export PHP code built by the new `SimpleTaxonomyRefreshed_Admin::build_php_export()`, with comment values made safe and the name exported as a string literal (review L3).

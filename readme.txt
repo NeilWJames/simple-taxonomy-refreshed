@@ -87,6 +87,9 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* FIX: Rename reports the correct number of migrated terms.
 	* FIX: Terms Merge term labels select their checkbox or radio button for hierarchical taxonomies.
 	* FIX: No PHP warning when counting terms on a site with no external taxonomies configured.
+	* FIX: Rename Slug keeps the taxonomy's default term setting.
+	* FIX: Rename Slug uses a new query_var when the old one was the default.
+	* FIX: Export PHP: text from the taxonomy settings can no longer break out of comments in the generated code.
 	* DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
 	* DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
 	* DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.
@@ -96,7 +99,8 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* DEV: Removed term-count code for WordPress before 5.7, including `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version`.
 	* DEV: JavaScript reviewed with wp-scripts lint-js.
 	* DEV: Code checked with PHPStan (level 5).
-	* DEV: PHPUnit test suite with shared fixtures covering configuration import, Terms Import, Terms Merge and term counts.
+	* DEV: PHPUnit test suite with shared fixtures covering configuration import, Terms Import, Terms Merge, term counts, taxonomy add/update/delete, Export PHP, Terms Conversion and Rename Slug.
+	* DEV: Export PHP code is built by `SimpleTaxonomyRefreshed_Admin::build_php_export()`.
 
 * Version 3.4.1  (03/09/2026)
 	* FIX: Taxonomy counts work within iFramed content.

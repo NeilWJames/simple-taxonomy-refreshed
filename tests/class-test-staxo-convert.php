@@ -1,0 +1,158 @@
+<?php
+/**
+ * Tests for Terms Conversion (copying terms between taxonomies).
+ *
+ * @author Neil W. James <neil@familyjames.com>
+ * @package test-simple-taxonomy-refreshed
+ */
+
+/**
+ * Terms Conversion over AJAX; its output is fed into Terms Import as the screen does.
+ *
+ * @group convert
+ */
+class Test_STaxo_Convert extends STaxo_Ajax_Test_Case {
+
+	/**
+	 * Log in an administrator; terms only in test_hier and test_flat.
+	 *
+	 * @return void
+	 */
+	public function set_up() {
+		parent::set_up();
+		$this->login( 'administrator' );
+		$this->import_config( 'staxo-config-suite.json' );
+		$this->import_terms( 'test_hier', 'terms-hier-tab.txt', 'tab' );
+		$this->import_terms( 'test_flat', 'terms-flat.txt' );
+	}
+
+	/**
+	 * Run the conversion from one taxonomy to another.
+	 *
+	 * @param string $source      source taxonomy.
+	 * @param string $destination destination taxonomy.
+	 * @return string response.
+	 */
+	private function convert( $source, $destination ) {
+		return $this->ajax(
+			SimpleTaxonomyRefreshed_Admin_Conversion::CONVERT_SLUG,
+			array(
+				'name' => array( $source, $destination ),
+				'copy' => array( 0 => '1' ),
+				'oput' => array( 1 => '1' ),
+			)
+		);
+	}
+
+	/**
+	 * The term list from the response's textarea, as the browser would submit it.
+	 *
+	 * @param string $response conversion response.
+	 * @return string[] lines.
+	 */
+	private function term_lines( $response ) {
+		$this->assertSame( 1, preg_match( '#<textarea name="import_content"[^>]*>(.*?)</textarea>#s', $response, $match ), 'No term list' );
+		$text = html_entity_decode( $match[1], ENT_QUOTES | ENT_HTML5 );
+
+		return explode( "\r", rtrim( $text, "\r" ) );
+	}
+
+	/**
+	 * The hierarchy option offered in the response.
+	 *
+	 * @param string $response conversion response.
+	 * @return string
+	 */
+	private function hierarchy( $response ) {
+		$this->assertSame( 1, preg_match( '#<select name="hierarchy" id="hierarchy">\s*<option value="([a-z]+)"#', $response, $match ), 'No hierarchy option' );
+
+		return $match[1];
+	}
+
+	/**
+	 * Hierarchical to hierarchical: the tree is copied, levels as spaces.
+	 */
+	public function test_hierarchical_to_hierarchical() {
+		$response = $this->convert( 'test_hier', 'test_count' );
+
+		$this->assertSame( 'space', $this->hierarchy( $response ) );
+		$this->assertSame(
+			array( 'Art', ' Painting', ' Sculpture', 'Misc', 'Music', ' Jazz', '  Bebop', '  Big Band', ' Rock', '  Punk' ),
+			$this->term_lines( $response )
+		);
+		$this->assertStringContainsString( '<option value="test_count" selected>', $response );
+
+		$this->import_terms( 'test_count', implode( "\r", $this->term_lines( $response ) ), 'space' );
+		$this->assertSame( $this->term_tree( 'test_hier' ), $this->term_tree( 'test_count' ) );
+	}
+
+	/**
+	 * Hierarchical to flat: a flat list of all terms.
+	 */
+	public function test_hierarchical_to_flat() {
+		$response = $this->convert( 'test_hier', 'test_cntl' );
+
+		$this->assertSame( 'no', $this->hierarchy( $response ) );
+		$lines = $this->term_lines( $response );
+		$this->assertSame( array( 'Art', 'Bebop', 'Big Band', 'Jazz', 'Misc', 'Music', 'Painting', 'Punk', 'Rock', 'Sculpture' ), $lines );
+
+		$this->import_terms( 'test_cntl', implode( "\r", $lines ) );
+		$this->assertCount( 10, $this->term_tree( 'test_cntl' ) );
+	}
+
+	/**
+	 * Flat to hierarchical: all terms at the top level (including the default term).
+	 */
+	public function test_flat_to_hierarchical() {
+		$response = $this->convert( 'test_flat', 'test_count' );
+
+		$this->assertSame( 'no', $this->hierarchy( $response ) );
+		$this->assertSame( array( 'blue', 'cyan', 'green', 'red', 'Unsorted', 'yellow' ), $this->term_lines( $response ) );
+	}
+
+	/**
+	 * Converting copies terms only; posts keep their terms and get none in the destination.
+	 */
+	public function test_posts_not_moved() {
+		$post_id = self::factory()->post->create();
+		wp_set_object_terms( $post_id, $this->term( 'test_hier', 'Jazz' )->term_id, 'test_hier' );
+
+		$response = $this->convert( 'test_hier', 'test_count' );
+		$this->import_terms( 'test_count', implode( "\r", $this->term_lines( $response ) ), 'space' );
+
+		$this->assertSame( array( 'Jazz' ), $this->post_terms( $post_id, 'test_hier' ) );
+		$this->assertSame( array(), $this->post_terms( $post_id, 'test_count' ) );
+	}
+
+	/**
+	 * Term names are escaped in the response.
+	 */
+	public function test_names_escaped() {
+		wp_insert_term( '<b>Bold</b>', 'test_hier' );
+
+		$response = $this->convert( 'test_hier', 'test_count' );
+
+		$this->assertStringNotContainsString( '<b>Bold</b>', $response );
+		$this->assertContains( '<b>Bold</b>', $this->term_lines( $response ) );
+	}
+
+	/**
+	 * An unknown taxonomy is refused.
+	 */
+	public function test_invalid_taxonomy() {
+		$this->expectException( 'WPAjaxDieStopException' );
+		$this->expectExceptionMessage( 'Invalid taxonomy.' );
+		$this->convert( 'test_hier', 'no_such_taxo' );
+	}
+
+	/**
+	 * An editor cannot convert.
+	 */
+	public function test_editor_refused() {
+		$this->login( 'editor' );
+
+		$this->expectException( 'WPAjaxDieStopException' );
+		$this->expectExceptionMessage( 'You do not have the necessary permissions.' );
+		$this->convert( 'test_hier', 'test_count' );
+	}
+}
