@@ -1,0 +1,10 @@
+Music
+	Jazz
+		Bebop
+		Big Band
+	Rock
+		Punk
+Art
+	Painting
+	Sculpture
+Misc

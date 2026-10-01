@@ -1,0 +1,67 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$text of function esc_attr expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 7
+			path: includes/class-simpletaxonomyrefreshed-admin-conversion.php
+
+		-
+			message: '#^Parameter \#1 \$text of function esc_attr expects string, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: includes/class-simpletaxonomyrefreshed-admin-merge.php
+
+		-
+			message: '#^Parameter \#1 \$text of function esc_html expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-simpletaxonomyrefreshed-admin-merge.php
+
+		-
+			message: '#^Parameter \#1 \$str of function sanitize_text_field expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-simpletaxonomyrefreshed-admin.php
+
+		-
+			message: '#^Parameter \#1 \$text of function esc_attr expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-simpletaxonomyrefreshed-admin.php
+
+		-
+			message: '#^Parameter \#1 \$text of function esc_attr expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: includes/class-simpletaxonomyrefreshed-admin.php
+
+		-
+			message: '#^Parameter \#1 \$text of function esc_attr expects string, int\<1, max\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: includes/class-simpletaxonomyrefreshed-admin.php
+
+		-
+			message: '#^Parameter \#2 \$dfault of static method SimpleTaxonomyRefreshed_Admin\:\:get_true_false\(\) expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: includes/class-simpletaxonomyrefreshed-admin.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between false and list\<int\>\|WP_Error will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: includes/class-simpletaxonomyrefreshed-admin.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 2
+			path: includes/class-simpletaxonomyrefreshed-admin.php
+
+		-
+			message: '#^Property WP_Taxonomy\:\:\$update_count_callback \(callable\) in empty\(\) is not falsy\.$#'
+			identifier: empty.property
+			count: 1
+			path: includes/class-simpletaxonomyrefreshed-client.php
