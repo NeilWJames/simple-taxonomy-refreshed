@@ -54,7 +54,7 @@ class Test_STaxo_Convert extends STaxo_Ajax_Test_Case {
 		$this->assertSame( 1, preg_match( '#<textarea name="import_content"[^>]*>(.*?)</textarea>#s', $response, $match ), 'No term list' );
 		$text = html_entity_decode( $match[1], ENT_QUOTES | ENT_HTML5 );
 
-		return explode( "\r", rtrim( $text, "\r" ) );
+		return explode( "\n", rtrim( $text, "\n" ) );
 	}
 
 	/**
@@ -82,7 +82,7 @@ class Test_STaxo_Convert extends STaxo_Ajax_Test_Case {
 		);
 		$this->assertStringContainsString( '<option value="test_count" selected>', $response );
 
-		$this->import_terms( 'test_count', implode( "\r", $this->term_lines( $response ) ), 'space' );
+		$this->import_terms( 'test_count', implode( "\n", $this->term_lines( $response ) ), 'space' );
 		$this->assertSame( $this->term_tree( 'test_hier' ), $this->term_tree( 'test_count' ) );
 	}
 
@@ -96,7 +96,7 @@ class Test_STaxo_Convert extends STaxo_Ajax_Test_Case {
 		$lines = $this->term_lines( $response );
 		$this->assertSame( array( 'Art', 'Bebop', 'Big Band', 'Jazz', 'Misc', 'Music', 'Painting', 'Punk', 'Rock', 'Sculpture' ), $lines );
 
-		$this->import_terms( 'test_cntl', implode( "\r", $lines ) );
+		$this->import_terms( 'test_cntl', implode( "\n", $lines ) );
 		$this->assertCount( 10, $this->term_tree( 'test_cntl' ) );
 	}
 
@@ -118,22 +118,42 @@ class Test_STaxo_Convert extends STaxo_Ajax_Test_Case {
 		wp_set_object_terms( $post_id, $this->term( 'test_hier', 'Jazz' )->term_id, 'test_hier' );
 
 		$response = $this->convert( 'test_hier', 'test_count' );
-		$this->import_terms( 'test_count', implode( "\r", $this->term_lines( $response ) ), 'space' );
+		$this->import_terms( 'test_count', implode( "\n", $this->term_lines( $response ) ), 'space' );
 
 		$this->assertSame( array( 'Jazz' ), $this->post_terms( $post_id, 'test_hier' ) );
 		$this->assertSame( array(), $this->post_terms( $post_id, 'test_count' ) );
 	}
 
 	/**
-	 * Term names are escaped in the response.
+	 * The list has one term per line: no HTML entity in place of the line breaks.
 	 */
-	public function test_names_escaped() {
-		wp_insert_term( '<b>Bold</b>', 'test_hier' );
+	public function test_one_term_per_line() {
+		$response = $this->convert( 'test_flat', 'test_count' );
 
-		$response = $this->convert( 'test_hier', 'test_count' );
+		$this->assertSame( 1, preg_match( '#<textarea name="import_content"[^>]*>(.*?)</textarea>#s', $response, $match ) );
+		$this->assertStringNotContainsString( '&#013;', html_entity_decode( $match[1], ENT_QUOTES | ENT_HTML5 ) );
+		$this->assertSame( 6, substr_count( $match[1], "\n" ) );
+	}
 
-		$this->assertStringNotContainsString( '<b>Bold</b>', $response );
-		$this->assertContains( '<b>Bold</b>', $this->term_lines( $response ) );
+	/**
+	 * A name with an ampersand is escaped once in the page, shown as typed, and importing it gives the same name.
+	 */
+	public function test_ampersand_round_trip() {
+		wp_insert_term( 'Rock & Roll', 'test_hier' );
+
+		$response = $this->convert( 'test_hier', 'test_cntl' );
+		$lines    = $this->term_lines( $response );
+		$this->assertContains( 'Rock & Roll', $lines );
+
+		// Escaped once in the HTML.
+		$this->assertStringContainsString( 'Rock &amp; Roll', $response );
+		$this->assertStringNotContainsString( 'Rock &amp;amp; Roll', $response );
+
+		$this->import_terms( 'test_cntl', implode( "\n", $lines ) );
+		$this->assertSame(
+			get_term_by( 'name', 'Rock & Roll', 'test_hier' )->name,
+			get_term_by( 'name', 'Rock & Roll', 'test_cntl' )->name
+		);
 	}
 
 	/**

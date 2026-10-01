@@ -462,8 +462,8 @@ class Test_STaxo_Taxonomy_Admin extends STaxo_Test_Case {
 		$this->import_config( 'staxo-config-suite.json' );
 
 		$cases = array(
-			array( 'editor', 'test_hier' ),
-			array( 'administrator', 'category' ),
+			array( 'editor', 'test_hier', 'You do not have the necessary permissions.' ),
+			array( 'administrator', 'category', 'You are trying to output a taxonomy' ),
 		);
 		foreach ( $cases as $case ) {
 			$this->login( $case[0] );
@@ -479,7 +479,7 @@ class Test_STaxo_Taxonomy_Admin extends STaxo_Test_Case {
 				SimpleTaxonomyRefreshed_Admin::admin_init();
 				$this->fail( "Export of {$case[1]} by {$case[0]} should be refused" );
 			} catch ( WPDieException $e ) {
-				unset( $e );
+				$this->assertStringContainsString( $case[2], $e->getMessage() );
 			}
 		}
 	}

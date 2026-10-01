@@ -10,7 +10,7 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 101 in 8 classes (A–G + the original main test) |
+| Tests written | 102 in 8 classes (A–G + the original main test) |
 | Run in CI | Not yet confirmed for the new classes (first CI run pending) |
 | Still to write | H, I, J, K (see "Planned") |
 
@@ -114,9 +114,9 @@ Fixture matrix check; add term (published / draft); remove term; remove last ter
 
 Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources and warns that children move (hierarchical only); single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move under the destination); parent and child together; destination below a source (moved up first, no loop); flat across posts and pages (object cache cleared); count rules respected; terms control kept; posts the merge would take below the terms-control minimum listed in phase three with a Do not merge / Merge anyway choice (default: do not merge), merge refused or done accordingly, type 1 ignores drafts; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce.
 
-### F. Terms Conversion — `class-test-staxo-convert.php` (`@group convert`, 7)
+### F. Terms Conversion — `class-test-staxo-convert.php` (`@group convert`, 8)
 
-Hierarchical → hierarchical (space-indented tree, imported tree identical); hierarchical → flat (sorted flat list); flat → hierarchical (top level, includes default term); posts not moved; names escaped in the response; unknown taxonomy and editor refused.
+Hierarchical → hierarchical (space-indented tree, imported tree identical); hierarchical → flat (sorted flat list); flat → hierarchical (top level, includes default term); posts not moved; one term per line (no `&#013;`); a name with `&` escaped once, shown as typed and imported unchanged; unknown taxonomy and editor refused.
 
 ### G. Rename slug — `class-test-staxo-rename.php` (`@group rename`, 11)
 
@@ -151,3 +151,5 @@ Multisite flag as expected; plugin loaded.
 - **1 Oct 2026** — Terms Merge now moves the children of each source term under the destination (`SimpleTaxonomyRefreshed_Admin_Merge::move_children()`); phase three says so for hierarchical taxonomies. Merge tests updated and 3 added (parent and child together, destination below a source, no notice for flat).
 - **1 Oct 2026** — Terms Merge checks the terms-control minimum: lists affected posts, "Do not merge" / "Merge anyway" choice (`min_control()`, `posts_below_minimum()`, `list_posts_below()`). 5 merge tests added.
 - **1 Oct 2026** — Classes B (taxonomy admin, 19), F (conversion, 7), G (rename, 11). Plugin changes made for them: rename moves `default_term_<slug>` (was `default_taxonomy_<slug>`) and the `<slug>_children` option through the options API (cache-safe); rename keeps an entered query_var when the old one was the default; Export PHP code built by the new `SimpleTaxonomyRefreshed_Admin::build_php_export()`, with comment values made safe and the name exported as a string literal (review L3).
+- **1 Oct 2026** — phpcs: taxonomy-admin test helpers build the request in a local array and assign it to `$_POST` / `$_GET` / `$_REQUEST`, instead of reading one superglobal into another (NonceVerification).
+- **1 Oct 2026** — First CI run of B, F, G: 97 of 101 passed. The 4 conversion failures were a real plugin bug: the list put `&#013;` between terms and it was escaped again, so the browser showed one line with literal `&#013;`. The conversion now lists one term per line with real line breaks and `esc_textarea()`, and decodes stored entities (`&amp;`) so names are shown as typed. Also fixed: "false to array" deprecation when adding the first taxonomy (or editing an external one) with no saved settings; the Export PHP refusal test now asserts the messages (was risky). Conversion tests: 8.

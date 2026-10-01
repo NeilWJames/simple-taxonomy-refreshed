@@ -2475,6 +2475,11 @@ class SimpleTaxonomyRefreshed_Admin {
 		$current_options = get_option( OPTION_STAXO );
 		$staxo           = $taxonomy['name'];
 
+		// No settings saved yet (first taxonomy on the site).
+		if ( ! is_array( $current_options ) ) {
+			$current_options = array();
+		}
+
 		if ( isset( $current_options['taxonomies'][ $staxo ] ) ) { // User taxo already exist ?
 			wp_die( esc_html__( 'You are trying to add a taxonomy with a name already used by an another taxonomy.', 'simple-taxonomy-refreshed' ) );
 		}
@@ -2603,6 +2608,11 @@ class SimpleTaxonomyRefreshed_Admin {
 	private static function update_external( $taxonomy ) {
 		$current_options = get_option( OPTION_STAXO );
 		$staxo           = $taxonomy['name'];
+
+		// No settings saved yet.
+		if ( ! is_array( $current_options ) ) {
+			$current_options = array();
+		}
 
 		// Remove added detail from external taxonomy definition.
 		unset( $taxonomy['labels'] );

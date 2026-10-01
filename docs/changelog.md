@@ -30,6 +30,8 @@
 * FIX: Rename Slug keeps the taxonomy's default term setting.
 * FIX: Rename Slug uses a new query_var when the old one was the default.
 * FIX: Export PHP: text from the taxonomy settings can no longer break out of comments in the generated code.
+* FIX: Terms Conversion lists one term per line (it showed `&#013;` between the terms), and names containing `&` are shown as typed.
+* FIX: PHP deprecation notice when adding the first taxonomy on a site.
 * DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
 * DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
 * DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.

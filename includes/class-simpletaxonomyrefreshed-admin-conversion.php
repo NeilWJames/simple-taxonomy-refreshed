@@ -113,13 +113,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 				$hier_text   = __( 'No hierarchy', 'simple-taxonomy-refreshed' );
 			}
 
-			// invoke import.
-			// phpcs:disable  WordPress.Security.NonceVerification.Recommended
-			$_POST['taxonomy']       = $destination_taxo->name;
-			$_POST['hierarchy']      = $hier_option;
-			$_POST['import_content'] = $taxo_list;
-			// phpcs:enable  WordPress.Security.NonceVerification.Recommended
-
+			// Output a Terms Import form pre-filled with the source terms.
 			ob_start();
 			settings_errors( 'simple-taxonomy-refreshed' );
 			?>
@@ -147,9 +141,9 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 					<br />
 					<?php
 					// Output the tag with PHP to avoid these leading format tabs being output in the textarea.
+					// One term per line; the line breaks are kept by the textarea.
 					echo '<textarea name="import_content" id="import_content" rows="20" style="width:100%">';
-					// phpcs:ignore  WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput
-					echo esc_html( stripslashes( wp_unslash( $_POST['import_content'] ) ) );
+					echo esc_textarea( $taxo_list );
 					echo '</textarea>';
 					?>
 				</p>
@@ -181,7 +175,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 	 * @param string  $taxonomy  taxonomy name.
 	 * @param integer $par_term  parent term.
 	 * @param integer $level     level (indent) of parent term.
-	 * @return void
+	 * @return string terms, one per line, indented with a space per level (not escaped).
 	 */
 	private static function list_taxonomy_children( $taxonomy, $par_term, $level ) {
 		global $wpdb;
@@ -202,29 +196,31 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 		);
 
 		$indent = str_repeat( ' ', $level );
+		$output = '';
 		foreach ( $children as $p => $row ) {
-			echo esc_html( $indent . $row['name'] . '&#013;' );
-			self::list_taxonomy_children( $taxonomy, $row['term_id'], $level + 1 );
+			// Names are stored with HTML entities (e.g. &amp;); show them as typed.
+			$output .= $indent . wp_specialchars_decode( $row['name'], ENT_QUOTES ) . "\n";
+			$output .= self::list_taxonomy_children( $taxonomy, (int) $row['term_id'], $level + 1 );
 		}
+
+		return $output;
 	}
 
 	/**
 	 * List all the taxonomy terms (Hierarchical).
 	 *
 	 * @param string $taxonomy taxonomy name.
-	 * @return string $output   list of terms (one per line indented)
+	 * @return string $output   list of terms (one per line indented, not escaped)
 	 */
 	private static function list_hier_taxo_terms( $taxonomy ) {
-		ob_start();
-		self::list_taxonomy_children( $taxonomy, 0, 0 );
-		return ob_get_clean();
+		return self::list_taxonomy_children( $taxonomy, 0, 0 );
 	}
 
 	/**
 	 * List all the taxonomy terms (Non-Hierarchical).
 	 *
 	 * @param string $taxonomy taxonomy name.
-	 * @return string $output   list of terms (one per line)
+	 * @return string $output   list of terms (one per line, not escaped)
 	 */
 	private static function list_std_taxo_terms( $taxonomy ) {
 		$output = '';
@@ -244,7 +240,7 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 		);
 
 		foreach ( $all_terms as $p => $row ) {
-			$output .= $row['name'] . '&#013;';
+			$output .= wp_specialchars_decode( $row['name'], ENT_QUOTES ) . "\n";
 		}
 
 		return $output;
