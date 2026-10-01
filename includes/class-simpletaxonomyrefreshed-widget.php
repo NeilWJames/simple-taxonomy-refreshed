@@ -494,10 +494,6 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	 * @since 2.1.0
 	 */
 	public function staxo_widget_display( $atts, $content = '' ) {
-		// need to wrapper the output with the display attributes.
-		$wrapper_attributes = get_block_wrapper_attributes();
-		$output             = '<div ' . $wrapper_attributes . '>';
-
 		// Create the two parameter sets.
 		$args     = array(
 			'before_widget' => '',
@@ -520,7 +516,13 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		}
 
 		global $strw;
-		$output .= $strw->widget_gen( $args, $instance ) . '</div>';
+		$output = $strw->widget_gen( $args, $instance );
+
+		// In one of this plugin's blocks, wrap the output with the block's display attributes.
+		$wrapper_attributes = SimpleTaxonomyRefreshed_Client::get_block_attributes();
+		if ( '' !== $wrapper_attributes ) {
+			$output = '<div ' . $wrapper_attributes . '>' . $output . '</div>';
+		}
 		return $output;
 	}
 }

@@ -98,6 +98,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* FIX: Post terms display adds the space after the "before" text when the separator has spaces (such as the default ", ").
 	* FIX: Post terms "before", separator and "after" text is escaped (plain text) or filtered as post HTML when displayed.
 	* FIX: Admin list filter no longer raises a PHP warning for an external taxonomy that is not registered.
+	* FIX: Display Post Terms and Taxonomy Cloud blocks only use block wrapper attributes while one of their own blocks is rendering, so their output can also be produced outside a block.
 	* DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
 	* DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
 	* DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.

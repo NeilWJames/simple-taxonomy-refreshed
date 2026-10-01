@@ -569,10 +569,34 @@ class SimpleTaxonomyRefreshed_Client {
 			$attributes
 		);
 
-		// need to wrapper the output with the display attributes.
-		$output  = '<div ' . get_block_wrapper_attributes() . '>';
-		$output .= self::taxonomy_filter( $content, 'arbitrary', $tax['tax'] ) . '</div>';
+		$output = self::taxonomy_filter( $content, 'arbitrary', $tax['tax'] );
+
+		// In one of this plugin's blocks, wrap the output with the block's display attributes.
+		$wrapper = self::get_block_attributes();
+		if ( '' !== $wrapper ) {
+			$output = '<div ' . $wrapper . '>' . $output . '</div>';
+		}
 		return $output;
+	}
+
+	/**
+	 * Block wrapper attributes.
+	 *
+	 * The rendering code may be called outside the context of one of this plugin's blocks
+	 * (for example directly, or while another dynamic block such as core/post-content renders).
+	 *
+	 * @since 4.0.0
+	 *
+	 * @return string the block wrapper attributes if one of this plugin's blocks is rendering, otherwise empty.
+	 */
+	public static function get_block_attributes(): string {
+		// $block_to_render is set while any dynamic block renders, so check it is ours.
+		$block = WP_Block_Supports::$block_to_render;
+		if ( ! is_array( $block ) || 0 !== strpos( (string) ( $block['blockName'] ?? '' ), 'simple-taxonomy-refreshed/' ) ) {
+			return '';
+		}
+
+		return get_block_wrapper_attributes();
 	}
 
 	/**

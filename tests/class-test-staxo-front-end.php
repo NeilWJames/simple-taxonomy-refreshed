@@ -443,18 +443,59 @@ class Test_STaxo_Front_End extends STaxo_Test_Case {
 	}
 
 	/**
-	 * The block display works when the ordering attribute is missing.
+	 * The block's ordering attribute is used as the order (the block names it "ordering").
 	 */
-	public function test_widget_block_without_ordering() {
+	public function test_widget_block_ordering() {
+		$this->require_block( 'simple-taxonomy-refreshed/cloud-widget' );
+
+		$block = '<!-- wp:simple-taxonomy-refreshed/cloud-widget {"taxonomy":"test_hier","disptype":"list","orderby":"name","ordering":"%s"} /-->';
+
+		$asc = do_blocks( sprintf( $block, 'ASC' ) );
+		$this->assertLessThan( strpos( $asc, '>Jazz</a>' ), strpos( $asc, '>Bebop</a>' ), 'Ascending: Bebop before Jazz' );
+
+		$desc = do_blocks( sprintf( $block, 'DESC' ) );
+		$this->assertLessThan( strpos( $desc, '>Bebop</a>' ), strpos( $desc, '>Jazz</a>' ), 'Descending: Jazz before Bebop' );
+	}
+
+	/**
+	 * The block display functions can be called outside a block render: no wrapper div, no error.
+	 */
+	public function test_block_display_outside_block() {
 		global $strw;
 
-		$output = $strw->staxo_widget_display(
+		$this->assertSame( '', SimpleTaxonomyRefreshed_Client::get_block_attributes() );
+
+		$widget = $strw->staxo_widget_display(
 			array(
 				'taxonomy' => 'test_hier',
 				'disptype' => 'list',
 			)
 		);
+		$this->assertStringStartsNotWith( '<div', $widget, 'No wrapper div outside a block' );
+		$this->assertStringContainsString( '>Jazz</a>', $widget, 'Works without the ordering attribute' );
 
-		$this->assertStringContainsString( '>Jazz</a>', $output );
+		$this->view_post( 'P1' );
+		$terms = SimpleTaxonomyRefreshed_Client::block_terms( array( 'tax' => 'test_flat' ), '' );
+		$this->assertStringStartsWith( '<div class="simple-taxonomy">', $terms, 'No wrapper div outside a block' );
+		$this->assertStringContainsString( 'taxonomy-test_flat', $terms );
+	}
+
+	/**
+	 * While another plugin's dynamic block renders (as core/post-content does when it runs a shortcode), no wrapper attributes are taken.
+	 */
+	public function test_block_attributes_only_for_own_blocks() {
+		register_block_type(
+			'staxo-test/outer',
+			array(
+				'render_callback' => static function () {
+					return '[' . SimpleTaxonomyRefreshed_Client::get_block_attributes() . ']';
+				},
+			)
+		);
+
+		$output = do_blocks( '<!-- wp:staxo-test/outer /-->' );
+		unregister_block_type( 'staxo-test/outer' );
+
+		$this->assertSame( '[]', $output );
 	}
 }
