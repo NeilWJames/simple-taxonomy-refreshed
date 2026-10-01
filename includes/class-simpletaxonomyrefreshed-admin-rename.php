@@ -206,7 +206,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			// Update the Taxonomy default term (if it exists).
 			$opt_table = "{$wpdb->prefix}options";
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$updated = $wpdb->update(
+			$wpdb->update(
 				$opt_table,
 				array(
 					'option_name' => 'default_taxonomy_' . $new_slug,
@@ -217,7 +217,7 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			);
 
 			add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Taxonomy slug changed.', 'simple-taxonomy-refreshed' ), 'updated' );
-			if ( 0 === $updated ) {
+			if ( empty( $updated ) ) {
 				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html__( 'Done, no terms were migrated.', 'simple-taxonomy-refreshed' ), 'updated' );
 			} else {
 				// translators: %d is the count of terms that were successfully migrated.

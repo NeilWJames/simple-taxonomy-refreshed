@@ -2628,16 +2628,22 @@ class SimpleTaxonomyRefreshed_Admin {
 			if ( isset( $current_options['list_order'] ) && is_array( $current_options['list_order'] ) ) {
 				$lists = $current_options['list_order'];
 				foreach ( $lists as $pt => $list ) {
-					// remove the taxonomy if found.
-					if ( in_array( $staxo, $lists[ $pt ], true ) ) {
-						unset( $lists[ $pt ][ $staxo ] );
-					}
+					// remove the taxonomy if found (lists hold taxonomy names as values).
+					$list = array_values( array_diff( (array) $list, array( $staxo ) ) );
 					// is a list still needed.
 					if ( count( $list ) < 2 ) {
-							unset( $lists[ $pt ] );
+						unset( $lists[ $pt ] );
+					} else {
+						$lists[ $pt ] = $list;
 					}
 				}
-				$current_options['list_order'] = $lists;
+				if ( empty( $lists ) ) {
+					unset( $current_options['list_order'] );
+					$lists = null;
+				}
+				if ( null !== $lists ) {
+					$current_options['list_order'] = $lists;
+				}
 			}
 		} elseif ( isset( $current_options['externals'][ $staxo ] ) ) {
 			// external taxonomy.

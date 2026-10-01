@@ -101,26 +101,26 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 
 					$level = strlen( $term_line ) - strlen( ltrim( $term_line, $sep ) );
 
-					if ( 0 === $termlines ) {
-						$term = self::create_term( $taxonomy, $term_line, 0 );
-						if ( false !== $term ) {
-							$prev_ids[0] = $term[0];
-							$added      += (int) $term[1];
-							++$termlines;
+					// Parent is the nearest term above at a shallower level; none (e.g. an indented first line) means top level.
+					$parent = 0;
+					foreach ( $prev_ids as $prev_level => $prev_id ) {
+						if ( $prev_level < $level ) {
+							$parent = $prev_id;
 						}
-					} else {
-						if ( ( $level - 1 ) < 0 ) {
-							$parent = 0;
-						} else {
-							$parent = $prev_ids[ $level - 1 ];
-						}
+					}
 
-						$term = self::create_term( $taxonomy, $term_line, $parent );
-						if ( false !== $term ) {
-							$prev_ids[ $level ] = $term[0];
-							$added             += (int) $term[1];
-							++$termlines;
+					$term = self::create_term( $taxonomy, $term_line, $parent );
+					if ( false !== $term ) {
+						// Forget deeper levels from the previous branch, then record this one.
+						foreach ( array_keys( $prev_ids ) as $prev_level ) {
+							if ( $prev_level >= $level ) {
+								unset( $prev_ids[ $prev_level ] );
+							}
 						}
+						$prev_ids[ $level ] = $term[0];
+						ksort( $prev_ids );
+						$added += (int) $term[1];
+						++$termlines;
 					}
 				} else {
 					$term = self::create_term( $taxonomy, $term_line, 0 );
@@ -171,6 +171,9 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 
 		// Insert on DB.
 		$term = wp_insert_term( $term_name, $taxonomy, array( 'parent' => $par_term ) );
+		if ( is_wp_error( $term ) ) {
+			return false;
+		}
 
 		// Cache.
 		clean_term_cache( $par_term, $taxonomy );

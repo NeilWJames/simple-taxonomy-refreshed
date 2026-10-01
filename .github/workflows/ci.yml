@@ -36,12 +36,12 @@ jobs:
       uses: actions/checkout@v7
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
       with:
         php-version: ${{ matrix.php-versions }}
         extensions: mysqli
         coverage: xdebug
-        tools: wp-cli, phpunit-polyfills, phpunit:${{ matrix.phpunit-versions }}
+        tools: wp-cli, phpunit:${{ matrix.phpunit-versions }}
       env:
         COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -58,38 +58,59 @@ jobs:
 
     - name: phpunit tests
       run: |
-        echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '$HOME/.composer/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
+        echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '${{ github.workspace }}/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
         /usr/local/bin/phpunit --config=${{ matrix.phpunit-config }}
       env:
         WP_MULTISITE: ${{ matrix.wp-multisite }}
 
     - name: Codecov
-      uses: codecov/codecov-action@v7
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage.xml
         directory: ${{ github.workspace }}
         verbose: true
-        flags: php-${{ matrix.php_version }},wp-${{ matrix.wp-version }},multisite-${{ matrix.wp-multisite }}
+        flags: php-${{ matrix.php-versions }},wp-${{ matrix.wp-version }},multisite-${{ matrix.wp-multisite }}
 
   phpcs:
     runs-on: ubuntu-latest
-    env:
-      TRAVIS_BUILD_DIR: ${{ github.workspace }}
-    strategy: 
+    strategy:
       matrix:
         php_version: [8.4]
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
         with:
           php-version: ${{ matrix.php_version }}
           extensions: mysqli
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: composer install --prefer-dist --no-progress
       
+      # composer puts the phpcs binary in bin/ (see composer.json bin-dir).
       - name: phpcs
-        run: script/cibuild-phpcs
+        run: bin/phpcs --standard=phpcs.ruleset.xml -p -s --colors *.php includes/*.php tests/*.php
+
+  phpstan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      # Settings in phpstan.neon.dist; existing issues are listed in phpstan-baseline.neon.
+      - name: phpstan
+        run: bin/phpstan analyse --no-progress --memory-limit=2G --error-format=github

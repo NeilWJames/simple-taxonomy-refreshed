@@ -2,32 +2,67 @@ name: Build Blocks and Compress JS/CSS
 
 on:
   workflow_dispatch:
-    branches: [master]
 
+# Read-only by default; only the pr job gets write access.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
+  # Runs npm with no write token available.
   build:
+    # workflow_dispatch can't be limited to a branch, so skip runs started from any other branch.
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
           node-version: 22
 
+      # Dependency install hooks are not needed for the build.
       - name: Run npm install
-        run: npm install
+        run: npm install --ignore-scripts
 
-      - name: Run Build	
+      - name: Run Build
         run: npm run build
 
+      - name: Upload build output
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-output
+          path: build/
+          if-no-files-found: error
+          retention-days: 1
+
+  # Opens the PR from the built files; does not run npm.
+  pr:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Remove old build output
+        run: rm -rf build
+
+      - name: Download build output
+        uses: actions/download-artifact@v8
+        with:
+          name: build-output
+          path: build
+
       - name: Open PR with build output
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           commit-message: "Build blocks [automated]"
           title: "Automated block build"
