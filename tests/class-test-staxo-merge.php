@@ -272,6 +272,127 @@ class Test_STaxo_Merge extends STaxo_Ajax_Test_Case {
 	}
 
 	/**
+	 * Change the terms control settings of test_cntl.
+	 *
+	 * @param array $settings STR settings to change (st_cc_*).
+	 * @return void
+	 */
+	private function set_control( $settings ) {
+		$options = get_option( OPTION_STAXO );
+		foreach ( $settings as $key => $value ) {
+			$options['taxonomies']['test_cntl'][ $key ] = $value;
+		}
+		update_option( OPTION_STAXO, $options );
+	}
+
+	/**
+	 * Phase three for merging red and blue into green in test_cntl.
+	 *
+	 * @return string response.
+	 */
+	private function cntl_phase_three() {
+		return $this->merge_phase(
+			'three',
+			'test_cntl',
+			array(
+				'destination' => $this->term( 'test_cntl', 'green' )->term_id,
+				'term'        => array( $this->term( 'test_cntl', 'red' )->term_id, $this->term( 'test_cntl', 'blue' )->term_id ),
+			)
+		);
+	}
+
+	/**
+	 * Phase three lists the posts the merge would take below the minimum, and offers the choice.
+	 */
+	public function test_phase_three_lists_posts_below_minimum() {
+		$this->set_control( array( 'st_cc_min' => '2' ) );
+
+		$response = $this->cntl_phase_three();
+
+		// P3 goes from red + blue to green only. P1, P2 and P4 keep one term, so they are not listed.
+		$this->assertStringContainsString( '1 post would have fewer than the minimum of 2 terms after this merge:', $response );
+		$this->assertStringContainsString( '>P3</a>', $response );
+		$this->assertStringContainsString( '2 terms before, 1 after', $response );
+		foreach ( array( 'P1', 'P2', 'P4' ) as $post ) {
+			$this->assertStringNotContainsString( '>' . $post . '</a>', $response, "$post should not be listed" );
+		}
+		$this->assertStringContainsString( 'name="below_min" id="below_min_stop" value="stop" checked', $response );
+		$this->assertStringContainsString( 'name="below_min" id="below_min_proceed" value="proceed"', $response );
+	}
+
+	/**
+	 * Phase three says so when no post falls below the minimum.
+	 */
+	public function test_phase_three_none_below_minimum() {
+		$response = $this->cntl_phase_three();
+
+		$this->assertStringContainsString( 'No posts will have fewer than the minimum number of terms after this merge.', $response );
+		$this->assertStringNotContainsString( 'below_min', $response );
+	}
+
+	/**
+	 * Terms control type 1 only applies to published and scheduled posts.
+	 */
+	public function test_below_minimum_type_one_ignores_drafts() {
+		$this->set_control(
+			array(
+				'st_cc_type' => '1',
+				'st_cc_min'  => '2',
+			)
+		);
+		wp_update_post(
+			array(
+				'ID'          => $this->posts['P3'],
+				'post_status' => 'draft',
+			)
+		);
+
+		$response = $this->cntl_phase_three();
+
+		$this->assertStringNotContainsString( '>P3</a>', $response );
+		$this->assertStringContainsString( 'No posts will have fewer than the minimum', $response );
+	}
+
+	/**
+	 * By default the merge is not done when posts would fall below the minimum.
+	 */
+	public function test_below_minimum_stops_by_default() {
+		$this->set_control( array( 'st_cc_min' => '2' ) );
+
+		$response = $this->merge( 'test_cntl', 'green', array( 'red', 'blue' ) );
+
+		$this->assertStringContainsString( 'Merge not done: 1 post would have fewer than the minimum of 2 terms.', $response );
+		$this->assertStringContainsString( '>P3</a>', $response );
+		$this->assertStringContainsString( 'id="phase" value="five"', $response );
+		$this->assertTrue( $this->term_exists_by_name( 'test_cntl', 'red' ), 'red should not be deleted' );
+		$this->assertTrue( $this->term_exists_by_name( 'test_cntl', 'blue' ), 'blue should not be deleted' );
+		$this->assertSame( array( 'blue', 'red' ), $this->post_terms( 'P3', 'test_cntl' ) );
+	}
+
+	/**
+	 * With "Merge anyway" the merge goes ahead and lists the posts now below the minimum.
+	 */
+	public function test_below_minimum_merge_anyway() {
+		$this->set_control( array( 'st_cc_min' => '2' ) );
+
+		$response = $this->merge_phase(
+			'four',
+			'test_cntl',
+			array(
+				'destination' => $this->term( 'test_cntl', 'green' )->term_id,
+				'sources'     => $this->term( 'test_cntl', 'red' )->term_id . ',' . $this->term( 'test_cntl', 'blue' )->term_id,
+				'below_min'   => 'proceed',
+			)
+		);
+
+		$this->assertFalse( $this->term_exists_by_name( 'test_cntl', 'red' ) );
+		$this->assertFalse( $this->term_exists_by_name( 'test_cntl', 'blue' ) );
+		$this->assertSame( array( 'green' ), $this->post_terms( 'P3', 'test_cntl' ) );
+		$this->assertStringContainsString( '1 post now has fewer than the minimum of 2 terms:', $response );
+		$this->assertStringContainsString( '>P3</a>', $response );
+	}
+
+	/**
 	 * No valid sources: nothing changes.
 	 */
 	public function test_no_valid_sources() {

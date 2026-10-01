@@ -91,7 +91,9 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 			}
 			$termlines = 0;
 			$added     = 0;
-			foreach ( $terms as $term_line ) {
+			$skipped   = array();
+			foreach ( $terms as $line_index => $term_line ) {
+				$line_no = $line_index + 1;
 				if ( 'no' !== $hierarchy ) {
 					if ( 'space' === $hierarchy ) {
 						$sep = ' ';
@@ -101,7 +103,13 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 
 					$level = strlen( $term_line ) - strlen( ltrim( $term_line, $sep ) );
 
+					// Blank lines are ignored and do not change the hierarchy.
+					if ( '' === trim( $term_line ) ) {
+						continue;
+					}
+
 					// Parent is the nearest term above at a shallower level; none (e.g. an indented first line) means top level.
+					// An entry of the form array( line number ) marks a parent that was itself skipped.
 					$parent = 0;
 					foreach ( $prev_ids as $prev_level => $prev_id ) {
 						if ( $prev_level < $level ) {
@@ -109,22 +117,38 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 						}
 					}
 
-					$term = self::create_term( $taxonomy, $term_line, $parent );
-					if ( false !== $term ) {
-						// Forget deeper levels from the previous branch, then record this one.
-						foreach ( array_keys( $prev_ids ) as $prev_level ) {
-							if ( $prev_level >= $level ) {
-								unset( $prev_ids[ $prev_level ] );
-							}
+					if ( is_array( $parent ) ) {
+						$term = new WP_Error(
+							'parent_skipped',
+							// translators: %d is the line number of the parent term that was skipped.
+							sprintf( __( 'Its parent term on line %d was skipped.', 'simple-taxonomy-refreshed' ), $parent[0] )
+						);
+					} else {
+						$term = self::create_term( $taxonomy, $term_line, $parent );
+					}
+
+					// Forget deeper levels from the previous branch, then record this one.
+					foreach ( array_keys( $prev_ids ) as $prev_level ) {
+						if ( $prev_level >= $level ) {
+							unset( $prev_ids[ $prev_level ] );
 						}
+					}
+
+					if ( is_wp_error( $term ) ) {
+						// Children of a skipped term are skipped too, rather than attached to the wrong parent.
+						$prev_ids[ $level ] = array( $line_no );
+						$skipped[]          = array( $line_no, trim( $term_line ), $term->get_error_message() );
+					} elseif ( false !== $term ) {
 						$prev_ids[ $level ] = $term[0];
-						ksort( $prev_ids );
-						$added += (int) $term[1];
+						$added             += (int) $term[1];
 						++$termlines;
 					}
+					ksort( $prev_ids );
 				} else {
 					$term = self::create_term( $taxonomy, $term_line, 0 );
-					if ( false !== $term ) {
+					if ( is_wp_error( $term ) ) {
+						$skipped[] = array( $line_no, trim( $term_line ), $term->get_error_message() );
+					} elseif ( false !== $term ) {
 						$added += (int) $term[1];
 						++$termlines;
 					}
@@ -143,6 +167,30 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 				// translators: %d is the count of terms that were created.
 				add_settings_error( 'simple-taxonomy-refreshed', 'terms_updated', esc_html( sprintf( __( ' %d new terms were created.', 'simple-taxonomy-refreshed' ), $added ) ), 'updated' );
 			}
+			if ( ! empty( $skipped ) ) {
+				$lines = array(
+					esc_html(
+						sprintf(
+							// translators: %d is the count of term lines that were skipped.
+							_n( '%d term line was skipped:', '%d term lines were skipped:', count( $skipped ), 'simple-taxonomy-refreshed' ),
+							count( $skipped )
+						)
+					),
+				);
+				foreach ( $skipped as $skip ) {
+					$lines[] = esc_html(
+						sprintf(
+							// translators: %1$d is the line number; %2$s is the term name; %3$s is the reason.
+							__( 'Line %1$d: "%2$s" - %3$s', 'simple-taxonomy-refreshed' ),
+							$skip[0],
+							$skip[1],
+							$skip[2]
+						)
+					);
+				}
+				// Each part is escaped above; settings_errors() outputs the message as HTML.
+				add_settings_error( 'simple-taxonomy-refreshed', 'terms_skipped', implode( '<br />', $lines ), 'warning' );
+			}
 		}
 	}
 
@@ -152,12 +200,16 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 	 * @param string  $taxonomy  taxonomy name.
 	 * @param string  $term_name term name.
 	 * @param integer $par_term  term parent.
-	 * @return boolean|array of term_id and whether already existed
+	 * @return false|array|WP_Error false for a blank line; array of term_id and whether newly created; WP_Error if the term was skipped.
 	 */
 	private static function create_term( $taxonomy = '', $term_name = '', $par_term = 0 ) {
-		$term_name = trim( sanitize_text_field( $term_name ) );
-		if ( empty( $term_name ) ) {
+		if ( '' === trim( $term_name ) ) {
 			return false;
+		}
+
+		$term_name = trim( sanitize_text_field( $term_name ) );
+		if ( '' === $term_name ) {
+			return new WP_Error( 'empty_term_name', __( 'The name is empty once invalid characters are removed.', 'simple-taxonomy-refreshed' ) );
 		}
 
 		$id = term_exists( $term_name, $taxonomy, $par_term );
@@ -172,7 +224,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 		// Insert on DB.
 		$term = wp_insert_term( $term_name, $taxonomy, array( 'parent' => $par_term ) );
 		if ( is_wp_error( $term ) ) {
-			return false;
+			return $term;
 		}
 
 		// Cache.

@@ -10,7 +10,7 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 59 in 5 classes (A, C, D, E + the original main test) |
+| Tests written | 64 in 5 classes (A, C, D, E + the original main test) |
 | Run in CI | Not yet confirmed for the new classes (first CI run pending) |
 | Still to write | B, F, G, H, I, J, K (see "Planned") |
 
@@ -106,9 +106,9 @@ Flat list; tab and space hierarchies; re-import creates nothing; same name under
 
 Fixture matrix check; add term (published / draft); remove term; remove last term; delete term (children move up); default term not deletable and given to new posts; default counts (published only); STR count rules type 2 (publish + draft), with trash, type 1 (all except trash); counts follow status changes; `staxo_term_count_statuses` filter.
 
-### E. Terms Merge — `class-test-staxo-merge.php` (`@group merge`, 20)
+### E. Terms Merge — `class-test-staxo-merge.php` (`@group merge`, 25)
 
-Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources and warns that children move (hierarchical only); single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move under the destination); parent and child together; destination below a source (moved up first, no loop); flat across posts and pages (object cache cleared); count rules respected; terms control kept; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce.
+Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources and warns that children move (hierarchical only); single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move under the destination); parent and child together; destination below a source (moved up first, no loop); flat across posts and pages (object cache cleared); count rules respected; terms control kept; posts the merge would take below the terms-control minimum listed in phase three with a Do not merge / Merge anyway choice (default: do not merge), merge refused or done accordingly, type 1 ignores drafts; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce.
 
 ### Main — `class-test-staxo-refreshed-main.php` (2)
 
@@ -129,7 +129,7 @@ Multisite flag as expected; plugin loaded.
 ## Behaviour decided for tests
 
 - Merging a parent term moves its children under the destination term (decided 1 Oct 2026). If the destination is below a source, it is first moved up to the source's parent.
-- A merge that leaves posts below the terms-control minimum warns but proceeds.
+- Terms control minimum (decided 1 Oct 2026): phase three lists the posts whose term count the merge would reduce below the minimum, and offers "Do not merge" (default) or "Merge anyway". Posts already below the minimum and not changed by the merge are not listed. Type 1 controls count published/scheduled posts only.
 - Terms Import: an indented first line is top level; skipped terms are reported with line numbers.
 
 ## Change log
@@ -138,3 +138,4 @@ Multisite flag as expected; plugin loaded.
 - **1 Oct 2026** — phpcs: `$GLOBALS['wp_settings_errors']` writes moved into `clear_settings_errors()`; assignment alignment fixed in `import_config()`.
 - **1 Oct 2026** — First CI run of the new classes. `test_fixture_matrix` exposed a plugin bug: `term_count_sel_cache()` read `$options['externals']` when no external taxonomies were configured ("Undefined array key" warning whenever a taxonomy STR doesn't manage, such as `category`, was counted). Fixed in `class-simpletaxonomyrefreshed-client.php`; every fixture-based test (classes D and E) depends on it.
 - **1 Oct 2026** — Terms Merge now moves the children of each source term under the destination (`SimpleTaxonomyRefreshed_Admin_Merge::move_children()`); phase three says so for hierarchical taxonomies. Merge tests updated and 3 added (parent and child together, destination below a source, no notice for flat).
+- **1 Oct 2026** — Terms Merge checks the terms-control minimum: lists affected posts, "Do not merge" / "Merge anyway" choice (`min_control()`, `posts_below_minimum()`, `list_posts_below()`). 5 merge tests added.
