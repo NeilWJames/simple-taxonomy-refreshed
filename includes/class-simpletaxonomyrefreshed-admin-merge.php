@@ -364,7 +364,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 		foreach ( $children as $p => $row ) {
 			$dis = ( in_array( (int) $row['term_id'], $term_ids, true ) ? 'disabled' : '' );
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo $indent . '<span class="components-checkbox-control__input-container"><input type="' . $type . '" role="' . $type . '" name="term' . $arr . '" id="tax' . esc_attr( $row['term_id'] ) . '" value="' . esc_attr( $row['term_id'] ) . '" ' . $dis . '/>';
+			echo $indent . '<span class="components-checkbox-control__input-container"><input type="' . $type . '" role="' . $type . '" name="term' . $arr . '" id="tax_' . esc_attr( $row['term_id'] ) . '" value="' . esc_attr( $row['term_id'] ) . '" ' . $dis . '/>';
 			echo '<label for="tax_' . esc_attr( $row['term_id'] ) . '" >' . esc_html( $row['name'] ) . '</label></span><br />';
 			self::list_taxonomy_children( $taxonomy, $row['term_id'], $level + 1, $type, $term_ids );
 		}

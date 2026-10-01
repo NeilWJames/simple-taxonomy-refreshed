@@ -23,3 +23,9 @@ function _staxo_manually_load_plugin() {
 tests_add_filter( 'muplugins_loaded', '_staxo_manually_load_plugin' );
 
 require $_tests_dir . '/includes/bootstrap.php';
+
+// Shared fixtures and base classes (need the WP test classes loaded above).
+require_once __DIR__ . '/class-staxo-redirect-exception.php';
+require_once __DIR__ . '/trait-staxo-fixtures.php';
+require_once __DIR__ . '/class-staxo-test-case.php';
+require_once __DIR__ . '/class-staxo-ajax-test-case.php';

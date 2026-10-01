@@ -75,6 +75,16 @@ trait STaxo_Fixtures {
 		foreach ( array( 'staxo_own_taxos', 'staxo_orderings', 'staxo_terms', 'staxo_taxonomies' ) as $key ) {
 			wp_cache_delete( $key );
 		}
+		$this->clear_settings_errors();
+	}
+
+	/**
+	 * Clear the settings errors (notices) raised so far in this request.
+	 *
+	 * @return void
+	 */
+	protected function clear_settings_errors() {
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- tests start each handler call with no notices.
 		$GLOBALS['wp_settings_errors'] = array();
 	}
 
@@ -102,10 +112,10 @@ trait STaxo_Fixtures {
 	 * @return array settings errors raised by the import.
 	 */
 	protected function import_config( $file, $register = true ) {
-		$GLOBALS['wp_settings_errors'] = array();
+		$this->clear_settings_errors();
 
 		$_POST[ SimpleTaxonomyRefreshed_Admin_Config::IMP_FILE_SLUG ] = '1';
-		$_REQUEST['_wpnonce'] = wp_create_nonce( SimpleTaxonomyRefreshed_Admin_Config::IMP_FILE_SLUG );
+		$_REQUEST['_wpnonce']  = wp_create_nonce( SimpleTaxonomyRefreshed_Admin_Config::IMP_FILE_SLUG );
 		$_FILES['config_file'] = array(
 			'error'    => 0,
 			'tmp_name' => __DIR__ . '/files/' . $file,
@@ -141,7 +151,7 @@ trait STaxo_Fixtures {
 	 * @return array settings errors raised by the import.
 	 */
 	protected function import_terms( $taxonomy, $source, $hierarchy = 'no' ) {
-		$GLOBALS['wp_settings_errors'] = array();
+		$this->clear_settings_errors();
 
 		$path = __DIR__ . '/files/' . $source;
 		if ( false === strpos( $source, "\n" ) && is_file( $path ) ) {
@@ -174,7 +184,7 @@ trait STaxo_Fixtures {
 		$this->import_terms( 'test_count', 'terms-hier-tab.txt', 'tab' );
 		$this->import_terms( 'test_flat', 'terms-flat.txt' );
 		$this->import_terms( 'test_cntl', 'terms-flat.txt' );
-		$GLOBALS['wp_settings_errors'] = array();
+		$this->clear_settings_errors();
 
 		add_term_meta( $this->term( 'test_hier', 'Bebop' )->term_id, 'staxo_test_meta', 'bebop' );
 		add_term_meta( $this->term( 'test_flat', 'blue' )->term_id, 'staxo_test_meta', 'blue' );
