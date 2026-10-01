@@ -110,6 +110,7 @@ class Test_STaxo_Merge extends STaxo_Ajax_Test_Case {
 
 		$this->assertStringContainsString( 'id="sources" value="' . $bebop . '"', $response );
 		$this->assertStringContainsString( 'id="phase" value="four"', $response );
+		$this->assertStringContainsString( 'Child terms of the source term(s) will be moved under the destination term.', $response );
 	}
 
 	/**
@@ -152,26 +153,75 @@ class Test_STaxo_Merge extends STaxo_Ajax_Test_Case {
 			$this->assertSame( array( 'Jazz' ), $this->post_terms( $post, 'test_hier' ), "$post not moved to Jazz" );
 		}
 
-		// Punk (child of Rock) moves up to Music.
-		$this->assertSame( 'Music', $this->term_tree( 'test_hier' )['Punk'] );
+		// Punk (child of Rock) moves under the destination.
+		$this->assertSame( 'Jazz', $this->term_tree( 'test_hier' )['Punk'] );
 
 		// P1-P4 published; P5 draft and P9 trash not counted.
 		$this->assertSame( 4, $this->term_count( 'test_hier', 'Jazz' ) );
 	}
 
 	/**
-	 * Merging a parent term: its children move up a level and keep their posts.
+	 * Merging a parent term: its children move under the destination and keep their posts.
 	 */
 	public function test_merge_parent_term() {
 		$this->merge( 'test_hier', 'Art', array( 'Music' ) );
 
 		$tree = $this->term_tree( 'test_hier' );
 		$this->assertArrayNotHasKey( 'Music', $tree );
-		$this->assertSame( '', $tree['Jazz'], 'Jazz should move to the top level' );
-		$this->assertSame( '', $tree['Rock'], 'Rock should move to the top level' );
-		$this->assertSame( 'Jazz', $tree['Bebop'] );
+		$this->assertSame( 'Art', $tree['Jazz'], 'Jazz should move under Art' );
+		$this->assertSame( 'Art', $tree['Rock'], 'Rock should move under Art' );
+		$this->assertSame( 'Jazz', $tree['Bebop'], 'Grandchildren keep their parent' );
+		$this->assertSame( 'Rock', $tree['Punk'] );
 		$this->assertSame( array( 'Jazz' ), $this->post_terms( 'P1', 'test_hier' ) );
 		$this->assertSame( 0, $this->term_count( 'test_hier', 'Art' ) );
+	}
+
+	/**
+	 * Merging a parent and one of its children: all remaining children end up under the destination.
+	 */
+	public function test_merge_parent_and_child() {
+		$this->merge( 'test_hier', 'Art', array( 'Music', 'Jazz' ) );
+
+		$tree = $this->term_tree( 'test_hier' );
+		$this->assertArrayNotHasKey( 'Music', $tree );
+		$this->assertArrayNotHasKey( 'Jazz', $tree );
+		foreach ( array( 'Rock', 'Bebop', 'Big Band', 'Painting', 'Sculpture' ) as $name ) {
+			$this->assertSame( 'Art', $tree[ $name ], "$name should be under Art" );
+		}
+		$this->assertSame( 'Rock', $tree['Punk'] );
+		$this->assertSame( array( 'Art' ), $this->post_terms( 'P1', 'test_hier' ), 'P1 moved from Jazz to Art' );
+	}
+
+	/**
+	 * A destination below a source (not offered by the UI) is moved up first, so no loop is created.
+	 */
+	public function test_merge_destination_below_source() {
+		$response = $this->merge( 'test_hier', 'Bebop', array( 'Music' ) );
+
+		$tree = $this->term_tree( 'test_hier' );
+		$this->assertArrayNotHasKey( 'Music', $tree );
+		$this->assertSame( '', $tree['Bebop'], 'Bebop should move to the top level' );
+		$this->assertSame( 'Bebop', $tree['Jazz'] );
+		$this->assertSame( 'Bebop', $tree['Rock'] );
+		$this->assertSame( 'Jazz', $tree['Big Band'] );
+		$this->assertStringContainsString( 'moved up a level', $response );
+	}
+
+	/**
+	 * Flat taxonomies have no children to move.
+	 */
+	public function test_flat_merge_has_no_children_notice() {
+		$red      = $this->term( 'test_flat', 'red' )->term_id;
+		$response = $this->merge_phase(
+			'three',
+			'test_flat',
+			array(
+				'destination' => $red,
+				'term'        => array( $this->term( 'test_flat', 'blue' )->term_id ),
+			)
+		);
+
+		$this->assertStringNotContainsString( 'Child terms', $response );
 	}
 
 	/**

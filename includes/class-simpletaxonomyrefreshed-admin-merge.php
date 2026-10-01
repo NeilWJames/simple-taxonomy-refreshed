@@ -81,26 +81,16 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 			// Taxonomy chosen - output the terms as a radio group.
 			if ( isset( $_POST['phase'] ) && 'one' === $_POST['phase'] ) {
 				// is terms control configured for this taxonomy with a minimum.
-				$options       = get_option( OPTION_STAXO );
-				$terms_control = false;
-				$parms         = null;
-				if ( isset( $options['taxonomies'][ $taxonomy ] ) && is_array( $options['taxonomies'][ $taxonomy ] ) ) {
-					$parms = $options['taxonomies'][ $taxonomy ];
-				} elseif ( isset( $options['externals'][ $taxonomy ] ) && is_array( $options['externals'][ $taxonomy ] ) ) {
-					$parms = $options['externals'][ $taxonomy ];
-				}
-				if ( isset( $parms['st_cc_type'] ) && $parms['st_cc_type'] > 0 ) {
-					$terms_control = ! empty( $parms['st_cc_umin'] ) && isset( $parms['st_cc_min'] ) && $parms['st_cc_min'] > 0;
-				}
+				$control = self::min_control( $taxonomy );
 
 				ob_start();
 
 				// translators: %s is the taxonomy name.
 				echo '<p>' . esc_html( sprintf( __( 'Selected Taxonomy : %s', 'simple-taxonomy-refreshed' ), $tax_obj->labels->name ) ) . '</p>';
-				if ( $terms_control ) {
+				if ( null !== $control ) {
 					echo '<p>' . esc_html__( 'This taxonomy has Terms Control implemented with a minimum number of terms.', 'simple-taxonomy-refreshed' ) .
-						' ' . esc_html__( 'This process may resulst in posts having less than the this minimum number.', 'simple-taxonomy-refreshed' ) . '</p>';
-					echo '<input type="hidden" name="control" id="control" value="' . esc_attr( $parms['st_cc_type'] ) . '/' . esc_attr( $parms['st_cc_min'] ) . '" />';
+						' ' . esc_html__( 'This process may result in posts having fewer terms than this minimum. Any such posts are listed before you confirm the merge.', 'simple-taxonomy-refreshed' ) . '</p>';
+					echo '<input type="hidden" name="control" id="control" value="' . esc_attr( (string) $control['type'] ) . '/' . esc_attr( (string) $control['min'] ) . '" />';
 				} else {
 					echo '<input type="hidden" name="control" id="control" value="0/0" />';
 				}
@@ -176,6 +166,37 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				}
 				echo '<p><strong>' . esc_html__( 'This will change all posts to link to the destination term and delete the source term(s).', 'simple-taxonomy-refreshed' ) . '</strong></p>';
 				echo '<p><strong>' . esc_html__( 'Any source term metadata will be deleted.', 'simple-taxonomy-refreshed' ) . '</strong></p>';
+				if ( $tax_obj->hierarchical ) {
+					echo '<p><strong>' . esc_html__( 'Child terms of the source term(s) will be moved under the destination term.', 'simple-taxonomy-refreshed' ) . '</strong></p>';
+				}
+
+				// Terms control: list the posts that would fall below the minimum and ask what to do.
+				$control = self::min_control( $taxonomy );
+				$below   = ( null === $control ? array() : self::posts_below_minimum( $taxonomy, $destination, $sources, $control ) );
+				if ( ! empty( $below ) ) {
+					echo '<p><strong>' . esc_html(
+						sprintf(
+							// translators: %1$d is the number of posts; %2$d is the minimum number of terms.
+							_n(
+								'%1$d post would have fewer than the minimum of %2$d terms after this merge:',
+								'%1$d posts would have fewer than the minimum of %2$d terms after this merge:',
+								count( $below ),
+								'simple-taxonomy-refreshed'
+							),
+							count( $below ),
+							$control['min']
+						)
+					) . '</strong></p>';
+					self::list_posts_below( $below );
+					echo '<fieldset><legend>' . esc_html__( 'If posts would have fewer than the minimum number of terms:', 'simple-taxonomy-refreshed' ) . '</legend>';
+					echo '<input type="radio" name="below_min" id="below_min_stop" value="stop" checked /> ';
+					echo '<label for="below_min_stop">' . esc_html__( 'Do not merge', 'simple-taxonomy-refreshed' ) . '</label><br />';
+					echo '<input type="radio" name="below_min" id="below_min_proceed" value="proceed" /> ';
+					echo '<label for="below_min_proceed">' . esc_html__( 'Merge anyway', 'simple-taxonomy-refreshed' ) . '</label>';
+					echo '</fieldset>';
+				} elseif ( null !== $control ) {
+					echo '<p>' . esc_html__( 'No posts will have fewer than the minimum number of terms after this merge.', 'simple-taxonomy-refreshed' ) . '</p>';
+				}
 				echo '<input type="hidden" name="taxonomy" id="taxonomy" value="' . esc_attr( $taxonomy ) . '" />';
 				echo '<input type="hidden" name="phase" id="phase" value="four" />';
 				echo '<input type="hidden" name="destination" id="destination" value="' . esc_attr( $destination ) . '" />';
@@ -204,6 +225,32 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 
 				if ( empty( $stt_ids ) ) {
 					echo '<p>' . esc_html__( 'No valid Source Terms were selected.', 'simple-taxonomy-refreshed' ) . '</p>';
+					echo '<input type="hidden" name="phase" id="phase" value="five" />';
+					// phpcs:ignore WordPress.Security.EscapeOutput
+					echo ob_get_clean();
+					wp_die();
+				}
+
+				// Terms control: check again which posts would fall below the minimum (before anything changes).
+				$control   = self::min_control( $taxonomy );
+				$below     = ( null === $control ? array() : self::posts_below_minimum( $taxonomy, $destination, $sources, $control ) );
+				$below_min = ( isset( $_POST['below_min'] ) && 'proceed' === sanitize_key( wp_unslash( $_POST['below_min'] ) ) ? 'proceed' : 'stop' );
+				if ( ! empty( $below ) && 'stop' === $below_min ) {
+					echo '<p><strong>' . esc_html(
+						sprintf(
+							// translators: %1$d is the number of posts; %2$d is the minimum number of terms.
+							_n(
+								'Merge not done: %1$d post would have fewer than the minimum of %2$d terms.',
+								'Merge not done: %1$d posts would have fewer than the minimum of %2$d terms.',
+								count( $below ),
+								'simple-taxonomy-refreshed'
+							),
+							count( $below ),
+							$control['min']
+						)
+					) . '</strong></p>';
+					self::list_posts_below( $below );
+					echo '<p>' . esc_html__( 'Nothing has been changed. To go ahead, start the merge again and choose "Merge anyway".', 'simple-taxonomy-refreshed' ) . '</p>';
 					echo '<input type="hidden" name="phase" id="phase" value="five" />';
 					// phpcs:ignore WordPress.Security.EscapeOutput
 					echo ob_get_clean();
@@ -282,6 +329,12 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 
 				// Delete source terms. There are no objects using them.
 				foreach ( $sources as $source ) {
+					// Hierarchical: move the source's children under the destination first.
+					// Any child that cannot be moved goes up to the source's parent when the source is deleted.
+					if ( $tax_obj->hierarchical ) {
+						self::move_children( (int) $source, $destination, $taxonomy );
+					}
+
 					// use the standard function. This will delete metadata, clean cache and call standard hooks.
 					$deleted = wp_delete_term( $source, $taxonomy );
 					if ( true !== $deleted ) {
@@ -296,11 +349,204 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				// Output result.
 				$dest_obj = get_term( $destination, $taxonomy );
 				echo '<p>' . esc_html__( 'All objects updated, destination term count is now : ', 'simple-taxonomy-refreshed' ) . esc_html( $dest_obj->count ) . '</p>';
+				if ( ! empty( $below ) ) {
+					echo '<p><strong>' . esc_html(
+						sprintf(
+							// translators: %1$d is the number of posts; %2$d is the minimum number of terms.
+							_n(
+								'%1$d post now has fewer than the minimum of %2$d terms:',
+								'%1$d posts now have fewer than the minimum of %2$d terms:',
+								count( $below ),
+								'simple-taxonomy-refreshed'
+							),
+							count( $below ),
+							$control['min']
+						)
+					) . '</strong></p>';
+					self::list_posts_below( $below );
+				}
 				echo '<input type="hidden" name="phase" id="phase" value="five" />';
 				// phpcs:ignore WordPress.Security.EscapeOutput
 				echo ob_get_clean();
 			}
 			wp_die(); // this is required to terminate immediately and return a proper response.
+		}
+	}
+
+	/**
+	 * Terms control minimum for a taxonomy, if one applies.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param string $taxonomy taxonomy name.
+	 * @return array{type: int, min: int, types: string[]}|null null when no minimum is set.
+	 */
+	private static function min_control( $taxonomy ) {
+		$options = get_option( OPTION_STAXO );
+		$parms   = null;
+		if ( isset( $options['taxonomies'][ $taxonomy ] ) && is_array( $options['taxonomies'][ $taxonomy ] ) ) {
+			$parms = $options['taxonomies'][ $taxonomy ];
+		} elseif ( isset( $options['externals'][ $taxonomy ] ) && is_array( $options['externals'][ $taxonomy ] ) ) {
+			$parms = $options['externals'][ $taxonomy ];
+		}
+		if ( ! is_array( $parms ) || ! isset( $parms['st_cc_type'] ) || (int) $parms['st_cc_type'] < 1 ) {
+			return null;
+		}
+		if ( empty( $parms['st_cc_umin'] ) || ! isset( $parms['st_cc_min'] ) || (int) $parms['st_cc_min'] < 1 ) {
+			return null;
+		}
+
+		// Post types the control applies to: those chosen, or all the taxonomy's object types.
+		$tax_obj = get_taxonomy( $taxonomy );
+		$types   = ( ! empty( $parms['st_cc_types'] ) ? (array) $parms['st_cc_types'] : ( false === $tax_obj ? array() : (array) $tax_obj->object_type ) );
+
+		return array(
+			'type'  => (int) $parms['st_cc_type'],
+			'min'   => (int) $parms['st_cc_min'],
+			'types' => $types,
+		);
+	}
+
+	/**
+	 * Posts that the merge would leave with fewer terms than the terms control minimum.
+	 *
+	 * Only posts whose number of terms goes down are listed (a post with both a source
+	 * and the destination, or several sources). Posts already below the minimum and not
+	 * changed by the merge are not listed. Terms control type 1 applies to published and
+	 * scheduled posts only; type 2 to all posts except those in the trash.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param string $taxonomy    taxonomy name.
+	 * @param int    $destination destination term id.
+	 * @param int[]  $sources     source term ids.
+	 * @param array  $control     result of min_control().
+	 * @return array<int, array{before: int, after: int}> keyed by post id.
+	 */
+	private static function posts_below_minimum( $taxonomy, $destination, $sources, $control ) {
+		$merge_ids = array_map( 'intval', array_merge( $sources, array( $destination ) ) );
+		$objects   = get_objects_in_term( $merge_ids, $taxonomy );
+		if ( ! is_array( $objects ) || empty( $objects ) ) {
+			return array();
+		}
+
+		$below = array();
+		foreach ( array_unique( array_map( 'intval', $objects ) ) as $object_id ) {
+			$post = get_post( $object_id );
+			if ( ! $post instanceof WP_Post || ! in_array( $post->post_type, $control['types'], true ) ) {
+				continue;
+			}
+			if ( 1 === $control['type'] ) {
+				if ( ! in_array( $post->post_status, array( 'publish', 'future' ), true ) ) {
+					continue;
+				}
+			} elseif ( in_array( $post->post_status, array( 'trash', 'auto-draft', 'inherit' ), true ) ) {
+				continue;
+			}
+
+			$terms = wp_get_object_terms( $object_id, $taxonomy, array( 'fields' => 'ids' ) );
+			if ( ! is_array( $terms ) ) {
+				continue;
+			}
+			$terms  = array_map( 'intval', $terms );
+			$before = count( $terms );
+			$merged = count( array_intersect( $terms, $merge_ids ) );
+			$after  = $before - max( 0, $merged - 1 );
+			if ( $after < $before && $after < $control['min'] ) {
+				$below[ $object_id ] = array(
+					'before' => $before,
+					'after'  => $after,
+				);
+			}
+		}
+
+		return $below;
+	}
+
+	/**
+	 * Output a list of posts below the terms control minimum.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array<int, array{before: int, after: int}> $below result of posts_below_minimum().
+	 * @return void
+	 */
+	private static function list_posts_below( $below ) {
+		echo '<ul class="staxo-below-min">';
+		foreach ( $below as $post_id => $counts ) {
+			$title = get_the_title( $post_id );
+			if ( '' === $title ) {
+				$title = __( '(no title)', 'simple-taxonomy-refreshed' );
+			}
+			$link = get_edit_post_link( $post_id, 'raw' );
+			echo '<li>';
+			if ( empty( $link ) ) {
+				echo esc_html( $title );
+			} else {
+				echo '<a href="' . esc_url( $link ) . '">' . esc_html( $title ) . '</a>';
+			}
+			echo ' (' . esc_html( (string) get_post_status( $post_id ) ) . ') : ' . esc_html(
+				sprintf(
+					// translators: %1$d is the number of terms before the merge; %2$d the number after.
+					__( '%1$d terms before, %2$d after', 'simple-taxonomy-refreshed' ),
+					$counts['before'],
+					$counts['after']
+				)
+			) . '</li>';
+		}
+		echo '</ul>';
+	}
+
+	/**
+	 * Move the child terms of a source term under the destination term.
+	 *
+	 * If the destination is itself below the source, it is first moved up to the
+	 * source's parent, so that no loop is created in the hierarchy.
+	 * Outputs a message for anything that could not be moved.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param int    $source      source term id.
+	 * @param int    $destination destination term id.
+	 * @param string $taxonomy    taxonomy name.
+	 * @return void
+	 */
+	private static function move_children( $source, $destination, $taxonomy ) {
+		$source_obj = get_term( $source, $taxonomy );
+		if ( ! $source_obj instanceof WP_Term ) {
+			return;
+		}
+
+		$ancestors = array_map( 'intval', get_ancestors( $destination, $taxonomy, 'taxonomy' ) );
+		if ( in_array( $source, $ancestors, true ) ) {
+			$lifted = wp_update_term( $destination, $taxonomy, array( 'parent' => (int) $source_obj->parent ) );
+			if ( is_wp_error( $lifted ) ) {
+				echo '<p>' . esc_html__( 'The destination term is below a source term and could not be moved up, so the child terms were not moved.', 'simple-taxonomy-refreshed' ) . '</p>';
+				return;
+			}
+			echo '<p>' . esc_html__( 'The destination term was below a source term, so it has been moved up a level.', 'simple-taxonomy-refreshed' ) . '</p>';
+		}
+
+		$children = get_terms(
+			array(
+				'taxonomy'   => $taxonomy,
+				'parent'     => $source,
+				'hide_empty' => false,
+				'fields'     => 'ids',
+			)
+		);
+		if ( ! is_array( $children ) ) {
+			return;
+		}
+
+		foreach ( $children as $child ) {
+			$moved = wp_update_term( (int) $child, $taxonomy, array( 'parent' => $destination ) );
+			if ( is_wp_error( $moved ) ) {
+				$child_obj = get_term( (int) $child, $taxonomy );
+				$name      = ( $child_obj instanceof WP_Term ? $child_obj->name : (string) $child );
+				// translators: %1$s is the child term name; %2$s is the reason it could not be moved.
+				echo '<p>' . esc_html( sprintf( __( 'Child term %1$s could not be moved under the destination term: %2$s', 'simple-taxonomy-refreshed' ), $name, $moved->get_error_message() ) ) . '</p>';
+			}
 		}
 	}
 

@@ -64,6 +64,8 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 * Version 4.0.0  (xx/xx/2026)
 	* NEW: Filter `staxo_can_edit_callbacks` controls who may edit the callback fields.
 	* NEW: Terms Import lists any lines it skips, with the line number, term and reason.
+	* NEW: Terms Merge moves the child terms of the merged terms under the destination term (previously they moved up a level).
+	* NEW: Terms Merge lists any posts the merge would leave below the Terms Control minimum, and lets you choose whether to merge anyway.
 	* FIX: Terms Merge now merges and deletes every selected source term, not just the first.
 	* FIX: Block editor notices no longer break when a label or translation contains a quote.
 	* FIX: Editor scripts wait for the page and the block editor iframe to be ready.

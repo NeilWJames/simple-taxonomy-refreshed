@@ -10,7 +10,7 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 56 in 5 classes (A, C, D, E + the original main test) |
+| Tests written | 59 in 5 classes (A, C, D, E + the original main test) |
 | Run in CI | Not yet confirmed for the new classes (first CI run pending) |
 | Still to write | B, F, G, H, I, J, K (see "Planned") |
 
@@ -88,6 +88,7 @@ Other config files: `staxo-config-test-hier.json` (single taxonomy), `staxo-conf
 | `post_terms( $post, $taxonomy )` | Sorted term names, read from the database |
 | `term_count( $taxonomy, $name )` | Stored count, cache cleared |
 | `messages( $errors, $type )` | Settings-error messages of one type |
+| `clear_settings_errors()` | Empties `$wp_settings_errors` (the only place the global is written, with a phpcs:ignore) |
 | `expect_redirect()` | `wp_redirect()` throws `STaxo_Redirect_Exception` |
 | `ajax()`, `merge_phase()`, `merge()` | AJAX base only: call a handler / a merge phase / a full merge |
 
@@ -105,9 +106,9 @@ Flat list; tab and space hierarchies; re-import creates nothing; same name under
 
 Fixture matrix check; add term (published / draft); remove term; remove last term; delete term (children move up); default term not deletable and given to new posts; default counts (published only); STR count rules type 2 (publish + draft), with trash, type 1 (all except trash); counts follow status changes; `staxo_term_count_statuses` filter.
 
-### E. Terms Merge — `class-test-staxo-merge.php` (`@group merge`, 17)
+### E. Terms Merge — `class-test-staxo-merge.php` (`@group merge`, 20)
 
-Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources; single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move up); flat across posts and pages (object cache cleared); count rules respected; terms control kept; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce.
+Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources and warns that children move (hierarchical only); single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move under the destination); parent and child together; destination below a source (moved up first, no loop); flat across posts and pages (object cache cleared); count rules respected; terms control kept; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce.
 
 ### Main — `class-test-staxo-refreshed-main.php` (2)
 
@@ -127,10 +128,13 @@ Multisite flag as expected; plugin loaded.
 
 ## Behaviour decided for tests
 
-- Merging a parent term moves its children up one level (WordPress `wp_delete_term()` behaviour).
+- Merging a parent term moves its children under the destination term (decided 1 Oct 2026). If the destination is below a source, it is first moved up to the source's parent.
 - A merge that leaves posts below the terms-control minimum warns but proceeds.
 - Terms Import: an indented first line is top level; skipped terms are reported with line numbers.
 
 ## Change log
 
 - **1 Oct 2026** — Shared fixtures and base classes; classes A (rewritten), C, D, E. Fixed hierarchical merge input id (`tax<ID>` → `tax_<ID>`).
+- **1 Oct 2026** — phpcs: `$GLOBALS['wp_settings_errors']` writes moved into `clear_settings_errors()`; assignment alignment fixed in `import_config()`.
+- **1 Oct 2026** — First CI run of the new classes. `test_fixture_matrix` exposed a plugin bug: `term_count_sel_cache()` read `$options['externals']` when no external taxonomies were configured ("Undefined array key" warning whenever a taxonomy STR doesn't manage, such as `category`, was counted). Fixed in `class-simpletaxonomyrefreshed-client.php`; every fixture-based test (classes D and E) depends on it.
+- **1 Oct 2026** — Terms Merge now moves the children of each source term under the destination (`SimpleTaxonomyRefreshed_Admin_Merge::move_children()`); phase three says so for hierarchical taxonomies. Merge tests updated and 3 added (parent and child together, destination below a source, no notice for flat).
