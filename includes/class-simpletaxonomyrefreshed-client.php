@@ -910,17 +910,17 @@ class SimpleTaxonomyRefreshed_Client {
 					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
 						// potentially add to post types list.
 						if ( ! empty( $taxonomy['objects'] ) ) {
-							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) && ! empty( $taxonomy['st_cc_types'] ) ? $taxonomy['st_cc_types'] : $taxonomy['objects'] );
+							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) && ! empty( $taxonomy['st_cc_types'] ) ? (array) $taxonomy['st_cc_types'] : $taxonomy['objects'] );
 							foreach ( $taxonomy['objects'] as $post_type ) {
 								// check the post type is in the list.
 								if ( in_array( $post_type, $cc_post_types, true ) ) {
 									$cntl_post_types[ $post_type ][ $taxonomy['name'] ] = array(
-										'st_cc_type'   => $taxonomy['st_cc_type'],
-										'st_cc_hard'   => $taxonomy['st_cc_hard'],
+										'st_cc_type'   => (int) $taxonomy['st_cc_type'],
+										'st_cc_hard'   => (int) $taxonomy['st_cc_hard'],
 										'st_cc_umin'   => $taxonomy['st_cc_umin'],
-										'st_cc_min'    => $taxonomy['st_cc_min'],
+										'st_cc_min'    => (int) $taxonomy['st_cc_min'],
 										'st_cc_umax'   => $taxonomy['st_cc_umax'],
-										'st_cc_max'    => $taxonomy['st_cc_max'],
+										'st_cc_max'    => (int) $taxonomy['st_cc_max'],
 										'show_in_rest' => $taxonomy['show_in_rest'],
 										'rest_base'    => ( empty( $taxonomy['rest_base'] ) ? $taxonomy['name'] : $taxonomy['rest_base'] ),
 										'label_name'   => $taxonomy['labels']['name'],
@@ -942,21 +942,25 @@ class SimpleTaxonomyRefreshed_Client {
 				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
 					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
 						// need to get some properties from external taxonomy.
-						$tax_obj             = get_taxonomy( $key );
+						$tax_obj = get_taxonomy( $key );
+						if ( false === $tax_obj ) {
+							// Not registered (yet); nothing to control.
+							continue;
+						}
 						$taxonomy['objects'] = (array) $tax_obj->object_type;
 						// add to post types list.
 						if ( ! empty( $taxonomy['objects'] ) ) {
-							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) ? $taxonomy['st_cc_types'] : $taxonomy['objects'] );
+							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) && ! empty( $taxonomy['st_cc_types'] ) ? (array) $taxonomy['st_cc_types'] : $taxonomy['objects'] );
 							foreach ( $taxonomy['objects'] as $post_type ) {
 								// check the post type is in the list.
 								if ( in_array( $post_type, $cc_post_types, true ) ) {
 									$cntl_post_types[ $post_type ][ $key ] = array(
-										'st_cc_type'   => $taxonomy['st_cc_type'],
-										'st_cc_hard'   => $taxonomy['st_cc_hard'],
+										'st_cc_type'   => (int) $taxonomy['st_cc_type'],
+										'st_cc_hard'   => (int) $taxonomy['st_cc_hard'],
 										'st_cc_umin'   => $taxonomy['st_cc_umin'],
-										'st_cc_min'    => $taxonomy['st_cc_min'],
+										'st_cc_min'    => (int) $taxonomy['st_cc_min'],
 										'st_cc_umax'   => $taxonomy['st_cc_umax'],
-										'st_cc_max'    => $taxonomy['st_cc_max'],
+										'st_cc_max'    => (int) $taxonomy['st_cc_max'],
 										'show_in_rest' => $tax_obj->show_in_rest,
 										'rest_base'    => ( empty( $tax_obj->rest_base ) ? $tax_obj->name : $tax_obj->rest_base ),
 										'label_name'   => $tax_obj->labels->name,

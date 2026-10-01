@@ -3242,7 +3242,8 @@ class SimpleTaxonomyRefreshed_Admin {
 			// there are controls for this post_type.
 			foreach ( $cntl_post_types[ $postarr['post_type'] ] as $tax => $cntl ) {
 				// check the post_status (trash already excluded so all cc_type 2 need processing).
-				if ( 1 === $cntl['st_cc_type'] && ! in_array( $postarr['post_status'], array( 'publish', 'future' ), true ) ) {
+				// The stored type may be a string, so compare as integers.
+				if ( 1 === (int) $cntl['st_cc_type'] && ! in_array( $post_status, array( 'publish', 'future' ), true ) ) {
 					continue;
 				}
 
@@ -3250,16 +3251,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				// count the number of terms.
 				$terms_count = 0;
 				if ( isset( $postarr['tax_input'][ $tax ] ) ) {
-					$terms = $postarr['tax_input'][ $tax ];
-					// ignore the 0 element (hierarchical).
-					if ( 0 === $terms[0] ) {
-						unset( $terms[0] );
-					}
-					// remove the No Terms value. (Ensure at beginning).
-					if ( isset( $terms[1] ) && -1 === $terms[1] ) {
-						unset( $terms[1] );
-					}
-					$terms_count = ( empty( $terms ) ? 0 : count( $terms ) );
+					$terms_count = self::count_input_terms( $postarr['tax_input'][ $tax ] );
 				}
 
 				// check the minimum bound.
@@ -3311,6 +3303,33 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Count the terms submitted for a taxonomy from the post edit form.
+	 *
+	 * The form may send a hidden 0 (hierarchical checkboxes) and -1 ("No term" radio);
+	 * neither is a term. Flat taxonomies may send a comma-separated string.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param mixed $terms submitted terms (ids, names, or a comma-separated string).
+	 * @return int
+	 */
+	private static function count_input_terms( $terms ) {
+		if ( is_string( $terms ) ) {
+			$terms = explode( ',', $terms );
+		}
+		$count = 0;
+		foreach ( (array) $terms as $term ) {
+			$term = trim( (string) $term );
+			if ( '' === $term || '0' === $term || '-1' === $term ) {
+				continue;
+			}
+			++$count;
+		}
+
+		return $count;
+	}
+
+	/**
 	 * Filters a post before it is inserted via the REST API to check terms control.
 	 *
 	 * @since 1.3.0
@@ -3349,7 +3368,8 @@ class SimpleTaxonomyRefreshed_Admin {
 			// there are controls for this post_type.
 			foreach ( $cntl_post_types[ $prepared_post->post_type ] as $tax => $cntl ) {
 				// check the post_status (trash already excluded so all cc_type 2 need processing).
-				if ( 1 === $cntl['st_cc_type'] && ! in_array( $post_status, array( 'publish', 'future' ), true ) ) {
+				// The stored type may be a string, so compare as integers.
+				if ( 1 === (int) $cntl['st_cc_type'] && ! in_array( $post_status, array( 'publish', 'future' ), true ) ) {
 					continue;
 				}
 

@@ -10,9 +10,9 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 102 in 8 classes (A–G + the original main test) |
-| Run in CI | Not yet confirmed for the new classes (first CI run pending) |
-| Still to write | H, I, J, K (see "Planned") |
+| Tests written | 119 in 9 classes (A–H + the original main test) |
+| Run in CI | H not yet run. A–G: all 102 pass (PHP 8.2–8.4, WP 6.9/latest, single site and multisite); phpcs and PHPStan clean — 1 Oct 2026 |
+| Still to write | I, J, K (see "Planned") |
 
 ## Running
 
@@ -24,7 +24,7 @@ vendor/bin/phpunit -c phpunit9.xml --group merge    # one area
 WP_MULTISITE=1 vendor/bin/phpunit -c phpunit9.xml   # multisite
 ```
 
-Groups: `config`, `import`, `merge`, `assignment`, `taxonomy`, `convert`, `rename`.
+Groups: `config`, `import`, `merge`, `assignment`, `taxonomy`, `convert`, `rename`, `control`.
 
 CI (`.github/workflows/ci.yml`) runs the suite on PHP 8.2–8.4 × WP 6.9/latest, plus multisite on PHP 8.4 / WP latest.
 
@@ -122,6 +122,10 @@ Hierarchical → hierarchical (space-indented tree, imported tree identical); hi
 
 Rename moves definition, `term_taxonomy` rows and posts' terms, hierarchy kept, "Done, 10 terms were migrated."; query_var (empty / equal to new slug → default; a new value is kept even when the old one was the default); `<taxonomy>_children` and `default_term_<taxonomy>` options move; `list_order` updated; new rewrite slug stored and flush scheduled; term cache cleared; invalid new slugs refused (empty, > 32, same, existing — review M6); core and unknown taxonomies refused; subscriber and bad nonce refused.
 
+### H. Terms Control on save — `class-test-staxo-terms-control.php` (`@group control`, 17)
+
+Control cache (values as integers; posts only; none when hard control off or post type not selected). Classic editor (`check_taxonomy_value_set()`): minimum and maximum redirect with `staxo_error`; 1–2 terms accepted; hidden `0` and "No term" `-1` not counted, comma list counted; type 2 checks drafts, type 1 only published/scheduled; new/auto-draft/trash, empty title and other post types not checked; quick edit outputs the error and stops; through `wp_update_post()` the save is stopped and terms unchanged. REST (`check_taxonomy_value_rest()`): create with too few / too many terms refused (403 `rest_minimum_terms` / `rest_maximum_terms`); update without the taxonomy uses the current terms (review M7); removing all terms refused; type 1 vs 2 on drafts; batch requests checked per item. Error notice after a refused save, and none without a valid nonce.
+
 ### Main — `class-test-staxo-refreshed-main.php` (2)
 
 Multisite flag as expected; plugin loaded.
@@ -130,7 +134,6 @@ Multisite flag as expected; plugin loaded.
 
 | Ref | Area | Notes |
 |---|---|---|
-| H | Terms control on save (classic and REST) | Note: `st_cc_type` compared with `===` to int 1 — check stored type |
 | I | Front-end output | the_content/excerpt, shortcode, block, feed, admin filter, widget `filter_min` |
 | J | Admin list ordering | |
 | K | Security sweep | Capability + nonce on every state-changing handler |
@@ -153,3 +156,5 @@ Multisite flag as expected; plugin loaded.
 - **1 Oct 2026** — Classes B (taxonomy admin, 19), F (conversion, 7), G (rename, 11). Plugin changes made for them: rename moves `default_term_<slug>` (was `default_taxonomy_<slug>`) and the `<slug>_children` option through the options API (cache-safe); rename keeps an entered query_var when the old one was the default; Export PHP code built by the new `SimpleTaxonomyRefreshed_Admin::build_php_export()`, with comment values made safe and the name exported as a string literal (review L3).
 - **1 Oct 2026** — phpcs: taxonomy-admin test helpers build the request in a local array and assign it to `$_POST` / `$_GET` / `$_REQUEST`, instead of reading one superglobal into another (NonceVerification).
 - **1 Oct 2026** — First CI run of B, F, G: 97 of 101 passed. The 4 conversion failures were a real plugin bug: the list put `&#013;` between terms and it was escaped again, so the browser showed one line with literal `&#013;`. The conversion now lists one term per line with real line breaks and `esc_textarea()`, and decodes stored entities (`&amp;`) so names are shown as typed. Also fixed: "false to array" deprecation when adding the first taxonomy (or editing an external one) with no saved settings; the Export PHP refusal test now asserts the messages (was risky). Conversion tests: 8.
+- **1 Oct 2026** — CI clean: 102 tests pass on the full matrix; phpcs and PHPStan clean.
+- **1 Oct 2026** — Class H (terms control, 17). Plugin fixes made for it: the control cache stores `st_cc_type`, `st_cc_hard`, `st_cc_min`, `st_cc_max` as integers and the checks compare as integers (type 1 was never recognised because the setting is stored as text, so drafts were always checked); classic-editor term counting moved to `count_input_terms()` (no PHP warning when all terms are removed; comma lists counted); the classic check uses the parent's status for revisions; external taxonomies that are not registered, or have an empty post-type list, no longer cause PHP errors in the control cache.
