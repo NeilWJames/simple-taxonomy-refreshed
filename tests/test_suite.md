@@ -10,9 +10,9 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 142 in 10 classes (A–I + the original main test) |
-| Run in CI | I not yet run. A–H: all 119 pass (PHP 8.2–8.4, WP 6.9/latest, single site and multisite); phpcs and PHPStan clean — 1 Oct 2026 |
-| Still to write | J, K (see "Planned") |
+| Tests written | 154 in 12 classes (A–K + the original main test) |
+| Run in CI | J and K not yet run; I's block-wrapper tests not yet run. A–H: all 119 pass; I: 20 of 21 passed on first run (the failing test was replaced) |
+| Still to write | None — plan complete (see "Planned" for follow-ups) |
 
 ## Running
 
@@ -24,7 +24,7 @@ vendor/bin/phpunit -c phpunit9.xml --group merge    # one area
 WP_MULTISITE=1 vendor/bin/phpunit -c phpunit9.xml   # multisite
 ```
 
-Groups: `config`, `import`, `merge`, `assignment`, `taxonomy`, `convert`, `rename`, `control`, `frontend`.
+Groups: `config`, `import`, `merge`, `assignment`, `taxonomy`, `convert`, `rename`, `control`, `frontend`, `order`, `security`.
 
 CI (`.github/workflows/ci.yml`) runs the suite on PHP 8.2–8.4 × WP 6.9/latest, plus multisite on PHP 8.4 / WP latest.
 
@@ -130,16 +130,28 @@ Control cache (values as integers; posts only; none when hard control off or pos
 
 Terms after the content (taxonomies set to content/both) and excerpt (excerpt/both) of a single post in the main loop, not elsewhere; pages only get page taxonomies; "not found" HTML comment for a post without terms; plain-text before/separator/after get spaces at the joins and are escaped; a plain-text separator with end spaces stays plain text; HTML before/after limited to post HTML (no `<script>`). Shortcode `[staxo_post_terms tax="…"]` (any display setting; empty for an unknown taxonomy or outside a single post's loop); Display Post Terms block. Feeds (rss2, atom, rdf) for taxonomies set to show in feeds. Admin list filter dropdown for the selected post types; unregistered external taxonomy ignored. Widget list (counts, terms without posts hidden), minimum posts incl. non-numeric values (review M3), cloud (minimum posts, no font sizes for equal counts), escaped title, fallback to tags, settings sanitised on save; Taxonomy Cloud block, and its `ordering` attribute used as the order; `get_block_attributes()` returns the wrapper attributes only while one of the plugin's own blocks renders (the display functions work, without the wrapper div, when called directly or inside another dynamic block). The two block tests are skipped if `build/blocks` is missing.
 
+### J. Taxonomy List Order — `class-test-staxo-order.php` (`@group order`, 8)
+
+Fixture columns (posts: core + four test taxonomies; pages: test_flat); saving a new order for one post type is kept (it was dropped when only one post type had its own order); the saved order is applied through `manage_taxonomies_for_{post_type}_columns`; saving the default stores nothing; unknown names, duplicates and non-strings dropped and missing taxonomies added at the end; a value that is not a list ignored; taxonomies no longer shown left out of the columns and new ones added; editor and bad nonce refused.
+
+### K. Security sweep — `class-test-staxo-security.php` (`@group security`, 4)
+
+Thirteen state-changing handlers, each called as its screen would call it: config import and export, add/update taxonomy, update external, delete, flush-delete, Export PHP, Terms Import, Terms Merge, Terms Conversion, Rename Slug, Taxonomy List Order. Roles below each handler's minimum (administrator; editor for Terms Import and Terms Merge, which accept the taxonomy's manage_terms capability) are refused with a permissions message; logged-out visitors are refused; an administrator with a bad nonce is refused; nothing changes in any refused case (option, terms and term relationships compared before and after). No `wp_ajax_nopriv_` actions and no REST routes are registered (review finding M4).
+
 ### Main — `class-test-staxo-refreshed-main.php` (2)
 
 Multisite flag as expected; plugin loaded.
 
 ## Planned
 
-| Ref | Area | Notes |
-|---|---|---|
-| J | Admin list ordering | |
-| K | Security sweep | Capability + nonce on every state-changing handler |
+The test plan (A–K) is complete. Follow-ups:
+
+| Area | Notes |
+|---|---|
+| Block supports | Decide and add supports to both blocks; add front-end tests for each (see `work/backlog.md`) |
+| Capabilities | Terms Import and Terms Merge accept the taxonomy's manage_terms capability, but their pages require manage_options; decide which is intended |
+| Config import sanitising | Review finding M1 is still open: imported configurations are stored without the form's sanitising |
+| Browser tests | Block-editor JavaScript (notices, radio buttons, iframe) needs e2e tests (Playwright) |
 
 ## Behaviour decided for tests
 
@@ -166,3 +178,4 @@ Multisite flag as expected; plugin loaded.
 - **1 Oct 2026** — Class I (front end, 21). Plugin fixes made for it: post terms display treated text with spaces at the ends (such as the default ", " separator) as HTML, so no space was added after the "before" text; plain text is now detected by the absence of `<`, escaped with `esc_html()`, and HTML before/separator/after is filtered with `wp_kses_post()` when shown; taxonomy name escaped in the class attribute and the "not found" comment; admin list filter skips an external taxonomy that is not registered; Taxonomy Cloud block display works without the `ordering` attribute.
 - **1 Oct 2026** — First CI run of I: 139 of 140 passed. `test_widget_block_without_ordering` called the block's render callback outside a block render, where WordPress's `get_block_wrapper_attributes()` fails; that cannot happen on a site (block attributes always get their defaults). Replaced by `test_widget_block_ordering`, which renders the block with `ordering` ASC and DESC.
 - **1 Oct 2026** — Block wrapper attributes (pattern from WP Document Revisions): new `SimpleTaxonomyRefreshed_Client::get_block_attributes()` returns `get_block_wrapper_attributes()` only when `WP_Block_Supports::$block_to_render` is one of this plugin's blocks; the wrapper div is added only when it is not empty, so `block_terms()` and `staxo_widget_display()` can be called outside their block (directly, or while another dynamic block such as core/post-content renders). 2 tests added (front end: 23).
+- **2 Oct 2026** — Classes J (list order, 8) and K (security sweep, 4); the test plan is complete. Plugin fixes made for them: a column order saved for only one post type was discarded (`1 === count()`), now kept; the posted order is validated (only that post type's admin-column taxonomies, once each, missing ones appended); `reorder_admin_list()` leaves out taxonomies no longer shown and copes with a missing saved order; Rename Slug requires `manage_options`, as its page does (it accepted the taxonomy's manage_terms).

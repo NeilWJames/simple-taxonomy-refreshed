@@ -84,3 +84,10 @@
 		border-style: double;
 		border-width: 5px;
 	}
+
+/* style the taxonomy/terms lists */
+.staxo-checkbox-item,
+.staxo-radio-item
+	{
+		margin-bottom: 6px;
+	}

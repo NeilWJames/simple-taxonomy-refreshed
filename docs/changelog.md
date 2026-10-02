@@ -39,16 +39,20 @@
 * FIX: Post terms "before", separator and "after" text is escaped (plain text) or filtered as post HTML when displayed.
 * FIX: Admin list filter no longer raises a PHP warning for an external taxonomy that is not registered.
 * FIX: Display Post Terms and Taxonomy Cloud blocks only use block wrapper attributes while one of their own blocks is rendering, so their output can also be produced outside a block.
+* FIX: Terms Merge screen loads the plugin's admin stylesheet, so its term lists are laid out correctly.
+* FIX: Taxonomy List Order keeps an order saved for a single post type (it was discarded).
+* FIX: Taxonomy List Order only accepts the post type's own taxonomies, and the admin list ignores taxonomies no longer shown.
 * DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
 * DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
 * DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.
+* DEV: Rename Slug requires the manage_options capability, as its page does.
 * DEV: Widget numeric settings are sanitised.
 * DEV: Notice about the original Simple Taxonomy plugin is shown only to administrators in admin.
 * DEV: Minimum WordPress version increased to 6.9.
 * DEV: Removed term-count code for WordPress before 5.7, including `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version`.
 * DEV: JavaScript reviewed with wp-scripts lint-js.
 * DEV: Code checked with PHPStan (level 5).
-* DEV: PHPUnit test suite with shared fixtures covering configuration import, Terms Import, Terms Merge, term counts, taxonomy add/update/delete, Export PHP, Terms Conversion, Rename Slug, Terms Control and front-end output.
+* DEV: PHPUnit test suite (154 tests) with shared fixtures covering configuration import, Terms Import, Terms Merge, term counts, taxonomy add/update/delete, Export PHP, Terms Conversion, Rename Slug, Terms Control, front-end output, Taxonomy List Order and a capability/nonce sweep of every admin handler.
 * DEV: Export PHP code is built by `SimpleTaxonomyRefreshed_Admin::build_php_export()`.
 
 ## Version 3.4.1  (03/09/2026)

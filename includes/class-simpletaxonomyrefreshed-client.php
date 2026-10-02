@@ -219,8 +219,12 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static function reorder_admin_list( $taxonomies, $post_type ) {
 		$options = get_option( OPTION_STAXO );
-		$ordered = $options['list_order'][ $post_type ];
-		$extra   = array_diff( $taxonomies, $ordered );
+		if ( ! isset( $options['list_order'][ $post_type ] ) || ! is_array( $options['list_order'][ $post_type ] ) ) {
+			return $taxonomies;
+		}
+		// Only taxonomies that are still shown, in the saved order, then any others.
+		$ordered = array_values( array_intersect( $options['list_order'][ $post_type ], $taxonomies ) );
+		$extra   = array_values( array_diff( $taxonomies, $ordered ) );
 		return array_merge( $ordered, $extra );
 	}
 

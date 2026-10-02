@@ -90,10 +90,14 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			foreach ( $deflt_ordering as $post_type => $tax ) {
 				$post_key = $post_type . '_arr';
 				if ( isset( $_POST[ $post_key ] ) && ! empty( $_POST[ $post_key ] ) ) {
-					$taxos                        = json_decode( sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) ), true );
-					$displ_ordering[ $post_type ] = $taxos;
-					// translators: %1$s is the post type name.
-					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', sprintf( __( '"%1$s" admin list taxonomies updated.', 'simple-taxonomy-refreshed' ), $wp_post_types[ $post_type ]->labels->name ), 'updated' );
+					$taxos = json_decode( sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) ), true );
+					if ( is_array( $taxos ) ) {
+						// Keep only this post type's admin-column taxonomies, once each, then add any not sent.
+						$taxos                        = array_values( array_unique( array_intersect( array_filter( $taxos, 'is_string' ), $tax ) ) );
+						$displ_ordering[ $post_type ] = array_merge( $taxos, array_values( array_diff( $tax, $taxos ) ) );
+						// translators: %1$s is the post type name.
+						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', sprintf( __( '"%1$s" admin list taxonomies updated.', 'simple-taxonomy-refreshed' ), $wp_post_types[ $post_type ]->labels->name ), 'updated' );
+					}
 				}
 				if ( $displ_ordering[ $post_type ] === $deflt_ordering[ $post_type ] ) {
 					// no need to store the default ordering.
@@ -102,8 +106,11 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			}
 			// if any changes to default order, store them.
 			$options = get_option( OPTION_STAXO );
-			// if all default, then remove.
-			if ( empty( $displ_ordering ) || 1 === count( $displ_ordering ) ) {
+			if ( ! is_array( $options ) ) {
+				$options = array();
+			}
+			// if all default, then remove. (A single post type with its own order is kept.)
+			if ( empty( $displ_ordering ) ) {
 				unset( $options['list_order'] );
 			} else {
 				$options['list_order'] = $displ_ordering;

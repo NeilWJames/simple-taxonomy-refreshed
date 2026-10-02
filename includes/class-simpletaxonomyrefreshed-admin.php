@@ -91,7 +91,12 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		$screen = get_current_screen();
 
-		if ( 'toplevel_page_staxo_settings' === $screen->id ) {
+		// Settings and Terms Merge screens use the admin js/css (Merge styles its term lists).
+		$admin_screens = array(
+			'toplevel_page_' . self::ADMIN_SLUG,
+			'taxonomies_page_' . SimpleTaxonomyRefreshed_Admin_Merge::MERGE_SLUG,
+		);
+		if ( in_array( $screen->id, $admin_screens, true ) ) {
 			// Add admin js/css.
 			self::enqueue_admin_libs();
 			return;

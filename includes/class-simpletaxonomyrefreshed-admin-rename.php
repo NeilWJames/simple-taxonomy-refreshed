@@ -106,8 +106,9 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				wp_die( esc_html__( 'Only taxonomies created by Simple Taxonomy Refreshed can be renamed.', 'simple-taxonomy-refreshed' ) );
 			}
 
+			// Renaming changes this plugin's settings, so it needs the same capability as the Rename page.
 			$taxonomy_obj = get_taxonomy( $taxonomy );
-			if ( ! ( current_user_can( 'manage_options' ) || current_user_can( $taxonomy_obj->cap->manage_terms ) ) ) {
+			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ) );
 			}
 
