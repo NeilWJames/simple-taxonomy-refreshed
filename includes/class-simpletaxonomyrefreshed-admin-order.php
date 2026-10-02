@@ -156,7 +156,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			}
 			if ( ! $multiple ) {
 				// Nothing to do.
-				echo '<strong?<p>' . esc_html__( 'There is no Post Type with more than one taxonomy.element. Nothing to do.', 'simple-taxonomy-refreshed' ) . '</p></strong></div>';
+				echo '<p><strong>' . esc_html__( 'There is no Post Type with more than one taxonomy.element. Nothing to do.', 'simple-taxonomy-refreshed' ) . '</strong></p></div>';
 				return;
 			}
 			?>

@@ -81,16 +81,12 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 				ob_end_clean();
 			}
 
-			// is a reordering of taxionomies wanted?
-			$options = get_option( OPTION_STAXO );
+			// is a reordering of taxonomies wanted?
+			$order = array();
 			if ( isset( $_POST['taxo_list_arr'] ) && ! empty( $_POST['taxo_list_arr'] ) ) {
-				$taxos = json_decode( sanitize_text_field( wp_unslash( $_POST['taxo_list_arr'] ) ), true );
-				$ntaxo = array();
-				foreach ( $taxos as $tax ) {
-					$ntaxo[ $tax ] = $options['taxonomies'][ $tax ];
-				}
-				$options['taxonomies'] = $ntaxo;
+				$order = json_decode( sanitize_text_field( wp_unslash( $_POST['taxo_list_arr'] ) ), true );
 			}
+			$export = self::build_config_export( get_option( OPTION_STAXO ), $order );
 
 			// No cache.
 			header( 'Expires: ' . gmdate( 'D, d M Y H:i:s', time() + ( 24 * 60 * 60 ) ) . ' GMT' );
@@ -110,7 +106,7 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 			// phpcs:ignore
 			header( 'Content-Disposition: attachment; filename=staxo-config-' . date( 'ymdHisT' ) . '.json;' );
 			// phpcs:ignore  WordPress.Security.EscapeOutput
-			die( 'SIMPLETAXONOMYREFRESHED' . wp_json_encode( $options ) );
+			die( $export );
 		}
 
 		// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
@@ -171,6 +167,37 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Build the configuration export file content.
+	 *
+	 * Taxonomies named in $order come first, in that order; any others follow in their
+	 * stored order. Names that are not stored taxonomies are ignored.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param mixed $options stored plugin options.
+	 * @param mixed $order   taxonomy names in the order wanted (from the Export screen).
+	 * @return string the file content: the marker followed by the options as JSON.
+	 */
+	public static function build_config_export( $options, $order = array() ) {
+		if ( ! is_array( $options ) ) {
+			$options = array();
+		}
+
+		if ( is_array( $order ) && ! empty( $order ) && isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
+			$ntaxo = array();
+			foreach ( $order as $tax ) {
+				if ( is_string( $tax ) && isset( $options['taxonomies'][ $tax ] ) ) {
+					$ntaxo[ $tax ] = $options['taxonomies'][ $tax ];
+				}
+			}
+			// Taxonomies missing from the list are kept, after the listed ones.
+			$options['taxonomies'] = $ntaxo + $options['taxonomies'];
+		}
+
+		return 'SIMPLETAXONOMYREFRESHED' . wp_json_encode( $options );
 	}
 
 	/**

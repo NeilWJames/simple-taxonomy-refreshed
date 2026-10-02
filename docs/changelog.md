@@ -11,6 +11,7 @@
 * Post terms "before", separator and "after" text: HTML is filtered as post content, so tags such as `<script>`, `<style>` and `<iframe>` are removed; plain text is escaped.
 * Callback fields can only be edited by users with the `unfiltered_html` capability (super admins on multisite). Use the `staxo_can_edit_callbacks` filter to change this.
 * Removed for code that calls the plugin directly: `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version` (term-count code for WordPress before 5.7).
+* Terms Migrate, Terms Import and Terms Merge check each taxonomy's own capabilities: terms can only be copied from a taxonomy where the user has its manage_terms capability, and only copied or imported into one where the user has its edit_terms capability; merging needs its manage_terms, delete_terms and assign_terms capabilities, and also edit_terms when child terms would be moved. Other taxonomies are listed but cannot be chosen. This only affects taxonomies whose capabilities are not granted to administrators.
 
 ### Changes
 
@@ -59,6 +60,11 @@
 * DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
 * DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.
 * DEV: Rename Slug requires the manage_options capability, as its page does.
+* DEV: Terms Migrate: "Copy From" needs the taxonomy's manage_terms capability and "Copy To" its edit_terms capability; other taxonomies are listed but cannot be selected, and the request is checked again when sent.
+* DEV: Terms Import requires the manage_options capability, as its page does, and the taxonomy's edit_terms capability (it accepted the taxonomy's manage_terms alone); other taxonomies are listed but cannot be chosen.
+* DEV: Terms Merge requires the manage_options capability, as its page does, and the taxonomy's manage_terms, delete_terms and assign_terms capabilities (it accepted manage_terms alone); edit_terms is also needed when source terms have child terms to move. Other taxonomies are listed but cannot be selected.
+* FIX: Terms Merge page no longer stops with a permissions message when the first taxonomy it checks is one the user cannot merge.
+* FIX: Terms Migrate page no longer has a script error when a taxonomy cannot be copied to.
 * DEV: Widget numeric settings are sanitised.
 * DEV: Notice about the original Simple Taxonomy plugin is shown only to administrators in admin.
 * DEV: Minimum WordPress version increased to 6.9.
@@ -67,6 +73,9 @@
 * DEV: Code checked with PHPStan (level 5).
 * DEV: PHPUnit test suite (154 tests) with shared fixtures covering configuration import, Terms Import, Terms Merge, term counts, taxonomy add/update/delete, Export PHP, Terms Conversion, Rename Slug, Terms Control, front-end output, Taxonomy List Order and a capability/nonce sweep of every admin handler.
 * DEV: Export PHP code is built by `SimpleTaxonomyRefreshed_Admin::build_php_export()`.
+* DEV: Configuration export file content is built by `SimpleTaxonomyRefreshed_Admin_Config::build_config_export()`.
+* FIX: Configuration export keeps any taxonomy missing from the chosen order and ignores names that are not stored taxonomies (they raised PHP warnings and could drop taxonomies from the file).
+* FIX: Taxonomy List Order page markup when no post type has more than one taxonomy.
 
 ## Version 3.4.1  (03/09/2026)
 

@@ -8,6 +8,13 @@ on:
   pull_request:
     branches:
       - master
+  # Manual run: no previous commit to compare with, so the blocks are always rebuilt.
+  workflow_dispatch:
+
+# Every job only reads the repository (Codecov uses its own token secret).
+permissions:
+  contents: read
+
 jobs:
   # Rebuilds build/blocks when src/ (or package.json) changed, so the tests use the blocks as src/ defines them.
   # Nothing is committed: the manual Build Blocks workflow still opens the PR with build/.
@@ -85,6 +92,8 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     # src/ changed: replace build/blocks with the fresh build from the build-blocks job.
     - name: Remove committed block build
@@ -133,7 +142,8 @@ jobs:
         files: coverage.xml
         directory: ${{ github.workspace }}
         verbose: true
-        flags: php-${{ matrix.php-versions }},wp-${{ matrix.wp-version }},multisite-${{ matrix.wp-multisite }}
+        # One flag per upload (Codecov rejects several): one per matrix combination.
+        flags: php${{ matrix.php-versions }}-wp${{ matrix.wp-version }}-ms${{ matrix.wp-multisite }}
 
   phpcs:
     runs-on: ubuntu-latest

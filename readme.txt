@@ -120,6 +120,9 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* DEV: Code checked with PHPStan (level 5).
 	* DEV: PHPUnit test suite (154 tests) with shared fixtures covering configuration import, Terms Import, Terms Merge, term counts, taxonomy add/update/delete, Export PHP, Terms Conversion, Rename Slug, Terms Control, front-end output, Taxonomy List Order and a capability/nonce sweep of every admin handler.
 	* DEV: Export PHP code is built by `SimpleTaxonomyRefreshed_Admin::build_php_export()`.
+	* DEV: Configuration export file content is built by `SimpleTaxonomyRefreshed_Admin_Config::build_config_export()`.
+	* FIX: Configuration export keeps any taxonomy missing from the chosen order and ignores names that are not stored taxonomies (they raised PHP warnings and could drop taxonomies from the file).
+	* FIX: Taxonomy List Order page markup when no post type has more than one taxonomy.
 
 * Version 3.4.1  (03/09/2026)
 	* FIX: Taxonomy counts work within iFramed content.

@@ -10,8 +10,9 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 169 in 12 classes (A–K + the original main test) |
-| Run in CI | All 154 pass (8,682 assertions) — GitHub CI run #127, 2 Oct 2026. Not yet run: 3 block-supports, 3 merge child-terms and 9 capability tests (Terms Import, Terms Migrate, Terms Merge) |
+| Tests written | 179 in 13 classes (A–L + the original main test) |
+| Run in CI | All 169 pass (9,534 assertions) — 2 Oct 2026, including the blocks rebuilt from `src/` by the new `build-blocks` CI job. Class L (10) not yet run |
+| Coverage (Codecov, 2 Oct 2026) | Plan target ≥ 80%: merge 91.0%, conversion 84.3% met; import 78.0%, rename 42.3%, config 23.0% not met (see "Planned") |
 | Still to write | None — plan complete (see "Planned" for follow-ups) |
 
 ## Running
@@ -144,12 +145,17 @@ Thirteen state-changing handlers, each called as its screen would call it: confi
 
 Multisite flag as expected; plugin loaded.
 
+
+### L. Admin screens — `class-test-staxo-admin-pages.php` (`@group pages`, 10)
+
+The admin screen classes as WordPress loads them in wp-admin: each is a singleton whose constructor hooks its menu (instance cleared by reflection so the constructor runs); each adds its page under Taxonomies with its help tabs on the page's load hook; each adds help tabs to the screen; Configuration and List Order load the sortable script and the plugin's admin script and style. Pages: Configuration (several taxonomies → sortable list and Export/Import forms; one taxonomy → no reordering; no custom taxonomies; no configuration → no Export form); Rename (a radio and script per taxonomy; no taxonomies → stops); Terms Import (posted taxonomy and hierarchy kept selected); List Order (post type tabs and sortable lists). Configuration export (plan A4): `build_config_export()` output re-imported gives the same settings; chosen order applied, unknown names ignored, unlisted taxonomies kept, no settings → empty export.
 ## Planned
 
 The test plan (A–K) is complete. Follow-ups:
 
 | Area | Notes |
 |---|---|
+| Coverage of the plan's five files | Import, rename and config were below 80% (2 Oct): their pages, help tabs, menus and constructors were never run, and config export ends in `die()`. Class L added for these (2 Oct); check the figures after its first run. The `ABSPATH` guard line at the top of each file cannot be covered: it only runs outside WordPress, and it ends the process before coverage is saved |
 | Config import sanitising | Review finding M1 is still open: imported configurations are stored without the form's sanitising |
 | Browser tests | Block-editor JavaScript (notices, radio buttons, iframe) needs e2e tests (Playwright) |
 
@@ -184,3 +190,5 @@ The test plan (A–K) is complete. Follow-ups:
 - **2 Oct 2026** — Terms Merge child terms: when a source has child terms, phase three asks whether they go under the destination (default) or up a level (the behaviour before 4.0.0); the notice is no longer shown when no source has children. `sources_have_children()` added. Merge tests: `test_phase_three_filters_sources` updated (Bebop has no children, so no choice), 3 added (choice shown, up a level, up a level with the destination below the source). Merge: 28; total 160.
 - **2 Oct 2026** — Capabilities for Terms Migrate and Terms Import (Neil): Copy From needs the taxonomy's manage_terms, Copy To and Import need its edit_terms; taxonomies without them are shown but cannot be selected, and the handlers check again; Terms Import also needs manage_options, as its page does. Pages stay manage_options. Terms Migrate script error fixed (a row without a Copy To box broke the script). Helpers `register_locked_taxonomy()` and `grant_caps()` added. Tests: import 18 (+3), convert 11 (+3); security sweep: Terms Import minimum role now administrator. Total 166.
 - **2 Oct 2026** — Capabilities for Terms Merge (Neil): manage_options (as the page) plus the taxonomy's manage_terms, delete_terms (sources are deleted) and assign_terms (posts get the destination); edit_terms as well when a source has child terms to move. Taxonomies without them are listed but disabled; the page no longer stops with a permissions message when the first taxonomy it checks is one the user cannot merge. `register_locked_taxonomy()` now uses `assign_locked` for assign_terms. Merge: 31 (+3); security sweep: Terms Merge minimum role now administrator. Total 169.
+- **2 Oct 2026** — CI clean: all 169 tests pass (9,534 assertions). CI now rebuilds `build/blocks` when `src/` changes, runs with read-only permissions and uploads coverage to Codecov (one flag per matrix job). First coverage figures for the plan's five files recorded in Status; three are below the 80% target.
+- **2 Oct 2026** — Class L (admin screens, 10) for coverage of the plan's files: singletons and constructors, menu pages, help tabs, sortable scripts, Configuration / Rename / Terms Import / List Order pages, and the configuration export round trip (plan A4). Plugin changes: configuration export content built by `SimpleTaxonomyRefreshed_Admin_Config::build_config_export()` (export keeps taxonomies missing from the chosen order and ignores unknown names); List Order page markup fixed for the no-multiple case. Total 179.
