@@ -9,7 +9,58 @@ on:
     branches:
       - master
 jobs:
+  # Rebuilds build/blocks when src/ (or package.json) changed, so the tests use the blocks as src/ defines them.
+  # Nothing is committed: the manual Build Blocks workflow still opens the PR with build/.
+  build-blocks:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # Compare with the PR's base, or with the commit before the push.
+      # With no usable base (first push of a branch, force push), build anyway.
+      - name: Check for src changes
+        id: diff
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "$BASE" HEAD -- src package.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node
+        if: steps.diff.outputs.changed == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # Dependency install hooks are not needed for the build.
+      - name: Build blocks
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          npm install --ignore-scripts
+          npm run build:blocks
+
+      - name: Upload block build
+        if: steps.diff.outputs.changed == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-blocks
+          path: build/blocks/
+          if-no-files-found: error
+          retention-days: 1
+
   run:
+    needs: build-blocks
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: true
@@ -34,6 +85,18 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v7
+
+    # src/ changed: replace build/blocks with the fresh build from the build-blocks job.
+    - name: Remove committed block build
+      if: needs.build-blocks.outputs.changed == 'true'
+      run: rm -rf build/blocks
+
+    - name: Download block build
+      if: needs.build-blocks.outputs.changed == 'true'
+      uses: actions/download-artifact@v8
+      with:
+        name: build-blocks
+        path: build/blocks
 
     - name: Setup PHP
       uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
