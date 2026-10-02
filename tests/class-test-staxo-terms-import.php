@@ -240,6 +240,50 @@ class Test_STaxo_Terms_Import extends STaxo_Test_Case {
 	}
 
 	/**
+	 * An editor cannot import terms (the page needs manage_options).
+	 */
+	public function test_editor_rejected() {
+		$this->login( 'editor' );
+
+		$this->expectException( 'WPDieException' );
+		$this->import_terms( 'test_flat', 'terms-flat.txt' );
+	}
+
+	/**
+	 * Without the taxonomy's edit_terms capability, nothing can be imported into it.
+	 */
+	public function test_needs_edit_terms() {
+		$this->register_locked_taxonomy();
+		$this->grant_caps( 'manage_locked' );
+
+		try {
+			$this->import_terms( 'test_locked', 'terms-flat.txt' );
+			$this->fail( 'Expected WPDieException' );
+		} catch ( WPDieException $e ) {
+			$this->assertStringContainsString( 'necessary permissions', $e->getMessage() );
+		}
+		$this->assertSame( array( 'Locked term' ), array_keys( $this->term_tree( 'test_locked' ) ) );
+
+		$this->grant_caps( 'edit_locked' );
+		$this->import_terms( 'test_locked', 'terms-flat.txt' );
+		$this->assertCount( 6, $this->term_tree( 'test_locked' ) );
+	}
+
+	/**
+	 * Taxonomies without the edit_terms capability are listed on the page but cannot be chosen.
+	 */
+	public function test_page_disables_taxonomies() {
+		$this->register_locked_taxonomy();
+
+		ob_start();
+		SimpleTaxonomyRefreshed_Admin_Import::page_importation();
+		$page = ob_get_clean();
+
+		$this->assertMatchesRegularExpression( '#<option value="test_locked"[^>]*disabled=#', $page );
+		$this->assertDoesNotMatchRegularExpression( '#<option value="test_flat"[^>]*disabled=#', $page );
+	}
+
+	/**
 	 * A bad nonce is rejected and nothing is created.
 	 */
 	public function test_bad_nonce_rejected() {

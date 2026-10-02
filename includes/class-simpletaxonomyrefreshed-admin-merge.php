@@ -68,13 +68,13 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 		if ( isset( $_POST['action'] ) && self::MERGE_SLUG === $_POST['action'] ) {
 			check_admin_referer( self::MERGE_SLUG );
 
-			// Validate the taxonomy and the user's right to manage its terms (all phases).
+			// Validate the taxonomy and the user's right to merge its terms (all phases).
 			$taxonomy = ( isset( $_POST['taxonomy'] ) ? sanitize_text_field( wp_unslash( $_POST['taxonomy'] ) ) : '' );
 			$tax_obj  = get_taxonomy( $taxonomy );
 			if ( false === $tax_obj ) {
 				wp_die( esc_html__( 'Invalid taxonomy.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 400 ) );
 			}
-			if ( ! ( current_user_can( 'manage_options' ) || current_user_can( $tax_obj->cap->manage_terms ) ) ) {
+			if ( ! current_user_can( 'manage_options' ) || ! self::can_merge( $tax_obj ) ) {
 				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
 			}
 
@@ -155,6 +155,17 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				$sources = array_keys( $terms );
 				$tt_ids  = array_values( $terms );
 				ob_start();
+
+				// Hierarchical: child terms of the sources are moved, which needs the taxonomy's edit_terms capability.
+				$has_children = ( $tax_obj->hierarchical && self::sources_have_children( $sources, $taxonomy ) );
+				if ( $has_children && ! current_user_can( $tax_obj->cap->edit_terms ) ) {
+					echo '<p><strong>' . esc_html__( 'These terms cannot be merged: the source term(s) have child terms, and you do not have permission to edit (move) terms in this taxonomy.', 'simple-taxonomy-refreshed' ) . '</strong></p>';
+					echo '<input type="hidden" name="phase" id="phase" value="five" />';
+					// phpcs:ignore WordPress.Security.EscapeOutput
+					echo ob_get_clean();
+					wp_die();
+				}
+
 				// translators: %s is the taxonomy name.
 				echo '<p>' . esc_html( sprintf( __( 'Selected Taxonomy : %s', 'simple-taxonomy-refreshed' ), $tax_obj->labels->name ) ) . '</p>';
 				// translators: %s is the desstination term name.
@@ -167,7 +178,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				echo '<p><strong>' . esc_html__( 'This will change all posts to link to the destination term and delete the source term(s).', 'simple-taxonomy-refreshed' ) . '</strong></p>';
 				echo '<p><strong>' . esc_html__( 'Any source term metadata will be deleted.', 'simple-taxonomy-refreshed' ) . '</strong></p>';
 				// Hierarchical: when a source has child terms, ask where they should go.
-				if ( $tax_obj->hierarchical && self::sources_have_children( $sources, $taxonomy ) ) {
+				if ( $has_children ) {
 					echo '<fieldset><legend>' . esc_html__( 'Child terms of the source term(s):', 'simple-taxonomy-refreshed' ) . '</legend>';
 					echo '<input type="radio" name="children" id="children_under" value="under" checked /> ';
 					echo '<label for="children_under">' . esc_html__( 'Move them under the destination term', 'simple-taxonomy-refreshed' ) . '</label><br />';
@@ -235,6 +246,12 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 					// phpcs:ignore WordPress.Security.EscapeOutput
 					echo ob_get_clean();
 					wp_die();
+				}
+
+				// Child terms are moved (under the destination or up a level), which needs the taxonomy's edit_terms capability.
+				if ( $tax_obj->hierarchical && ! current_user_can( $tax_obj->cap->edit_terms ) && self::sources_have_children( $sources, $taxonomy ) ) {
+					ob_end_clean();
+					wp_die( esc_html__( 'You do not have the necessary permissions to move child terms.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
 				}
 
 				// Terms control: check again which posts would fall below the minimum (before anything changes).
@@ -510,6 +527,24 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 	}
 
 	/**
+	 * Whether the user may merge terms of a taxonomy.
+	 *
+	 * Listing its terms needs manage_terms; the source terms are deleted (delete_terms)
+	 * and their posts are given the destination term (assign_terms). Moving child terms
+	 * also needs edit_terms, which is checked once the source terms are known.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param WP_Taxonomy $tax_obj taxonomy.
+	 * @return bool
+	 */
+	private static function can_merge( $tax_obj ) {
+		return current_user_can( $tax_obj->cap->manage_terms )
+			&& current_user_can( $tax_obj->cap->delete_terms )
+			&& current_user_can( $tax_obj->cap->assign_terms );
+	}
+
+	/**
 	 * Whether any of the source terms has child terms.
 	 *
 	 * @since 4.0.0
@@ -760,20 +795,23 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 					// build a list of taxonomies that can be processed.
 					$taxos = array();
 					global $wp_taxonomies;
+					$allowed = array();
 					foreach ( $wp_taxonomies as $taxo ) {
-						if ( $taxo->public && ( current_user_can( 'manage_options' ) || current_user_can( $taxo->capabilities->manage_terms ) ) ) {
+						if ( $taxo->public ) {
 							$taxos[ $taxo->labels->name ] = $taxo->name;
+							// Taxonomies the user may not merge are listed but cannot be selected.
+							$allowed[ $taxo->name ] = self::can_merge( $taxo );
 						}
-						if ( empty( $taxos ) ) {
-							// user has no taxonomies possible to change.
-							wp_die( esc_html__( 'Sorry. You do not have the necessary permissions to change any taxonomies.', 'simple-taxonomy-refreshed' ) );
-						}
+					}
+					if ( ! in_array( true, $allowed, true ) ) {
+						// user has no taxonomies possible to change.
+						wp_die( esc_html__( 'Sorry. You do not have the necessary permissions to change any taxonomies.', 'simple-taxonomy-refreshed' ) );
 					}
 					// sort the list and output.
 					ksort( $taxos );
 					foreach ( $taxos as $taxo => $value ) {
 						echo '<span class="staxo-radio-item" >';
-						echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . esc_attr( $value ) . '" value="' . esc_attr( $value ) . '" onclick="' . esc_attr( 'str_t(' . wp_json_encode( $value ) . ')' ) . '" >';
+						echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . esc_attr( $value ) . '" value="' . esc_attr( $value ) . '" onclick="' . esc_attr( 'str_t(' . wp_json_encode( $value ) . ')' ) . '"' . disabled( ! $allowed[ $value ], true, false ) . ' >';
 						echo '<label for="' . esc_attr( $value ) . '" >' . esc_html( $taxo ) . '</label></span><br />';
 					}
 					?>

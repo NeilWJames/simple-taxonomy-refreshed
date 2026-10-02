@@ -74,7 +74,8 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 			}
 
 			$taxonomy_obj = get_taxonomy( $taxonomy );
-			if ( ! ( current_user_can( 'manage_options' ) || current_user_can( $taxonomy_obj->cap->manage_terms ) ) ) {
+			// Same capability as the Terms Import page, and creating terms needs the taxonomy's edit_terms capability.
+			if ( ! current_user_can( 'manage_options' ) || ! current_user_can( $taxonomy_obj->cap->edit_terms ) ) {
 				wp_die( esc_html__( 'You do not have the necessary permissions to import terms.', 'simple-taxonomy-refreshed' ) );
 			}
 
@@ -282,8 +283,9 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 							),
 							'objects'
 						) as $taxonomy ) {
+							// Terms can only be created in taxonomies where the user has the edit_terms capability.
 							// phpcs:ignore WordPress.Security.NonceVerification.Missing
-							echo '<option value="' . esc_attr( $taxonomy->name ) . '" ' . selected( sanitize_text_field( wp_unslash( $_POST['taxonomy'] ) ), $taxonomy->name, false ) . '> ' . esc_html( $taxonomy->label ) . ' (' . esc_html( $taxonomy->name ) . ')</option>' . "\n";
+							echo '<option value="' . esc_attr( $taxonomy->name ) . '" ' . selected( sanitize_text_field( wp_unslash( $_POST['taxonomy'] ) ), $taxonomy->name, false ) . disabled( ! current_user_can( $taxonomy->cap->edit_terms ), true, false ) . '> ' . esc_html( $taxonomy->label ) . ' (' . esc_html( $taxonomy->name ) . ')</option>' . "\n";
 						}
 						?>
 					</select>

@@ -189,7 +189,7 @@ class Test_STaxo_Security extends STaxo_Test_Case {
 				},
 			),
 			'terms import'        => array(
-				'editor',
+				'administrator',
 				function ( $valid ) use ( $nonce ) {
 					$this->request(
 						array(
@@ -205,7 +205,7 @@ class Test_STaxo_Security extends STaxo_Test_Case {
 				},
 			),
 			'terms merge'         => array(
-				'editor',
+				'administrator',
 				function ( $valid ) use ( $nonce, $id ) {
 					$this->request(
 						array(

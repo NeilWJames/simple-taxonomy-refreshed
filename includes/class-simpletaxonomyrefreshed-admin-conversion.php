@@ -100,6 +100,11 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 				wp_die( esc_html__( 'Invalid taxonomy.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 400 ) );
 			}
 
+			// Reading the source terms needs its manage_terms capability; creating them needs the destination's edit_terms.
+			if ( ! current_user_can( $source_taxo->cap->manage_terms ) || ! current_user_can( $destination_taxo->cap->edit_terms ) ) {
+				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ), '', array( 'response' => 403 ) );
+			}
+
 			// Hierarchical or not? (Both need to be).
 			$hierarchical = (bool) $source_taxo->hierarchical && (bool) $destination_taxo->hierarchical;
 
@@ -292,25 +297,19 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 								$selectors,
 								'objects'
 							) as $taxonomy ) {
+								// Copy From needs the taxonomy's manage_terms capability; Copy To needs its edit_terms. Otherwise the box cannot be selected.
+								$can_from = current_user_can( $taxonomy->cap->manage_terms );
+								$can_to   = current_user_can( $taxonomy->cap->edit_terms );
 								?>
 								<tr id="taxonomy-<?php echo esc_attr( $i ); ?>">
 									<td><input type="checkbox" onclick="copy()" class="copy" id="copy[<?php echo esc_attr( $i ); ?>]" name="copy[<?php echo esc_attr( $i ); ?>]"
 									aria-describedby="descCopyFrom" aria-labelledby="<?php echo esc_html( $taxonomy->name ); ?>"
-									title="<?php esc_html_e( 'Copy From', 'simple-taxonomy-refreshed' ); ?> checkbox <?php echo esc_html( $taxonomy->label ); ?>"></td>
-									<td>
-									<?php
-									// Can it be copied to?
-									if ( current_user_can( $taxonomy->cap->manage_terms ) ) {
-										?>
-										<input type="checkbox" onclick="oput()" class="oput" id="oput[<?php echo esc_attr( $i ); ?>]" name="oput[<?php echo esc_attr( $i ); ?>]"
-										aria-describedby="descCopyTo" aria-labelledby="<?php echo esc_html( $taxonomy->name ); ?>"
-										title="<?php esc_html_e( 'Copy To', 'simple-taxonomy-refreshed' ); ?> checkbox <?php echo esc_html( $taxonomy->label ); ?>">
-										<?php
-									} else {
-										echo '<br/>';
-									}
-									?>
-									</td>
+									title="<?php esc_html_e( 'Copy From', 'simple-taxonomy-refreshed' ); ?> checkbox <?php echo esc_html( $taxonomy->label ); ?>"
+									data-locked="<?php echo esc_attr( $can_from ? '0' : '1' ); ?>"<?php disabled( ! $can_from ); ?>></td>
+									<td><input type="checkbox" onclick="oput()" class="oput" id="oput[<?php echo esc_attr( $i ); ?>]" name="oput[<?php echo esc_attr( $i ); ?>]"
+									aria-describedby="descCopyTo" aria-labelledby="<?php echo esc_html( $taxonomy->name ); ?>"
+									title="<?php esc_html_e( 'Copy To', 'simple-taxonomy-refreshed' ); ?> checkbox <?php echo esc_html( $taxonomy->label ); ?>"
+									data-locked="<?php echo esc_attr( $can_to ? '0' : '1' ); ?>"<?php disabled( ! $can_to ); ?>></td>
 									<td class="name column-name" id="<?php echo esc_html( $taxonomy->name ); ?>"><?php echo esc_html( $taxonomy->label ); ?></td>
 									<td class="name column-name"><?php echo esc_html( $taxonomy->name ); ?>
 									<input type="hidden" id="name[<?php echo esc_attr( $i ); ?>]" name="name[<?php echo esc_attr( $i ); ?>]" value="<?php echo esc_html( $taxonomy->name ); ?>" /></td>
@@ -346,17 +345,19 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 				var p = document.getElementById(event.srcElement.id).parentElement.parentElement;
 				var members = document.getElementsByClassName(thisgrp);
 				for (var i = 0; i < members.length; i++) {
-					members[i].disabled = x;
+					// Boxes the user may not select stay disabled.
+					members[i].disabled = x || "1" === members[i].dataset.locked;
 				}
+				var other = p.getElementsByClassName(othgrp)[0];
 				if (x) {
 					document.getElementById(event.srcElement.id).disabled = false;
-					p.getElementsByClassName(othgrp)[0].disabled = true;
+					other.disabled = true;
 					if ( is_checked(othgrp) ) {
 						document.getElementById("<?php echo esc_html( self::CONVERT_SLUG ); ?>").disabled = false;
 					}
 				} else {
 					if ( ! is_checked(othgrp) ) {
-						p.getElementsByClassName(othgrp)[0].disabled = false;
+						other.disabled = "1" === other.dataset.locked;
 					}
 					document.getElementById("<?php echo esc_html( self::CONVERT_SLUG ); ?>").disabled = true;
 				}

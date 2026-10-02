@@ -69,6 +69,9 @@ trait STaxo_Fixtures {
 			delete_transient( 'staxo_sel_' . $taxonomy );
 			delete_option( 'default_term_' . $taxonomy );
 		}
+		if ( taxonomy_exists( 'test_locked' ) ) {
+			unregister_taxonomy( 'test_locked' );
+		}
 		delete_option( OPTION_STAXO );
 		delete_transient( 'staxo_cntl_post_types' );
 		delete_transient( 'simple_taxonomy_refreshed_rewrite' );
@@ -76,6 +79,52 @@ trait STaxo_Fixtures {
 			wp_cache_delete( $key );
 		}
 		$this->clear_settings_errors();
+	}
+
+	/**
+	 * Register `test_locked`: a hierarchical taxonomy with its own capabilities, holding the term "Locked term".
+	 *
+	 * No role has these capabilities; give them to the current user with grant_caps().
+	 * Capabilities: manage_terms `manage_locked`, edit_terms `edit_locked`, delete_terms `delete_locked`, assign_terms `assign_locked`.
+	 * On multisite the current user stops being a super admin (who has every capability) and stays a site administrator.
+	 *
+	 * @return void
+	 */
+	protected function register_locked_taxonomy() {
+		if ( is_multisite() && is_super_admin() ) {
+			revoke_super_admin( get_current_user_id() );
+		}
+
+		register_taxonomy(
+			'test_locked',
+			'post',
+			array(
+				'label'        => 'Locked',
+				'public'       => true,
+				'show_ui'      => true,
+				'hierarchical' => true,
+				'capabilities' => array(
+					'manage_terms' => 'manage_locked',
+					'edit_terms'   => 'edit_locked',
+					'delete_terms' => 'delete_locked',
+					'assign_terms' => 'assign_locked',
+				),
+			)
+		);
+		wp_insert_term( 'Locked term', 'test_locked' );
+	}
+
+	/**
+	 * Give the current user extra capabilities.
+	 *
+	 * @param string ...$caps capabilities.
+	 * @return void
+	 */
+	protected function grant_caps( ...$caps ) {
+		$user = wp_get_current_user();
+		foreach ( $caps as $cap ) {
+			$user->add_cap( $cap );
+		}
 	}
 
 	/**

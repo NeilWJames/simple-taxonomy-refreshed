@@ -17,8 +17,7 @@
 	"supports": {
 		"align": true,
 		"color": {
-			"gradients": true,
-			"link": true
+			"gradients": true
 		},
 		"spacing": {
 			"margin": true,

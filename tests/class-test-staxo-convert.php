@@ -166,6 +166,74 @@ class Test_STaxo_Convert extends STaxo_Ajax_Test_Case {
 	}
 
 	/**
+	 * The Terms Migrate page as the current user sees it.
+	 *
+	 * @return string
+	 */
+	private function migrate_page() {
+		ob_start();
+		SimpleTaxonomyRefreshed_Admin_Conversion::page_conversion();
+		return ob_get_clean();
+	}
+
+	/**
+	 * The Copy From or Copy To checkbox of a taxonomy on the Terms Migrate page.
+	 *
+	 * @param string $page     page output.
+	 * @param string $group    "copy" (Copy From) or "oput" (Copy To).
+	 * @param string $taxonomy taxonomy name.
+	 * @return string the input tag.
+	 */
+	private function checkbox( $page, $group, $taxonomy ) {
+		$found = preg_match( '#<input type="checkbox"[^>]*class="' . $group . '"[^>]*aria-labelledby="' . $taxonomy . '"[^>]*>#s', $page, $match );
+		$this->assertSame( 1, $found, "No $group checkbox for $taxonomy" );
+
+		return $match[0];
+	}
+
+	/**
+	 * Taxonomies the user may not copy from (manage_terms) or to (edit_terms) are shown but cannot be selected.
+	 */
+	public function test_page_locks_taxonomies() {
+		$this->register_locked_taxonomy();
+		$this->grant_caps( 'manage_locked' );
+
+		$page = $this->migrate_page();
+
+		$this->assertStringNotContainsString( 'disabled', $this->checkbox( $page, 'copy', 'test_hier' ) );
+		$this->assertStringNotContainsString( 'disabled', $this->checkbox( $page, 'oput', 'test_hier' ) );
+		$this->assertStringNotContainsString( 'disabled', $this->checkbox( $page, 'copy', 'test_locked' ), 'manage_terms: can copy from' );
+		$this->assertStringContainsString( 'data-locked="1"', $this->checkbox( $page, 'oput', 'test_locked' ), 'no edit_terms: cannot copy to' );
+		$this->assertStringContainsString( "disabled='disabled'", $this->checkbox( $page, 'oput', 'test_locked' ) );
+	}
+
+	/**
+	 * Without the taxonomy's manage_terms capability, it cannot be copied from.
+	 */
+	public function test_copy_from_needs_manage_terms() {
+		$this->register_locked_taxonomy();
+		$this->grant_caps( 'edit_locked' );
+
+		$this->expectException( 'WPAjaxDieStopException' );
+		$this->expectExceptionMessage( 'You do not have the necessary permissions.' );
+		$this->convert( 'test_locked', 'test_hier' );
+	}
+
+	/**
+	 * Without the taxonomy's edit_terms capability, it cannot be copied to; with manage_terms it can be copied from.
+	 */
+	public function test_copy_to_needs_edit_terms() {
+		$this->register_locked_taxonomy();
+		$this->grant_caps( 'manage_locked' );
+
+		$this->assertSame( array( 'Locked term' ), $this->term_lines( $this->convert( 'test_locked', 'test_hier' ) ) );
+
+		$this->expectException( 'WPAjaxDieStopException' );
+		$this->expectExceptionMessage( 'You do not have the necessary permissions.' );
+		$this->convert( 'test_hier', 'test_locked' );
+	}
+
+	/**
 	 * An editor cannot convert.
 	 */
 	public function test_editor_refused() {

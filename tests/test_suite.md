@@ -10,8 +10,8 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 160 in 12 classes (A–K + the original main test) |
-| Run in CI | All 154 pass (8,682 assertions) — GitHub CI run #127, 2 Oct 2026. The 3 block-supports and 3 merge child-terms tests are not yet run |
+| Tests written | 169 in 12 classes (A–K + the original main test) |
+| Run in CI | All 154 pass (8,682 assertions) — GitHub CI run #127, 2 Oct 2026. Not yet run: 3 block-supports, 3 merge child-terms and 9 capability tests (Terms Import, Terms Migrate, Terms Merge) |
 | Still to write | None — plan complete (see "Planned" for follow-ups) |
 
 ## Running
@@ -90,6 +90,8 @@ Other config files: `staxo-config-test-hier.json` (single taxonomy), `staxo-conf
 | `messages( $errors, $type )` | Settings-error messages of one type |
 | `clear_settings_errors()` | Empties `$wp_settings_errors` (the only place the global is written, with a phpcs:ignore) |
 | `expect_redirect()` | `wp_redirect()` throws `STaxo_Redirect_Exception` |
+| `register_locked_taxonomy()` | Registers `test_locked` (hierarchical, term "Locked term") with its own capabilities `manage_locked`, `edit_locked`, `delete_locked`, `assign_locked`, which no role has; on multisite the current user stops being a super admin. Unregistered by `reset_staxo()` |
+| `grant_caps( ...$caps )` | Adds capabilities to the current user |
 | `ajax()`, `merge_phase()`, `merge()` | AJAX base only: call a handler / a merge phase / a full merge |
 
 ## Test classes
@@ -102,21 +104,21 @@ Import saves the option; taxonomy registered with its settings; suite file regis
 
 Add taxonomy (stored, registered at next init, redirect `message=added`); form values sanitised (name via `sanitize_title`, labels, `st_before` via kses); default WP labels not stored; core/STR names refused; update (labels, count type, status choices cleared unless type 2); update of unknown refused; callback fields protected; editor and bad nonce refused. Delete keeps terms and relationships; flush-delete removes terms, relationships and meta (but WordPress keeps a taxonomy's default term); delete updates `list_order`; unknown / editor / bad nonce refused. Export PHP (`build_php_export()`): valid PHP for all fixture taxonomies (`token_get_all( …, TOKEN_PARSE )`); values in comments cannot become code (review L3); name exported as a string literal and safe function name; editor / unknown taxonomy refused.
 
-### C. Terms Import — `class-test-staxo-terms-import.php` (`@group import`, 15)
+### C. Terms Import — `class-test-staxo-terms-import.php` (`@group import`, 18)
 
-Flat list; tab and space hierarchies; re-import creates nothing; same name under two parents; blank lines ignored (flat and hierarchical); hierarchy into flat taxonomy rejected; indented first line → top level; skipped level → nearest ancestor; skipped-line warning notice (line number, term, reason; children of a skipped term skipped; name escaped); term named `0`; unknown taxonomy, subscriber and bad nonce rejected.
+Flat list; tab and space hierarchies; re-import creates nothing; same name under two parents; blank lines ignored (flat and hierarchical); hierarchy into flat taxonomy rejected; indented first line → top level; skipped level → nearest ancestor; skipped-line warning notice (line number, term, reason; children of a skipped term skipped; name escaped); term named `0`; unknown taxonomy, subscriber, editor and bad nonce rejected; a taxonomy without the user's edit_terms capability refused (and accepted once granted) and shown disabled in the page's list.
 
 ### D. Term assignment and counts — `class-test-staxo-term-assignment.php` (`@group assignment`, 14)
 
 Fixture matrix check; add term (published / draft); remove term; remove last term; delete term (children move up); default term not deletable and given to new posts; default counts (published only); STR count rules type 2 (publish + draft), with trash, type 1 (all except trash); counts follow status changes; `staxo_term_count_statuses` filter.
 
-### E. Terms Merge — `class-test-staxo-merge.php` (`@group merge`, 28)
+### E. Terms Merge — `class-test-staxo-merge.php` (`@group merge`, 31)
 
-Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources; when a source has child terms (hierarchical only), phase three offers "under the destination" (default) or "up a level"; single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move under the destination, or up a level when chosen; with "up a level" a destination below the source is not moved); parent and child together; destination below a source (moved up first, no loop); flat across posts and pages (object cache cleared); count rules respected; terms control kept; posts the merge would take below the terms-control minimum listed in phase three with a Do not merge / Merge anyway choice (default: do not merge), merge refused or done accordingly, type 1 ignores drafts; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce.
+Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources; when a source has child terms (hierarchical only), phase three offers "under the destination" (default) or "up a level"; single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move under the destination, or up a level when chosen; with "up a level" a destination below the source is not moved); parent and child together; destination below a source (moved up first, no loop); flat across posts and pages (object cache cleared); count rules respected; terms control kept; posts the merge would take below the terms-control minimum listed in phase three with a Do not merge / Merge anyway choice (default: do not merge), merge refused or done accordingly, type 1 ignores drafts; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce; capabilities: the page disables taxonomies without manage_terms, delete_terms and assign_terms, each of delete_terms and assign_terms required, and edit_terms required only when a source has child terms (refused in phase three and phase four, nothing deleted; a source without children merges).
 
-### F. Terms Conversion — `class-test-staxo-convert.php` (`@group convert`, 8)
+### F. Terms Conversion — `class-test-staxo-convert.php` (`@group convert`, 11)
 
-Hierarchical → hierarchical (space-indented tree, imported tree identical); hierarchical → flat (sorted flat list); flat → hierarchical (top level, includes default term); posts not moved; one term per line (no `&#013;`); a name with `&` escaped once, shown as typed and imported unchanged; unknown taxonomy and editor refused.
+Hierarchical → hierarchical (space-indented tree, imported tree identical); hierarchical → flat (sorted flat list); flat → hierarchical (top level, includes default term); posts not moved; one term per line (no `&#013;`); a name with `&` escaped once, shown as typed and imported unchanged; unknown taxonomy and editor refused; the page disables Copy From without the taxonomy's manage_terms and Copy To without its edit_terms; copying from without manage_terms, or to without edit_terms, refused.
 
 ### G. Rename slug — `class-test-staxo-rename.php` (`@group rename`, 11)
 
@@ -136,7 +138,7 @@ Fixture columns (posts: core + four test taxonomies; pages: test_flat); saving a
 
 ### K. Security sweep — `class-test-staxo-security.php` (`@group security`, 4)
 
-Thirteen state-changing handlers, each called as its screen would call it: config import and export, add/update taxonomy, update external, delete, flush-delete, Export PHP, Terms Import, Terms Merge, Terms Conversion, Rename Slug, Taxonomy List Order. Roles below each handler's minimum (administrator; editor for Terms Import and Terms Merge, which accept the taxonomy's manage_terms capability) are refused with a permissions message; logged-out visitors are refused; an administrator with a bad nonce is refused; nothing changes in any refused case (option, terms and term relationships compared before and after). No `wp_ajax_nopriv_` actions and no REST routes are registered (review finding M4).
+Thirteen state-changing handlers, each called as its screen would call it: config import and export, add/update taxonomy, update external, delete, flush-delete, Export PHP, Terms Import, Terms Merge, Terms Conversion, Rename Slug, Taxonomy List Order. Roles below each handler's minimum (administrator for all) are refused with a permissions message; logged-out visitors are refused; an administrator with a bad nonce is refused; nothing changes in any refused case (option, terms and term relationships compared before and after). No `wp_ajax_nopriv_` actions and no REST routes are registered (review finding M4).
 
 ### Main — `class-test-staxo-refreshed-main.php` (2)
 
@@ -148,7 +150,6 @@ The test plan (A–K) is complete. Follow-ups:
 
 | Area | Notes |
 |---|---|
-| Capabilities | Terms Import and Terms Merge accept the taxonomy's manage_terms capability, but their pages require manage_options; decide which is intended |
 | Config import sanitising | Review finding M1 is still open: imported configurations are stored without the form's sanitising |
 | Browser tests | Block-editor JavaScript (notices, radio buttons, iframe) needs e2e tests (Playwright) |
 
@@ -181,3 +182,5 @@ The test plan (A–K) is complete. Follow-ups:
 - **2 Oct 2026** — CI clean (GitHub CI run #127): all 154 tests pass (8,682 assertions), including J, K and the block-wrapper tests on their first run. phpcs: an inline comment in the list-order handler ended in `)`, reworded.
 - **2 Oct 2026** — Block supports: both blocks now declare the standard list (align; color with gradients; spacing margin and padding; typography fontSize and lineHeight); link colour removed. 3 front-end tests added (supports registered; each support applied to the wrapper of Display Post Terms and of Taxonomy Cloud). Front end: 26; total 157.
 - **2 Oct 2026** — Terms Merge child terms: when a source has child terms, phase three asks whether they go under the destination (default) or up a level (the behaviour before 4.0.0); the notice is no longer shown when no source has children. `sources_have_children()` added. Merge tests: `test_phase_three_filters_sources` updated (Bebop has no children, so no choice), 3 added (choice shown, up a level, up a level with the destination below the source). Merge: 28; total 160.
+- **2 Oct 2026** — Capabilities for Terms Migrate and Terms Import (Neil): Copy From needs the taxonomy's manage_terms, Copy To and Import need its edit_terms; taxonomies without them are shown but cannot be selected, and the handlers check again; Terms Import also needs manage_options, as its page does. Pages stay manage_options. Terms Migrate script error fixed (a row without a Copy To box broke the script). Helpers `register_locked_taxonomy()` and `grant_caps()` added. Tests: import 18 (+3), convert 11 (+3); security sweep: Terms Import minimum role now administrator. Total 166.
+- **2 Oct 2026** — Capabilities for Terms Merge (Neil): manage_options (as the page) plus the taxonomy's manage_terms, delete_terms (sources are deleted) and assign_terms (posts get the destination); edit_terms as well when a source has child terms to move. Taxonomies without them are listed but disabled; the page no longer stops with a permissions message when the first taxonomy it checks is one the user cannot merge. `register_locked_taxonomy()` now uses `assign_locked` for assign_terms. Merge: 31 (+3); security sweep: Terms Merge minimum role now administrator. Total 169.

@@ -455,6 +455,116 @@ class Test_STaxo_Merge extends STaxo_Ajax_Test_Case {
 	}
 
 	/**
+	 * Add terms to `test_locked`: "Locked parent" with child "Locked child".
+	 *
+	 * @return void
+	 */
+	private function locked_terms() {
+		$parent = wp_insert_term( 'Locked parent', 'test_locked' );
+		wp_insert_term( 'Locked child', 'test_locked', array( 'parent' => $parent['term_id'] ) );
+	}
+
+	/**
+	 * Taxonomies the user may not merge (manage_terms, delete_terms and assign_terms) are listed but cannot be selected.
+	 */
+	public function test_page_disables_taxonomies() {
+		$this->register_locked_taxonomy();
+		$this->grant_caps( 'manage_locked', 'edit_locked', 'delete_locked' );
+
+		ob_start();
+		SimpleTaxonomyRefreshed_Admin_Merge::page_merge();
+		$page = ob_get_clean();
+
+		$this->assertMatchesRegularExpression( '#<input type="radio"[^>]*id="test_locked"[^>]*disabled=#', $page );
+		$this->assertDoesNotMatchRegularExpression( '#<input type="radio"[^>]*id="test_hier"[^>]*disabled=#', $page );
+	}
+
+	/**
+	 * Merging needs the taxonomy's delete_terms and assign_terms capabilities.
+	 */
+	public function test_needs_delete_and_assign_terms() {
+		$this->register_locked_taxonomy();
+		$this->grant_caps( 'manage_locked', 'edit_locked', 'assign_locked' );
+
+		try {
+			$this->merge_phase( 'one', 'test_locked' );
+			$this->fail( 'Without delete_terms: expected a refusal' );
+		} catch ( WPAjaxDieStopException $e ) {
+			$this->assertSame( 'You do not have the necessary permissions.', $e->getMessage() );
+		}
+
+		$this->revoke_assign_and_grant_delete();
+		try {
+			$this->merge_phase( 'one', 'test_locked' );
+			$this->fail( 'Without assign_terms: expected a refusal' );
+		} catch ( WPAjaxDieStopException $e ) {
+			$this->assertSame( 'You do not have the necessary permissions.', $e->getMessage() );
+		}
+
+		$this->grant_caps( 'assign_locked' );
+		$this->assertStringContainsString( 'Locked term', $this->merge_phase( 'one', 'test_locked' ) );
+	}
+
+	/**
+	 * Remove assign_locked from the current user and give delete_locked.
+	 *
+	 * @return void
+	 */
+	private function revoke_assign_and_grant_delete() {
+		wp_get_current_user()->remove_cap( 'assign_locked' );
+		$this->grant_caps( 'delete_locked' );
+	}
+
+	/**
+	 * Moving child terms needs the taxonomy's edit_terms capability; a source without children does not.
+	 */
+	public function test_child_terms_need_edit_terms() {
+		$this->register_locked_taxonomy();
+		$this->locked_terms();
+		$this->grant_caps( 'manage_locked', 'delete_locked', 'assign_locked' );
+
+		$dest   = $this->term( 'test_locked', 'Locked term' )->term_id;
+		$parent = $this->term( 'test_locked', 'Locked parent' )->term_id;
+
+		$response = $this->merge_phase(
+			'three',
+			'test_locked',
+			array(
+				'destination' => $dest,
+				'term'        => array( $parent ),
+			)
+		);
+		$this->assertStringContainsString( 'These terms cannot be merged: the source term(s) have child terms', $response );
+		$this->assertStringContainsString( 'id="phase" value="five"', $response );
+
+		try {
+			$this->merge_phase(
+				'four',
+				'test_locked',
+				array(
+					'destination' => $dest,
+					'sources'     => (string) $parent,
+				)
+			);
+			$this->fail( 'Phase four: expected a refusal' );
+		} catch ( WPAjaxDieStopException $e ) {
+			$this->assertSame( 'You do not have the necessary permissions to move child terms.', $e->getMessage() );
+		}
+		$this->assertTrue( $this->term_exists_by_name( 'test_locked', 'Locked parent' ), 'Nothing deleted' );
+
+		// A source without children can be merged.
+		$this->merge_phase(
+			'four',
+			'test_locked',
+			array(
+				'destination' => $dest,
+				'sources'     => (string) $this->term( 'test_locked', 'Locked child' )->term_id,
+			)
+		);
+		$this->assertFalse( $this->term_exists_by_name( 'test_locked', 'Locked child' ) );
+	}
+
+	/**
 	 * No valid sources: nothing changes.
 	 */
 	public function test_no_valid_sources() {
