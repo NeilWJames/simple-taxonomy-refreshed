@@ -166,8 +166,14 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				}
 				echo '<p><strong>' . esc_html__( 'This will change all posts to link to the destination term and delete the source term(s).', 'simple-taxonomy-refreshed' ) . '</strong></p>';
 				echo '<p><strong>' . esc_html__( 'Any source term metadata will be deleted.', 'simple-taxonomy-refreshed' ) . '</strong></p>';
-				if ( $tax_obj->hierarchical ) {
-					echo '<p><strong>' . esc_html__( 'Child terms of the source term(s) will be moved under the destination term.', 'simple-taxonomy-refreshed' ) . '</strong></p>';
+				// Hierarchical: when a source has child terms, ask where they should go.
+				if ( $tax_obj->hierarchical && self::sources_have_children( $sources, $taxonomy ) ) {
+					echo '<fieldset><legend>' . esc_html__( 'Child terms of the source term(s):', 'simple-taxonomy-refreshed' ) . '</legend>';
+					echo '<input type="radio" name="children" id="children_under" value="under" checked /> ';
+					echo '<label for="children_under">' . esc_html__( 'Move them under the destination term', 'simple-taxonomy-refreshed' ) . '</label><br />';
+					echo '<input type="radio" name="children" id="children_up" value="up" /> ';
+					echo '<label for="children_up">' . esc_html__( "Move them up a level (under the source term's parent)", 'simple-taxonomy-refreshed' ) . '</label>';
+					echo '</fieldset>';
 				}
 
 				// Terms control: list the posts that would fall below the minimum and ask what to do.
@@ -327,11 +333,17 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				// Update Destination count. Uses the taxonomy counting method.
 				wp_update_term_count( $dest_obj->term_taxonomy_id, $taxonomy );
 
+				// Hierarchical: child terms go under the destination unless "up a level" was chosen.
+				$children = ( isset( $_POST['children'] ) && 'up' === sanitize_key( wp_unslash( $_POST['children'] ) ) ? 'up' : 'under' );
+				if ( $tax_obj->hierarchical && 'up' === $children && self::sources_have_children( $sources, $taxonomy ) ) {
+					echo '<p>' . esc_html__( 'Child terms of the source term(s) have been moved up a level.', 'simple-taxonomy-refreshed' ) . '</p>';
+				}
+
 				// Delete source terms. There are no objects using them.
 				foreach ( $sources as $source ) {
 					// Hierarchical: move the source's children under the destination first.
-					// Any child that cannot be moved goes up to the source's parent when the source is deleted.
-					if ( $tax_obj->hierarchical ) {
+					// Otherwise (or for any child that cannot be moved), WordPress moves them up to the source's parent when the source is deleted.
+					if ( $tax_obj->hierarchical && 'under' === $children ) {
 						self::move_children( (int) $source, $destination, $taxonomy );
 					}
 
@@ -495,6 +507,33 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 			) . '</li>';
 		}
 		echo '</ul>';
+	}
+
+	/**
+	 * Whether any of the source terms has child terms.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param int[]  $sources  source term ids.
+	 * @param string $taxonomy taxonomy name.
+	 * @return bool
+	 */
+	private static function sources_have_children( $sources, $taxonomy ) {
+		foreach ( $sources as $source ) {
+			$children = get_terms(
+				array(
+					'taxonomy'   => $taxonomy,
+					'parent'     => (int) $source,
+					'hide_empty' => false,
+					'fields'     => 'ids',
+					'number'     => 1,
+				)
+			);
+			if ( is_array( $children ) && ! empty( $children ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

@@ -2,9 +2,21 @@
 
 ## Version 4.0.0  (xx/xx/2026)
 
+### Breaking changes
+
+* Requires WordPress 6.9 or later.
+* Display Post Terms and Taxonomy Cloud blocks no longer offer link colour. Link colours set on these blocks are lost; the links now use the theme's link colour, which can be changed in the theme's styles.
+* Terms Merge moves the child terms of a merged term under the destination term by default. Before, they moved up a level; to keep that, choose "Move them up a level" on the confirmation screen.
+* Terms Merge does not merge, by default, when posts would be left below the Terms Control minimum. It lists those posts, and you can choose "Merge anyway".
+* Post terms "before", separator and "after" text: HTML is filtered as post content, so tags such as `<script>`, `<style>` and `<iframe>` are removed; plain text is escaped.
+* Callback fields can only be edited by users with the `unfiltered_html` capability (super admins on multisite). Use the `staxo_can_edit_callbacks` filter to change this.
+* Removed for code that calls the plugin directly: `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version` (term-count code for WordPress before 5.7).
+
+### Changes
+
 * NEW: Filter `staxo_can_edit_callbacks` controls who may edit the callback fields.
 * NEW: Terms Import lists any lines it skips, with the line number, term and reason.
-* NEW: Terms Merge moves the child terms of the merged terms under the destination term (previously they moved up a level).
+* NEW: Terms Merge asks where the child terms of merged terms should go: under the destination term (the default) or up a level (as before).
 * NEW: Terms Merge lists any posts the merge would leave below the Terms Control minimum, and lets you choose whether to merge anyway.
 * FIX: Terms Merge now merges and deletes every selected source term, not just the first.
 * FIX: Block editor notices no longer break when a label or translation contains a quote.
@@ -39,6 +51,7 @@
 * FIX: Post terms "before", separator and "after" text is escaped (plain text) or filtered as post HTML when displayed.
 * FIX: Admin list filter no longer raises a PHP warning for an external taxonomy that is not registered.
 * FIX: Display Post Terms and Taxonomy Cloud blocks only use block wrapper attributes while one of their own blocks is rendering, so their output can also be produced outside a block.
+* FIX: Display Post Terms and Taxonomy Cloud blocks use the plugin's standard block supports: alignment, text and background colour (including gradients), margin, padding, font size and line height. Link colour is no longer offered.
 * FIX: Terms Merge screen loads the plugin's admin stylesheet, so its term lists are laid out correctly.
 * FIX: Taxonomy List Order keeps an order saved for a single post type (it was discarded).
 * FIX: Taxonomy List Order only accepts the post type's own taxonomies, and the admin list ignores taxonomies no longer shown.

@@ -109,7 +109,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			if ( ! is_array( $options ) ) {
 				$options = array();
 			}
-			// if all default, then remove. (A single post type with its own order is kept.)
+			// If all default, then remove; a single post type with its own order is kept.
 			if ( empty( $displ_ordering ) ) {
 				unset( $options['list_order'] );
 			} else {

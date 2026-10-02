@@ -110,7 +110,7 @@ class Test_STaxo_Merge extends STaxo_Ajax_Test_Case {
 
 		$this->assertStringContainsString( 'id="sources" value="' . $bebop . '"', $response );
 		$this->assertStringContainsString( 'id="phase" value="four"', $response );
-		$this->assertStringContainsString( 'Child terms of the source term(s) will be moved under the destination term.', $response );
+		$this->assertStringNotContainsString( 'Child terms', $response, 'Bebop has no children, so no choice' );
 	}
 
 	/**
@@ -174,6 +174,68 @@ class Test_STaxo_Merge extends STaxo_Ajax_Test_Case {
 		$this->assertSame( 'Rock', $tree['Punk'] );
 		$this->assertSame( array( 'Jazz' ), $this->post_terms( 'P1', 'test_hier' ) );
 		$this->assertSame( 0, $this->term_count( 'test_hier', 'Art' ) );
+	}
+
+	/**
+	 * Phase three offers a choice for child terms when a source has children (default: under the destination).
+	 */
+	public function test_phase_three_child_terms_choice() {
+		$response = $this->merge_phase(
+			'three',
+			'test_hier',
+			array(
+				'destination' => $this->term( 'test_hier', 'Art' )->term_id,
+				'term'        => array( $this->term( 'test_hier', 'Music' )->term_id ),
+			)
+		);
+
+		$this->assertStringContainsString( 'Child terms of the source term(s):', $response );
+		$this->assertStringContainsString( 'name="children" id="children_under" value="under" checked', $response );
+		$this->assertStringContainsString( 'name="children" id="children_up" value="up" />', $response );
+	}
+
+	/**
+	 * With "up a level" the children of a merged parent move to its parent, as before 4.0.0.
+	 */
+	public function test_merge_children_up() {
+		$response = $this->merge_phase(
+			'four',
+			'test_hier',
+			array(
+				'destination' => $this->term( 'test_hier', 'Art' )->term_id,
+				'sources'     => (string) $this->term( 'test_hier', 'Music' )->term_id,
+				'children'    => 'up',
+			)
+		);
+
+		$tree = $this->term_tree( 'test_hier' );
+		$this->assertArrayNotHasKey( 'Music', $tree );
+		$this->assertSame( '', $tree['Jazz'], 'Jazz should move to the top level' );
+		$this->assertSame( '', $tree['Rock'], 'Rock should move to the top level' );
+		$this->assertSame( 'Jazz', $tree['Bebop'], 'Grandchildren keep their parent' );
+		$this->assertSame( array( 'Jazz' ), $this->post_terms( 'P1', 'test_hier' ) );
+		$this->assertStringContainsString( 'Child terms of the source term(s) have been moved up a level.', $response );
+	}
+
+	/**
+	 * With "up a level" a destination below a source is left where it is (it only moves up with its parent).
+	 */
+	public function test_merge_children_up_destination_below_source() {
+		$response = $this->merge_phase(
+			'four',
+			'test_hier',
+			array(
+				'destination' => $this->term( 'test_hier', 'Bebop' )->term_id,
+				'sources'     => (string) $this->term( 'test_hier', 'Music' )->term_id,
+				'children'    => 'up',
+			)
+		);
+
+		$tree = $this->term_tree( 'test_hier' );
+		$this->assertArrayNotHasKey( 'Music', $tree );
+		$this->assertSame( '', $tree['Jazz'] );
+		$this->assertSame( 'Jazz', $tree['Bebop'], 'Bebop stays under Jazz' );
+		$this->assertStringNotContainsString( 'The destination term was below a source term', $response );
 	}
 
 	/**

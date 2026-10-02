@@ -10,8 +10,8 @@ _Last updated: 1 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 154 in 12 classes (A–K + the original main test) |
-| Run in CI | J and K not yet run; I's block-wrapper tests not yet run. A–H: all 119 pass; I: 20 of 21 passed on first run (the failing test was replaced) |
+| Tests written | 160 in 12 classes (A–K + the original main test) |
+| Run in CI | All 154 pass (8,682 assertions) — GitHub CI run #127, 2 Oct 2026. The 3 block-supports and 3 merge child-terms tests are not yet run |
 | Still to write | None — plan complete (see "Planned" for follow-ups) |
 
 ## Running
@@ -110,9 +110,9 @@ Flat list; tab and space hierarchies; re-import creates nothing; same name under
 
 Fixture matrix check; add term (published / draft); remove term; remove last term; delete term (children move up); default term not deletable and given to new posts; default counts (published only); STR count rules type 2 (publish + draft), with trash, type 1 (all except trash); counts follow status changes; `staxo_term_count_statuses` filter.
 
-### E. Terms Merge — `class-test-staxo-merge.php` (`@group merge`, 25)
+### E. Terms Merge — `class-test-staxo-merge.php` (`@group merge`, 28)
 
-Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources and warns that children move (hierarchical only); single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move under the destination); parent and child together; destination below a source (moved up first, no loop); flat across posts and pages (object cache cleared); count rules respected; terms control kept; posts the merge would take below the terms-control minimum listed in phase three with a Do not merge / Merge anyway choice (default: do not merge), merge refused or done accordingly, type 1 ignores drafts; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce.
+Phase one lists terms / shows terms-control warning; phase two disables destination (flat) and destination + ancestors (hierarchical, label `for` matches input `id`); phase three filters invalid sources; when a source has child terms (hierarchical only), phase three offers "under the destination" (default) or "up a level"; single source (duplicate row, meta deleted, count); several sources (review H1); parent term (children move under the destination, or up a level when chosen; with "up a level" a destination below the source is not moved); parent and child together; destination below a source (moved up first, no loop); flat across posts and pages (object cache cleared); count rules respected; terms control kept; posts the merge would take below the terms-control minimum listed in phase three with a Do not merge / Merge anyway choice (default: do not merge), merge refused or done accordingly, type 1 ignores drafts; no valid sources; invalid / other-taxonomy destination; invalid taxonomy; subscriber; bad nonce.
 
 ### F. Terms Conversion — `class-test-staxo-convert.php` (`@group convert`, 8)
 
@@ -126,9 +126,9 @@ Rename moves definition, `term_taxonomy` rows and posts' terms, hierarchy kept, 
 
 Control cache (values as integers; posts only; none when hard control off or post type not selected). Classic editor (`check_taxonomy_value_set()`): minimum and maximum redirect with `staxo_error`; 1–2 terms accepted; hidden `0` and "No term" `-1` not counted, comma list counted; type 2 checks drafts, type 1 only published/scheduled; new/auto-draft/trash, empty title and other post types not checked; quick edit outputs the error and stops; through `wp_update_post()` the save is stopped and terms unchanged. REST (`check_taxonomy_value_rest()`): create with too few / too many terms refused (403 `rest_minimum_terms` / `rest_maximum_terms`); update without the taxonomy uses the current terms (review M7); removing all terms refused; type 1 vs 2 on drafts; batch requests checked per item. Error notice after a refused save, and none without a valid nonce.
 
-### I. Front-end output — `class-test-staxo-front-end.php` (`@group frontend`, 23)
+### I. Front-end output — `class-test-staxo-front-end.php` (`@group frontend`, 26)
 
-Terms after the content (taxonomies set to content/both) and excerpt (excerpt/both) of a single post in the main loop, not elsewhere; pages only get page taxonomies; "not found" HTML comment for a post without terms; plain-text before/separator/after get spaces at the joins and are escaped; a plain-text separator with end spaces stays plain text; HTML before/after limited to post HTML (no `<script>`). Shortcode `[staxo_post_terms tax="…"]` (any display setting; empty for an unknown taxonomy or outside a single post's loop); Display Post Terms block. Feeds (rss2, atom, rdf) for taxonomies set to show in feeds. Admin list filter dropdown for the selected post types; unregistered external taxonomy ignored. Widget list (counts, terms without posts hidden), minimum posts incl. non-numeric values (review M3), cloud (minimum posts, no font sizes for equal counts), escaped title, fallback to tags, settings sanitised on save; Taxonomy Cloud block, and its `ordering` attribute used as the order; `get_block_attributes()` returns the wrapper attributes only while one of the plugin's own blocks renders (the display functions work, without the wrapper div, when called directly or inside another dynamic block). The two block tests are skipped if `build/blocks` is missing.
+Terms after the content (taxonomies set to content/both) and excerpt (excerpt/both) of a single post in the main loop, not elsewhere; pages only get page taxonomies; "not found" HTML comment for a post without terms; plain-text before/separator/after get spaces at the joins and are escaped; a plain-text separator with end spaces stays plain text; HTML before/after limited to post HTML (no `<script>`). Shortcode `[staxo_post_terms tax="…"]` (any display setting; empty for an unknown taxonomy or outside a single post's loop); Display Post Terms block. Feeds (rss2, atom, rdf) for taxonomies set to show in feeds. Admin list filter dropdown for the selected post types; unregistered external taxonomy ignored. Widget list (counts, terms without posts hidden), minimum posts incl. non-numeric values (review M3), cloud (minimum posts, no font sizes for equal counts), escaped title, fallback to tags, settings sanitised on save; Taxonomy Cloud block, and its `ordering` attribute used as the order; `get_block_attributes()` returns the wrapper attributes only while one of the plugin's own blocks renders (the display functions work, without the wrapper div, when called directly or inside another dynamic block). Block supports: both blocks are registered with the standard supports list (align; color with gradients; spacing margin and padding; typography fontSize and lineHeight), and each support (preset and custom values) is applied to the block's single wrapper div. The block tests are skipped if `build/blocks` is missing.
 
 ### J. Taxonomy List Order — `class-test-staxo-order.php` (`@group order`, 8)
 
@@ -148,14 +148,13 @@ The test plan (A–K) is complete. Follow-ups:
 
 | Area | Notes |
 |---|---|
-| Block supports | Decide and add supports to both blocks; add front-end tests for each (see `work/backlog.md`) |
 | Capabilities | Terms Import and Terms Merge accept the taxonomy's manage_terms capability, but their pages require manage_options; decide which is intended |
 | Config import sanitising | Review finding M1 is still open: imported configurations are stored without the form's sanitising |
 | Browser tests | Block-editor JavaScript (notices, radio buttons, iframe) needs e2e tests (Playwright) |
 
 ## Behaviour decided for tests
 
-- Merging a parent term moves its children under the destination term (decided 1 Oct 2026). If the destination is below a source, it is first moved up to the source's parent.
+- Merging a parent term moves its children under the destination term by default (decided 1 Oct 2026); the user can choose to move them up a level instead, as before 4.0.0 (decided 2 Oct 2026). If the destination is below a source and children go under it, it is first moved up to the source's parent.
 - Terms control minimum (decided 1 Oct 2026): phase three lists the posts whose term count the merge would reduce below the minimum, and offers "Do not merge" (default) or "Merge anyway". Posts already below the minimum and not changed by the merge are not listed. Type 1 controls count published/scheduled posts only.
 - Terms Import: an indented first line is top level; skipped terms are reported with line numbers.
 - Rename query_var: an empty value or one equal to the new slug means the default (the new taxonomy name); any other value entered is stored.
@@ -179,3 +178,6 @@ The test plan (A–K) is complete. Follow-ups:
 - **1 Oct 2026** — First CI run of I: 139 of 140 passed. `test_widget_block_without_ordering` called the block's render callback outside a block render, where WordPress's `get_block_wrapper_attributes()` fails; that cannot happen on a site (block attributes always get their defaults). Replaced by `test_widget_block_ordering`, which renders the block with `ordering` ASC and DESC.
 - **1 Oct 2026** — Block wrapper attributes (pattern from WP Document Revisions): new `SimpleTaxonomyRefreshed_Client::get_block_attributes()` returns `get_block_wrapper_attributes()` only when `WP_Block_Supports::$block_to_render` is one of this plugin's blocks; the wrapper div is added only when it is not empty, so `block_terms()` and `staxo_widget_display()` can be called outside their block (directly, or while another dynamic block such as core/post-content renders). 2 tests added (front end: 23).
 - **2 Oct 2026** — Classes J (list order, 8) and K (security sweep, 4); the test plan is complete. Plugin fixes made for them: a column order saved for only one post type was discarded (`1 === count()`), now kept; the posted order is validated (only that post type's admin-column taxonomies, once each, missing ones appended); `reorder_admin_list()` leaves out taxonomies no longer shown and copes with a missing saved order; Rename Slug requires `manage_options`, as its page does (it accepted the taxonomy's manage_terms).
+- **2 Oct 2026** — CI clean (GitHub CI run #127): all 154 tests pass (8,682 assertions), including J, K and the block-wrapper tests on their first run. phpcs: an inline comment in the list-order handler ended in `)`, reworded.
+- **2 Oct 2026** — Block supports: both blocks now declare the standard list (align; color with gradients; spacing margin and padding; typography fontSize and lineHeight); link colour removed. 3 front-end tests added (supports registered; each support applied to the wrapper of Display Post Terms and of Taxonomy Cloud). Front end: 26; total 157.
+- **2 Oct 2026** — Terms Merge child terms: when a source has child terms, phase three asks whether they go under the destination (default) or up a level (the behaviour before 4.0.0); the notice is no longer shown when no source has children. `sources_have_children()` added. Merge tests: `test_phase_three_filters_sources` updated (Bebop has no children, so no choice), 3 added (choice shown, up a level, up a level with the destination below the source). Merge: 28; total 160.

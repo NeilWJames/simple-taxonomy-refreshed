@@ -458,6 +458,127 @@ class Test_STaxo_Front_End extends STaxo_Test_Case {
 	}
 
 	/**
+	 * The block supports both blocks declare (the plugin's standard list).
+	 *
+	 * @return array
+	 */
+	private static function standard_supports() {
+		return array(
+			'align'      => true,
+			'color'      => array( 'gradients' => true ),
+			'spacing'    => array(
+				'margin'  => true,
+				'padding' => true,
+			),
+			'typography' => array(
+				'fontSize'   => true,
+				'lineHeight' => true,
+			),
+		);
+	}
+
+	/**
+	 * Render one of the plugin's blocks with display settings for each standard support.
+	 *
+	 * @param string $name     block name.
+	 * @param array  $attrs    the block's own attributes.
+	 * @param array  $settings display (support) attributes.
+	 * @return string the block's opening tag.
+	 */
+	private function render_with_supports( $name, $attrs, $settings ) {
+		$output = ltrim( do_blocks( '<!-- wp:' . $name . ' ' . wp_json_encode( array_merge( $attrs, $settings ) ) . ' /-->' ) );
+
+		$class = 'wp-block-' . str_replace( '/', '-', $name );
+		$this->assertSame( 1, substr_count( $output, $class ), "$name: one wrapper" );
+		$this->assertStringStartsWith( '<div ', $output, "$name: output starts with the wrapper" );
+
+		return substr( $output, 0, strpos( $output, '>' ) + 1 );
+	}
+
+	/**
+	 * Settings for each standard support, and what each one adds to the wrapper.
+	 *
+	 * @return array[] each: array( attributes, expected strings ).
+	 */
+	private static function support_cases() {
+		return array(
+			'presets'          => array(
+				array(
+					'align'           => 'wide',
+					'backgroundColor' => 'staxo-bg',
+					'textColor'       => 'staxo-text',
+					'fontSize'        => 'staxo-size',
+				),
+				array( 'alignwide', 'has-staxo-bg-background-color', 'has-background', 'has-staxo-text-color', 'has-text-color', 'has-staxo-size-font-size' ),
+			),
+			'gradient, custom' => array(
+				array(
+					'gradient' => 'staxo-grad',
+					'style'    => array(
+						'color'      => array( 'text' => '#123456' ),
+						'spacing'    => array(
+							'margin'  => array( 'top' => '11px' ),
+							'padding' => array( 'left' => '12px' ),
+						),
+						'typography' => array( 'lineHeight' => '1.7' ),
+					),
+				),
+				array( 'has-staxo-grad-gradient-background', 'color:#123456', 'margin-top:11px', 'padding-left:12px', 'line-height:1.7' ),
+			),
+		);
+	}
+
+	/**
+	 * Both blocks are registered with the standard supports list.
+	 */
+	public function test_block_supports_registered() {
+		foreach ( array( 'simple-taxonomy-refreshed/staxo-terms', 'simple-taxonomy-refreshed/cloud-widget' ) as $name ) {
+			$this->require_block( $name );
+			$supports = WP_Block_Type_Registry::get_instance()->get_registered( $name )->supports;
+
+			foreach ( self::standard_supports() as $support => $value ) {
+				$this->assertArrayHasKey( $support, $supports, "$name: $support" );
+				$this->assertEquals( $value, $supports[ $support ], "$name: $support" );
+			}
+		}
+	}
+
+	/**
+	 * Display Post Terms: each standard support is applied to the block's wrapper.
+	 */
+	public function test_terms_block_supports() {
+		$name = 'simple-taxonomy-refreshed/staxo-terms';
+		$this->require_block( $name );
+		$this->view_post( 'P1' );
+
+		foreach ( self::support_cases() as $label => $case ) {
+			$wrapper = $this->render_with_supports( $name, array( 'tax' => 'test_flat' ), $case[0] );
+			foreach ( $case[1] as $expected ) {
+				$this->assertStringContainsString( $expected, $wrapper, "$label: $expected" );
+			}
+		}
+	}
+
+	/**
+	 * Taxonomy Cloud: each standard support is applied to the block's wrapper.
+	 */
+	public function test_widget_block_supports() {
+		$name = 'simple-taxonomy-refreshed/cloud-widget';
+		$this->require_block( $name );
+
+		$attrs = array(
+			'taxonomy' => 'test_hier',
+			'disptype' => 'list',
+		);
+		foreach ( self::support_cases() as $label => $case ) {
+			$wrapper = $this->render_with_supports( $name, $attrs, $case[0] );
+			foreach ( $case[1] as $expected ) {
+				$this->assertStringContainsString( $expected, $wrapper, "$label: $expected" );
+			}
+		}
+	}
+
+	/**
 	 * The block display functions can be called outside a block render: no wrapper div, no error.
 	 */
 	public function test_block_display_outside_block() {
