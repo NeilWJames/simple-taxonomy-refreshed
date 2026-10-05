@@ -1951,7 +1951,7 @@ class SimpleTaxonomyRefreshed_Admin {
 								<table class="form-table" style="clear:none;">
 									<p id="cc_descr"><?php esc_html_e( 'Term controls are to be applied on posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
 									<p><?php esc_html_e( 'Note that the terms need to be displayed on the Admin screen to use this effectively. Current value: ', 'simple-taxonomy-refreshed' ); ?>
-									<span id="show_ui_2"><?php esc_attr( self::get_true_false( (int) $taxonomy['show_ui'] ) ); ?></span></p>
+									<span id="show_ui_2"><?php echo esc_html( self::get_true_false( (int) $taxonomy['show_ui'] ) ); ?></span></p>
 									<tr>
 										<th scope="row"><label id="cc_label"><?php esc_html_e( 'Post status', 'simple-taxonomy-refreshed' ); ?></label></th>
 										<td><fieldset><div id="cc_type" role="radiogroup" aria-labelledby="cc_label" aria-describedby="cc_descr">
@@ -2911,7 +2911,8 @@ class SimpleTaxonomyRefreshed_Admin {
 				$max = ( $vmx ? (int) $cntl['st_cc_max'] : null );
 
 				// Put out saving error message as current may be erroneous.
-				if ( $status > 0 ) {
+				// Notification only (control level 0): only for users who cannot change the terms.
+				if ( $status > 0 && ( 0 < (int) $cntl['st_cc_hard'] || ! $user_change ) ) {
 					$err_notice = false;
 					// check minimum if test is needed.
 					if ( $vmn && $num_terms < $min ) {
@@ -3029,7 +3030,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				if ( 2 === (int) $cntl['st_cc_hard'] && $user_change ) {
 					global $post;
 					$stat = $post->post_status;
-					$parm = self::term_limits_push( $tax, $label, $pstat, $min, $max, true, $cntl['no_term'], $stat );
+					$parm = self::term_limits_push( $tax, $label, $pstat, $min, $max, (bool) $tax_obj->hierarchical, $cntl['no_term'], $stat );
 					self::enqueue_client_libs();
 					if ( self::is_block_editor() ) {
 						// Block editor is the same. N.B. This should be called elsewhere.
@@ -3283,6 +3284,10 @@ class SimpleTaxonomyRefreshed_Admin {
 				if ( 1 === (int) $cntl['st_cc_type'] && ! in_array( $post_status, array( 'publish', 'future' ), true ) ) {
 					continue;
 				}
+				// Notification only: the post is saved whatever its terms.
+				if ( 0 === (int) $cntl['st_cc_hard'] ) {
+					continue;
+				}
 
 				$error_type = '';
 				// count the number of terms.
@@ -3407,6 +3412,10 @@ class SimpleTaxonomyRefreshed_Admin {
 				// check the post_status (trash already excluded so all cc_type 2 need processing).
 				// The stored type may be a string, so compare as integers.
 				if ( 1 === (int) $cntl['st_cc_type'] && ! in_array( $post_status, array( 'publish', 'future' ), true ) ) {
+					continue;
+				}
+				// Notification only: the post is saved whatever its terms.
+				if ( 0 === (int) $cntl['st_cc_hard'] ) {
 					continue;
 				}
 

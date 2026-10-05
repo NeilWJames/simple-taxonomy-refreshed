@@ -159,7 +159,7 @@ class Test_STaxo_Terms_Control extends STaxo_Test_Case {
 	}
 
 	/**
-	 * No control is cached when hard controls are off, or the post type is not selected.
+	 * No control is cached when there is no control, or the post type is not selected.
 	 */
 	public function test_control_cache_exclusions() {
 		$this->set_control( array( 'st_cc_types' => array( 'page' ) ) );
@@ -168,10 +168,35 @@ class Test_STaxo_Terms_Control extends STaxo_Test_Case {
 		$this->set_control(
 			array(
 				'st_cc_types' => '',
-				'st_cc_hard'  => '0',
+				'st_cc_type'  => '0',
 			)
 		);
 		$this->assertSame( array(), SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache() );
+	}
+
+	/**
+	 * Notification only (control level 0) is cached, so the post screens can show radio buttons and
+	 * notices, but saving is not checked: neither the classic editor nor the REST API refuses the post.
+	 */
+	public function test_notification_only() {
+		$this->set_control( array( 'st_cc_hard' => '0' ) );
+
+		$cache = SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache();
+		$this->assertSame( 0, $cache['post']['test_cntl']['st_cc_hard'] );
+
+		$this->assertNull( $this->classic_check( $this->postarr( 'publish', array() ) ), 'Too few terms: saved' );
+		$this->assertNull( $this->classic_check( $this->postarr( 'publish', $this->cntl_ids( array( 'red', 'green', 'blue' ) ) ) ), 'Too many terms: saved' );
+
+		$response = $this->rest(
+			'POST',
+			'/wp/v2/posts',
+			array(
+				'title'     => 'REST post',
+				'status'    => 'publish',
+				'test_cntl' => array(),
+			)
+		);
+		$this->assertSame( 201, $response->get_status() );
 	}
 
 	/**

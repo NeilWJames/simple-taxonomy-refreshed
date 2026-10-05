@@ -130,6 +130,8 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* NEW: Term Count for an external taxonomy with a count function of its own: the tab warns that counts made with these options may not match its own, and a new "Use these options" box (setting `st_cb_override`) replaces its count function with WordPress's standard one and the statuses chosen. Without the tick, its own function is kept.
 	* FIX: The taxonomy form's "Display Terms with Posts" and EP_MASK lists marked the chosen option with escaped quotes (`selected=&#039;selected&#039;`).
 	* FIX: Term Count "Selection" for an external taxonomy raised PHP warnings for each status left unticked (unticked boxes were not saved).
+	* FIX: The Term Control tab showed nothing after "Current value:" (the taxonomy's Display on admin setting) until that setting was changed.
+	* FIX: Term Control "When user cannot change terms give notification message" did nothing: the taxonomy was left out of the controls, so it got neither the notice nor radio buttons (maximum 1). It now gives both; saving is still never blocked.
 	* NEW: Block editor: a hierarchical taxonomy whose Terms Control allows one term at most is shown with radio buttons, as in the classic editor, with its search and Add New Term form (the term checkboxes are replaced through the `editor.PostTaxonomyType` filter). Without a minimum, a "No term" choice is offered.
 	* FIX: Block editor: the Terms Control notice for a post already outside the limits was never shown (its script was added after the page head had been printed).
 	* FIX: Block editor: Terms Control notices showed HTML entities, such as `&#039;` for an apostrophe in the taxonomy label.

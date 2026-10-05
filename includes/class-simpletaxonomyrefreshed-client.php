@@ -1014,7 +1014,9 @@ class SimpleTaxonomyRefreshed_Client {
 
 				// Identify if term count control limits wanted.
 				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
-					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
+					// Every control level is cached: notification only (0) gives notices and radio buttons;
+					// 1 and 2 also check the terms when the post is saved.
+					if ( isset( $taxonomy['st_cc_hard'] ) ) {
 						// potentially add to post types list.
 						if ( ! empty( $taxonomy['objects'] ) ) {
 							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) && ! empty( $taxonomy['st_cc_types'] ) ? (array) $taxonomy['st_cc_types'] : $taxonomy['objects'] );
@@ -1047,7 +1049,9 @@ class SimpleTaxonomyRefreshed_Client {
 
 				// Identify if term count control limits wanted.
 				if ( isset( $taxonomy['st_cc_type'] ) && 0 < $taxonomy['st_cc_type'] ) {
-					if ( isset( $taxonomy['st_cc_hard'] ) && ! empty( $taxonomy['st_cc_hard'] ) ) {
+					// Every control level is cached: notification only (0) gives notices and radio buttons;
+					// 1 and 2 also check the terms when the post is saved.
+					if ( isset( $taxonomy['st_cc_hard'] ) ) {
 						// need to get some properties from external taxonomy.
 						$tax_obj = get_taxonomy( $key );
 						if ( false === $tax_obj ) {
