@@ -129,6 +129,7 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 		* FIX: Rename Slug uses a new query_var when the old one was the default.
 	* Security and permissions
 		* NEW: Filter `staxo_can_edit_callbacks` controls who may edit the callback fields.
+		* FIX: Configuration import checks and sanitises each taxonomy as the admin form does. A taxonomy is not imported when its name is not valid, WordPress or another plugin already uses the name, or a setting has a value the form would not store (such as HTML in a label, or a Term Control option out of range); a notice lists them. Settings the plugin does not use are ignored. If nothing in the file is valid, the current configuration is kept.
 		* DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
 		* DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
 		* DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.

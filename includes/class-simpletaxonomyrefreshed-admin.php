@@ -686,7 +686,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @return array
 	 */
-	private static function external_defaults() {
+	public static function external_defaults() {
 		return array(
 			'st_show_in_graphql' => 0,
 			'st_graphql_single'  => '',
@@ -2096,6 +2096,48 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Sanitise the settings of a taxonomy, as sent by the taxonomy form or read from a configuration file.
+	 *
+	 * Only the plugin's own fields (get_taxonomy_default_fields()) are kept. The display texts
+	 * (before, separator, after) may hold HTML and are filtered as post content; other texts are
+	 * plain text; lists (labels, capabilities, post types ...) are sanitised item by item.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array  $source  settings (unslashed).
+	 * @param string $missing for a field not in $source: 'empty' (store ''), 'default' (store its default) or 'skip' (leave it out).
+	 * @return array
+	 */
+	public static function clean_taxonomy_fields( $source, $missing = 'empty' ) {
+		$taxonomy = array();
+		foreach ( SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields() as $field => $default_value ) {
+			if ( ! is_array( $source ) || ! array_key_exists( $field, $source ) ) {
+				if ( 'skip' !== $missing ) {
+					$taxonomy[ $field ] = ( 'default' === $missing ? $default_value : '' );
+				}
+				continue;
+			}
+			$value = $source[ $field ];
+			if ( is_string( $value ) ) {
+				if ( in_array( $field, array( 'st_before', 'st_sep', 'st_after' ), true ) ) {
+					// can contain html.
+					$taxonomy[ $field ] = wp_kses_post( $value );
+				} else {
+					$taxonomy[ $field ] = sanitize_text_field( trim( stripslashes( $value ) ) );
+				}
+			} elseif ( is_array( $value ) ) {
+				$taxonomy[ $field ] = array();
+				foreach ( $value as $k => $v ) {
+					$taxonomy[ $field ][ sanitize_text_field( $k ) ] = sanitize_text_field( $v );
+				}
+			} else {
+				$taxonomy[ $field ] = sanitize_text_field( $value );
+			}
+		}
+		return $taxonomy;
+	}
+
+	/**
 	 * Check $_POST datas for add/merge taxonomy
 	 *
 	 * @return boolean
@@ -2111,35 +2153,8 @@ class SimpleTaxonomyRefreshed_Admin {
 			// phpcs:ignore  WordPress.Security.NonceVerification.Recommended
 			$action = sanitize_text_field( wp_unslash( $_POST['action'] ) );
 			// Clean values from _POST.
-			$simple   = true;
-			$taxonomy = array();
-			foreach ( SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields() as $field => $default_value ) {
-				if ( 'merge-external' === $action && ! array_key_exists( $field, $_POST ) ) {
-					// Don't create non-existing fields for external taxonomies.
-					continue;
-				}
-				// phpcs:ignore  WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput
-				$post_field = ( array_key_exists( $field, $_POST ) ? wp_unslash( $_POST[ $field ] ) : '' );
-				if ( isset( $post_field ) ) {
-					$taxonomy[ $field ] = '';
-					if ( is_string( $post_field ) ) {// String ?
-						if ( in_array( $field, array( 'st_before', 'st_sep', 'st_after' ), true ) ) {
-							// can contain html.
-							$taxonomy[ $field ] = wp_kses_post( $post_field );
-							$simple             = false;
-						} else {
-							$taxonomy[ $field ] = sanitize_text_field( trim( stripslashes( $post_field ) ) );
-						}
-					} elseif ( is_array( $post_field ) ) {
-						$taxonomy[ $field ] = array();
-						foreach ( $post_field as $k => $_v ) {
-							$taxonomy[ $field ][ sanitize_text_field( $k ) ] = sanitize_text_field( $_v );
-						}
-					} else {
-						$taxonomy[ $field ] = sanitize_text_field( $post_field );
-					}
-				}
-			}
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- the nonce is checked below for each action; clean_taxonomy_fields() sanitises the fields.
+			$taxonomy = self::clean_taxonomy_fields( wp_unslash( $_POST ), ( 'merge-external' === $action ? 'skip' : 'empty' ) );
 
 			// Retrive st_ep_mask value. User cannot set the input value.
 			$taxonomy['st_ep_mask'] = 0;

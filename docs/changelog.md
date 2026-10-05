@@ -10,6 +10,7 @@
 * Terms Merge does not merge, by default, when posts would be left below the Terms Control minimum. It lists those posts, and you can choose "Merge anyway".
 * Post terms "before", separator and "after" text: HTML is filtered as post content, so tags such as `<script>`, `<style>` and `<iframe>` are removed; plain text is escaped.
 * Callback fields can only be edited by users with the `unfiltered_html` capability (super admins on multisite). Use the `staxo_can_edit_callbacks` filter to change this.
+* Configuration import no longer stores a file as it is: taxonomies with an invalid name, a name already used by another taxonomy, or settings the admin form would not accept are not imported (a notice lists them), and settings the plugin does not use are dropped.
 * Removed for code that calls the plugin directly: `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version` (term-count code for WordPress before 5.7).
 * Terms Migrate, Terms Import and Terms Merge check each taxonomy's own capabilities: terms can only be copied from a taxonomy where the user has its manage_terms capability, and only copied or imported into one where the user has its edit_terms capability; merging needs its manage_terms, delete_terms and assign_terms capabilities, and also edit_terms when child terms would be moved. Other taxonomies are listed but cannot be chosen. This only affects taxonomies whose capabilities are not granted to administrators.
 
@@ -93,6 +94,7 @@
 #### Security and permissions
 
 * NEW: Filter `staxo_can_edit_callbacks` controls who may edit the callback fields.
+* FIX: Configuration import checks and sanitises each taxonomy as the admin form does. A taxonomy is not imported when its name is not valid, WordPress or another plugin already uses the name, or a setting has a value the form would not store (such as HTML in a label, or a Term Control option out of range); a notice lists them. Settings the plugin does not use are ignored. If nothing in the file is valid, the current configuration is kept.
 * DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
 * DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
 * DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.

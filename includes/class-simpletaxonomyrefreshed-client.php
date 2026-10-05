@@ -93,6 +93,25 @@ class SimpleTaxonomyRefreshed_Client {
 	}
 
 	/**
+	 * Names of the taxonomies this plugin has registered in this request.
+	 *
+	 * @var bool[]
+	 */
+	private static $registered = array();
+
+	/**
+	 * Whether this plugin registered the taxonomy (so it is not one from WordPress or another plugin).
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param string $taxonomy taxonomy name.
+	 * @return bool
+	 */
+	public static function registered_by_plugin( $taxonomy ) {
+		return isset( self::$registered[ $taxonomy ] );
+	}
+
+	/**
 	 * Register all custom taxonomies to WordPress process.
 	 *
 	 * @return void
@@ -113,6 +132,7 @@ class SimpleTaxonomyRefreshed_Client {
 				}
 
 				register_taxonomy( $taxonomy['name'], $taxonomy['objects'], $args );
+				self::$registered[ $taxonomy['name'] ] = true;
 
 				// avoid side effects (see https://developer.wordpress.org/reference/functions/register_taxonomy/).
 				// see init_2() - called with low priority to allow cpt to be declared later.

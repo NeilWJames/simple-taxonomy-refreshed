@@ -131,24 +131,16 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 				if ( ! is_array( $config_file ) ) {
 					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
 				} elseif ( isset( $config_file['taxonomies'] ) || isset( $config_file['list_order'] ) || isset( $config_file['externals'] ) ) {
-					// looks as though it is OK so load it.
-					// clear caches (need to do first as values could be different).
+					// Check and sanitise every entry as the admin form does.
 					$options = get_option( OPTION_STAXO );
-
-					// Callback fields cannot be changed by import unless the user may edit them.
-					foreach ( array( 'taxonomies', 'externals' ) as $group ) {
-						if ( isset( $config_file[ $group ] ) && is_array( $config_file[ $group ] ) ) {
-							foreach ( $config_file[ $group ] as $tax_name => $tax_data ) {
-								if ( ! is_array( $tax_data ) ) {
-									unset( $config_file[ $group ][ $tax_name ] );
-									continue;
-								}
-								$stored = ( isset( $options[ $group ][ $tax_name ] ) ? (array) $options[ $group ][ $tax_name ] : array() );
-
-								$config_file[ $group ][ $tax_name ] = SimpleTaxonomyRefreshed_Admin::protect_callback_fields( $tax_data, $stored, (string) $tax_name );
-							}
-						}
+					$import  = self::prepare_import( $config_file, $options );
+					if ( empty( $import['config'] ) ) {
+						add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'The config file holds no valid settings, so nothing has been imported.', 'simple-taxonomy-refreshed' ), 'error' );
+						self::import_notices( $import );
+						return;
 					}
+
+					// clear caches (need to do first as values could be different).
 					if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
 						foreach ( (array) $options['taxonomies'] as $taxonomy => $tax_data ) {
 							wp_cache_delete( 'staxo_sel_' . $taxonomy );
@@ -157,15 +149,236 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 					}
 					wp_cache_delete( 'staxo_taxonomies' );
 					wp_cache_delete( 'staxo_orderings' );
-					update_option( OPTION_STAXO, $config_file, true );
+					update_option( OPTION_STAXO, $import['config'], true );
 					SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache();
 					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'OK. Configuration is restored.', 'simple-taxonomy-refreshed' ), 'updated' );
+					self::import_notices( $import );
 					// Change of file may provoke a change of rewrite rules, so trigger it via transient data.
 					set_transient( 'simple_taxonomy_refreshed_rewrite', true, 0 );
 				} else {
 					add_settings_error( 'simple-taxonomy-refreshed', 'settings_updated', __( 'This is really a config file for Simple Taxonomy ? Probably corrupt :(', 'simple-taxonomy-refreshed' ), 'error' );
 				}
 			}
+		}
+	}
+
+	/**
+	 * Check and sanitise an imported configuration, entry by entry, as the admin form does.
+	 *
+	 * A taxonomy is skipped when its name is not valid, WordPress or another plugin already uses
+	 * the name, or any setting the plugin uses has a value the admin form would not store (out of
+	 * range, wrong type, or changed by sanitising). Settings the plugin does not use are dropped.
+	 * Callback fields follow the staxo_can_edit_callbacks rule.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array $config  decoded configuration file.
+	 * @param mixed $options current plugin options.
+	 * @return array {
+	 *     @type array    $config    the configuration to store.
+	 *     @type string[] $skipped   one line per taxonomy skipped (plain text).
+	 *     @type int      $ignored   number of settings dropped because the plugin does not use them.
+	 * }
+	 */
+	public static function prepare_import( $config, $options ) {
+		$options = ( is_array( $options ) ? $options : array() );
+		$clean   = array();
+		$skipped = array();
+		$ignored = count( array_diff( array_keys( $config ), array( 'taxonomies', 'externals', 'list_order' ) ) );
+		$own     = ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ? array_map( 'strval', array_keys( $options['taxonomies'] ) ) : array() );
+
+		foreach ( array( 'taxonomies', 'externals' ) as $group ) {
+			if ( ! isset( $config[ $group ] ) ) {
+				continue;
+			}
+			if ( ! is_array( $config[ $group ] ) ) {
+				++$ignored;
+				continue;
+			}
+			foreach ( $config[ $group ] as $key => $data ) {
+				$name   = (string) $key;
+				$reason = self::import_entry_problem( $group, $name, $data, $own );
+				if ( '' !== $reason ) {
+					// translators: %1$s is the taxonomy name in the file; %2$s is why it was not imported.
+					$skipped[] = sprintf( __( '"%1$s": %2$s', 'simple-taxonomy-refreshed' ), $name, $reason );
+					continue;
+				}
+				if ( 'externals' === $group ) {
+					// Only the settings for integrating the taxonomy; the rest belongs to whoever registers it.
+					$defaults = SimpleTaxonomyRefreshed_Admin::external_defaults();
+					$taxonomy = SimpleTaxonomyRefreshed_Admin::clean_taxonomy_fields( $data, 'skip' );
+					$taxonomy = array_merge( $defaults, array_intersect_key( $taxonomy, $defaults + array_flip( array( 'hierarchical', 'show_ui' ) ) ) );
+				} else {
+					$taxonomy = SimpleTaxonomyRefreshed_Admin::clean_taxonomy_fields( $data, 'default' );
+				}
+				$taxonomy['name'] = $name;
+				$taxonomy         = self::import_value_ranges( $taxonomy );
+
+				// A setting the plugin uses must be stored as it is in the file; otherwise skip the taxonomy.
+				$invalid = self::import_invalid_field( $data, $taxonomy );
+				if ( '' !== $invalid ) {
+					// translators: %1$s is the taxonomy name in the file; %2$s is the name of the setting.
+					$skipped[] = sprintf( __( '"%1$s": the setting "%2$s" is not valid.', 'simple-taxonomy-refreshed' ), $name, $invalid );
+					continue;
+				}
+				// Settings the plugin does not use are dropped.
+				$ignored += count( array_diff_key( $data, $taxonomy ) );
+
+				$stored                   = ( isset( $options[ $group ][ $name ] ) ? (array) $options[ $group ][ $name ] : array() );
+				$clean[ $group ][ $name ] = SimpleTaxonomyRefreshed_Admin::protect_callback_fields( $taxonomy, $stored, $name );
+			}
+		}
+
+		if ( isset( $config['list_order'] ) ) {
+			if ( is_array( $config['list_order'] ) ) {
+				foreach ( $config['list_order'] as $post_type => $taxonomies ) {
+					$list = ( is_array( $taxonomies ) ? array_values( array_filter( array_map( 'sanitize_key', array_filter( $taxonomies, 'is_string' ) ) ) ) : array() );
+					if ( ! is_array( $taxonomies ) || $list !== array_values( $taxonomies ) || sanitize_key( $post_type ) !== (string) $post_type ) {
+						++$ignored;
+					}
+					if ( ! empty( $list ) ) {
+						$clean['list_order'][ sanitize_key( $post_type ) ] = $list;
+					}
+				}
+			} else {
+				++$ignored;
+			}
+		}
+
+		return array(
+			'config'  => $clean,
+			'skipped' => $skipped,
+			'ignored' => $ignored,
+		);
+	}
+
+	/**
+	 * Why an entry of an imported configuration cannot be imported.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param string   $group 'taxonomies' or 'externals'.
+	 * @param string   $name  taxonomy name (the entry key).
+	 * @param mixed    $data  its settings.
+	 * @param string[] $own   taxonomies currently defined by this plugin.
+	 * @return string reason, or '' if it can be imported.
+	 */
+	private static function import_entry_problem( $group, $name, $data, $own ) {
+		if ( ! is_array( $data ) ) {
+			return __( 'its settings are not a list.', 'simple-taxonomy-refreshed' );
+		}
+		if ( '' === $name || strlen( $name ) > 32 ) {
+			return __( 'the name must have 1 to 32 characters.', 'simple-taxonomy-refreshed' );
+		}
+		if ( sanitize_title( $name ) !== $name ) {
+			return __( 'the name may only contain lowercase letters, numbers, hyphens and underscores.', 'simple-taxonomy-refreshed' );
+		}
+		if ( isset( $data['name'] ) && (string) $data['name'] !== $name ) {
+			return __( 'the name in its settings is different.', 'simple-taxonomy-refreshed' );
+		}
+		if ( 'taxonomies' === $group && taxonomy_exists( $name ) && ! in_array( $name, $own, true ) && ! SimpleTaxonomyRefreshed_Client::registered_by_plugin( $name ) ) {
+			return __( 'WordPress or another plugin already has a taxonomy with this name.', 'simple-taxonomy-refreshed' );
+		}
+		return '';
+	}
+
+	/**
+	 * Normalise imported values; values out of range are changed, so the taxonomy is skipped.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array $taxonomy sanitised taxonomy settings.
+	 * @return array
+	 */
+	private static function import_value_ranges( $taxonomy ) {
+		// Choices 0, 1 or 2 (empty, as in settings from older versions, counts as 0).
+		foreach ( array( 'st_cb_type', 'st_cc_type', 'st_cc_hard' ) as $field ) {
+			if ( isset( $taxonomy[ $field ] ) && ! in_array( (string) $taxonomy[ $field ], array( '', '0', '1', '2' ), true ) ) {
+				$taxonomy[ $field ] = 0;
+			}
+		}
+		// Whole numbers (may be left empty).
+		foreach ( array( 'st_cc_min', 'st_cc_max', 'st_adm_depth' ) as $field ) {
+			if ( isset( $taxonomy[ $field ] ) && '' !== $taxonomy[ $field ] ) {
+				$taxonomy[ $field ] = (string) absint( $taxonomy[ $field ] );
+			}
+		}
+		if ( isset( $taxonomy['st_ep_mask'] ) ) {
+			$taxonomy['st_ep_mask'] = absint( $taxonomy['st_ep_mask'] );
+		}
+		return $taxonomy;
+	}
+
+	/**
+	 * The first setting of an imported entry whose value would be stored differently.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array $raw   settings in the file.
+	 * @param array $clean settings sanitised and checked.
+	 * @return string setting name, or '' if all are valid.
+	 */
+	private static function import_invalid_field( $raw, $clean ) {
+		foreach ( $raw as $key => $value ) {
+			if ( array_key_exists( $key, $clean ) && ! self::same_value( $value, $clean[ $key ] ) ) {
+				return (string) $key;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Whether two setting values are the same once stored (numbers and numeric strings match).
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param mixed $a value.
+	 * @param mixed $b value.
+	 * @return bool
+	 */
+	private static function same_value( $a, $b ) {
+		if ( is_array( $a ) || is_array( $b ) ) {
+			if ( ! is_array( $a ) || ! is_array( $b ) || count( $a ) !== count( $b ) ) {
+				return false;
+			}
+			foreach ( $a as $key => $value ) {
+				if ( ! array_key_exists( $key, $b ) || ! self::same_value( $value, $b[ $key ] ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		if ( is_object( $a ) || is_object( $b ) ) {
+			return false;
+		}
+		return (string) $a === (string) $b;
+	}
+
+	/**
+	 * Report the taxonomies skipped and the settings ignored by an import.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array $import result of prepare_import().
+	 * @return void
+	 */
+	private static function import_notices( $import ) {
+		if ( ! empty( $import['skipped'] ) ) {
+			add_settings_error(
+				'simple-taxonomy-refreshed',
+				'config_skipped',
+				esc_html__( 'These taxonomies in the file were not imported:', 'simple-taxonomy-refreshed' ) . '<br />' . implode( '<br />', array_map( 'esc_html', $import['skipped'] ) ),
+				'warning'
+			);
+		}
+		if ( $import['ignored'] > 0 ) {
+			add_settings_error(
+				'simple-taxonomy-refreshed',
+				'config_ignored',
+				// translators: %d is the number of settings ignored.
+				sprintf( _n( '%d setting in the file is not used by the plugin and has been ignored.', '%d settings in the file are not used by the plugin and have been ignored.', $import['ignored'], 'simple-taxonomy-refreshed' ), $import['ignored'] ),
+				'warning'
+			);
 		}
 	}
 
