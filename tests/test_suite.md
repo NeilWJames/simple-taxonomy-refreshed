@@ -10,11 +10,11 @@ _Last updated: 4 Oct 2026_
 
 | Item | State |
 |---|---|
-| Tests written | 240 in 17 classes (A–P + the original main test); class P (widget, 12) written 5 Oct 2026, not yet run |
+| Tests written | 242 in 17 classes (A–P + the original main test); class P (widget, 12) and class M's 2 newest written 5 Oct 2026, not yet run |
 | Run in CI | All 228 pass, including classes M, N and O — 5 Oct 2026 (179 on 2 Oct); CI rebuilds `build/blocks` from `src/` when it changes |
 | Coverage (Codecov, 5 Oct 2026, after classes M, N and O) | Whole plugin 87.4% (3,553 / 4,067 lines; 54.5% on 2 Oct). Plan target ≥ 80% met for all five files: conversion 98.9%, import 97.7%, rename 96.8%, merge 95.7%, config 85.2%. Others: order 97.7%, admin 88.8% (214 missed; 23.3% on 2 Oct), client 84.6% (86 missed), widget 49.8% (111 missed), main file 0% (44, load time) |
 | Still to write | None — plan complete (see "Planned" for follow-ups) |
-| End-to-end (Playwright) | 26 tests in 6 specs: 24 pass locally (Playground, 2.9 min) — 5 Oct 2026; the 2 notification-only radio tests not yet run. Not yet run in CI — see "End-to-end tests" |
+| End-to-end (Playwright) | 26 tests in 6 specs, all passing locally (Playground) — 5 Oct 2026: full run 24/26, then `radio.spec.js` 5/5 after the "No term" fix. CI e2e to be re-run — see "End-to-end tests" |
 
 ## Running
 
@@ -310,3 +310,6 @@ Smaller gaps in the target files: merge `move_children()` (7 lines, child-term e
 - **5 Oct 2026** — `radio.spec.js` +2 for notification-only Terms Control (Neil): new fixture `staxo-config-e2e-radio-notify.json`; block editor ("No term" offered and saved) and classic editor radio buttons. 26 e2e tests.
 - **5 Oct 2026** — CI: all 228 pass (class N `test_edit_form` needed `\s*` before the "Current value" span). Codecov: whole plugin 87.4% (3,553 / 4,067); `admin.php` 88.8% (was 76.1%). Coverage item 3 done. Remaining: widget 111 lines, client 86, main file 44 (load time), config 23.
 - **5 Oct 2026** — Class P (widget, 12) to raise widget coverage (49.8%: the settings form, taxonomy list and block registration were not run). Plugin fix made while writing it: the widget settings form passed `selected()` through `esc_attr()` (5 lists), as the taxonomy form did. Also covers the main file's `init_staxo_widget()`, `hide_staxonomy_widget()` and `staxo_widgets_block_init()`. 240 tests.
+- **5 Oct 2026** — First run of the 2 notification-only radio tests: both failed. Classic editor: a real bug — with no minimum, `add_no_term()` copies the first item of each list to make "No term", but the Most Used list is empty until a term has posts, so `add_nt_element()` failed on `inp[0]` and the radio conversion never ran (the existing radio fixture has a minimum, so it never added "No term"). `add_nt_element()` now skips an empty list. Block editor: the second `editor.saveDraft()` returned on the first save's "Draft saved" notice before saving; the test now polls the stored terms.
+- **5 Oct 2026** — After the fix, `radio.spec.js` 5/5 locally: all 26 e2e tests have passed.
+- **5 Oct 2026** — CI e2e "saves Term Control settings for an external taxonomy" failed on Docker/MySQL: `Undefined array key "st_cc_max"` in `refresh_term_cntl_cache()` was printed before the redirect. The form disables the maximum when "Use maximum" is False, a disabled field is not posted, and `merge-external` keeps only posted fields (locally the category settings already held a maximum). Fix: new `SimpleTaxonomyRefreshed_Admin::external_defaults()` (also used by `page_manage()`); `update_external()` merges it under the posted fields; `refresh_term_cntl_cache()` defaults the min/max fields for externals saved earlier; `prepare_filter_args()` reads the Admin List Filter flags with `empty()`. Class M +2 (fields not sent; older settings without a maximum). 242 tests.

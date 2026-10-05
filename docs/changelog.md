@@ -51,6 +51,7 @@
 * FIX: Term counts for external taxonomies that are not yet registered no longer raise PHP warnings.
 * FIX: No PHP warning when counting terms on a site with no external taxonomies configured.
 * FIX: Editing an external taxonomy now loads its saved settings.
+* FIX: Saving an external taxonomy whose Term Control maximum or minimum was not used (or a flat taxonomy, whose Admin List Filter hierarchy options are disabled) left those settings out, so PHP warnings could stop the save returning to the list and appear on post lists. Missing settings now take their defaults, also for settings saved by earlier versions.
 * FIX: External taxonomies with WPGraphQL turned on caused a fatal error when the taxonomy was registered (the settings were written to the taxonomy object as if it were an array).
 * FIX: The Term Control tab showed nothing after "Current value:" (the taxonomy's Display on admin setting) until that setting was changed.
 * FIX: The taxonomy form's "Display Terms with Posts" and EP_MASK lists marked the chosen option with escaped quotes (`selected=&#039;selected&#039;`).

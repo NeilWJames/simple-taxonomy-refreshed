@@ -16,9 +16,10 @@ permissions:
   contents: read
 
 jobs:
-  # Rebuilds build/blocks when src/ (or package.json) changed, so the tests use the blocks as src/ defines them.
+  # Rebuilds build/ (blocks, block editor radio selector, admin and client scripts and styles)
+  # when src/ (or package.json) changed, so the tests use what src/ defines.
   # Nothing is committed: the manual Build Blocks workflow still opens the PR with build/.
-  build-blocks:
+  build:
     runs-on: ubuntu-latest
     outputs:
       changed: ${{ steps.diff.outputs.changed }}
@@ -51,23 +52,34 @@ jobs:
           node-version: 22
 
       # Dependency install hooks are not needed for the build.
-      - name: Build blocks
+      - name: Build
         if: steps.diff.outputs.changed == 'true'
         run: |
           npm install --ignore-scripts
-          npm run build:blocks
+          npm run build
 
-      - name: Upload block build
+      # Stop here if a part of the build is missing.
+      - name: Check build output
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          for f in build/blocks/staxo-terms/index.js build/blocks/staxo-widget/index.js \
+                   build/editor/index.js build/editor/index.asset.php build/editor/style-index.css \
+                   build/common/staxo-admin.js build/common/staxo-client.js \
+                   build/common/staxo-admin.css build/common/staxo-widget.css; do
+            test -s "$f" || { echo "::error::Missing build output: $f"; exit 1; }
+          done
+
+      - name: Upload build
         if: steps.diff.outputs.changed == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: build-blocks
-          path: build/blocks/
+          name: build
+          path: build/
           if-no-files-found: error
           retention-days: 1
 
   run:
-    needs: build-blocks
+    needs: build
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: true
@@ -95,17 +107,17 @@ jobs:
       with:
         persist-credentials: false
 
-    # src/ changed: replace build/blocks with the fresh build from the build-blocks job.
-    - name: Remove committed block build
-      if: needs.build-blocks.outputs.changed == 'true'
-      run: rm -rf build/blocks
+    # src/ changed: replace build/ with the fresh build from the build job.
+    - name: Remove committed build
+      if: needs.build.outputs.changed == 'true'
+      run: rm -rf build
 
-    - name: Download block build
-      if: needs.build-blocks.outputs.changed == 'true'
+    - name: Download build
+      if: needs.build.outputs.changed == 'true'
       uses: actions/download-artifact@v8
       with:
-        name: build-blocks
-        path: build/blocks
+        name: build
+        path: build
 
     - name: Setup PHP
       uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2

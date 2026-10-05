@@ -677,6 +677,46 @@ class SimpleTaxonomyRefreshed_Admin {
 
 
 	/**
+	 * Default values of the settings stored for an external taxonomy.
+	 *
+	 * The form does not send every field (unticked boxes and disabled fields, such as
+	 * the maximum when "Use maximum" is False), so these fill the gaps when it is saved.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @return array
+	 */
+	private static function external_defaults() {
+		return array(
+			'st_show_in_graphql' => 0,
+			'st_graphql_single'  => '',
+			'st_graphql_plural'  => '',
+			'st_adm_types'       => array(),
+			'st_adm_hier'        => 0,
+			'st_adm_depth'       => 0,
+			'st_adm_count'       => 0,
+			'st_adm_h_e'         => 0,
+			'st_adm_h_i_e'       => 0,
+			'st_cb_type'         => 0,
+			'st_cb_pub'          => 0,
+			'st_cb_fut'          => 0,
+			'st_cb_dft'          => 0,
+			'st_cb_pnd'          => 0,
+			'st_cb_prv'          => 0,
+			'st_cb_tsh'          => 0,
+			'st_cb_override'     => 0,
+			'st_cc_type'         => 0,
+			'st_cc_types'        => array(),
+			'st_cc_hard'         => 0,
+			'st_cc_umin'         => 0,
+			'st_cc_umax'         => 0,
+			'st_cc_min'          => 0,
+			'st_cc_max'          => 0,
+			'st_feed'            => 0,
+		);
+	}
+
+	/**
 	 * Display options on admin
 	 *
 	 * @return void
@@ -739,34 +779,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				wp_die( esc_html__( "You are trying to edit a taxonomy that doesn't exist...", 'simple-taxonomy-refreshed' ) );
 			}
 			// set defaults.
-			$taxonomy = array(
-				'name'               => $tax_name,
-				'st_show_in_graphql' => 0,
-				'st_graphql_single'  => '',
-				'st_graphql_plural'  => '',
-				'st_adm_types'       => array(),
-				'st_adm_hier'        => 0,
-				'st_adm_depth'       => 0,
-				'st_adm_count'       => 0,
-				'st_adm_h_e'         => 0,
-				'st_adm_h_i_e'       => 0,
-				'st_cb_type'         => 0,
-				'st_cb_pub'          => 0,
-				'st_cb_fut'          => 0,
-				'st_cb_dft'          => 0,
-				'st_cb_pnd'          => 0,
-				'st_cb_prv'          => 0,
-				'st_cb_tsh'          => 0,
-				'st_cb_override'     => 0,
-				'st_cc_type'         => 0,
-				'st_cc_types'        => array(),
-				'st_cc_hard'         => 0,
-				'st_cc_umin'         => 0,
-				'st_cc_umax'         => 0,
-				'st_cc_min'          => 0,
-				'st_cc_max'          => 0,
-				'st_feed'            => 0,
-			);
+			$taxonomy = array_merge( array( 'name' => $tax_name ), self::external_defaults() );
 			// overlay any saved settings for this external taxonomy.
 			if ( isset( $options['externals'] ) && is_array( $options['externals'] ) && array_key_exists( $tax_name, $options['externals'] ) ) {
 				$taxonomy = array_merge( $taxonomy, (array) $options['externals'][ $tax_name ] );
@@ -2643,10 +2656,12 @@ class SimpleTaxonomyRefreshed_Admin {
 		unset( $taxonomy['st_ep_mask'] );
 		unset( $taxonomy['st_update_count_callback'] );
 
-		// Statuses only apply to a selection. Unticked boxes are not posted, so store them as 0.
-		$selection = ( isset( $taxonomy['st_cb_type'] ) && 2 === (int) $taxonomy['st_cb_type'] );
-		foreach ( array( 'st_cb_pub', 'st_cb_fut', 'st_cb_dft', 'st_cb_pnd', 'st_cb_prv', 'st_cb_tsh' ) as $status ) {
-			if ( ! $selection || ! isset( $taxonomy[ $status ] ) ) {
+		// Fields the form did not send (unticked boxes, disabled fields) take their defaults.
+		$taxonomy = array_merge( self::external_defaults(), $taxonomy );
+
+		// Statuses only apply to a selection.
+		if ( 2 !== (int) $taxonomy['st_cb_type'] ) {
+			foreach ( array( 'st_cb_pub', 'st_cb_fut', 'st_cb_dft', 'st_cb_pnd', 'st_cb_prv', 'st_cb_tsh' ) as $status ) {
 				$taxonomy[ $status ] = 0;
 			}
 		}

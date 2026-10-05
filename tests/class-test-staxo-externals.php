@@ -221,6 +221,64 @@ class Test_STaxo_Externals extends STaxo_Test_Case {
 	}
 
 	/**
+	 * Fields the form does not send (disabled minimum or maximum, flat taxonomy's hierarchy options,
+	 * unticked status boxes) are stored with their defaults, so the controls can be built from them.
+	 */
+	public function test_save_external_fields_not_sent() {
+		$form = $this->external_form(
+			'ext_topic',
+			array(
+				'st_cc_type' => '2',
+				'st_cc_hard' => '1',
+				'st_cc_umin' => '1',
+				'st_cc_min'  => '1',
+				'st_cb_type' => '2',
+				'st_cb_pub'  => '1',
+			)
+		);
+		// "Use maximum" is False, so the browser does not send the disabled maximum.
+		unset( $form['st_cc_max'], $form['st_adm_hier'], $form['st_adm_depth'] );
+		$this->submit_external( $form );
+
+		$saved = get_option( OPTION_STAXO )['externals']['ext_topic'];
+		$this->assertSame( 0, $saved['st_cc_max'] );
+		$this->assertSame( 0, $saved['st_adm_hier'] );
+		$this->assertSame( 0, $saved['st_adm_depth'] );
+		$this->assertSame( '1', $saved['st_cb_pub'] );
+		$this->assertSame( 0, $saved['st_cb_fut'], 'Unticked status' );
+		$this->assertSame( array(), $saved['st_cc_types'] );
+
+		$cntl = SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache()['post']['ext_topic'];
+		$this->assertSame( 0, $cntl['st_cc_max'] );
+		$this->assertSame( 1, $cntl['st_cc_min'] );
+	}
+
+	/**
+	 * Settings saved by an earlier version without the maximum still give a control (no PHP warning).
+	 */
+	public function test_external_control_cache_older_settings() {
+		update_option(
+			OPTION_STAXO,
+			array(
+				'externals' => array(
+					'ext_topic' => array(
+						'name'       => 'ext_topic',
+						'st_cc_type' => '2',
+						'st_cc_hard' => '1',
+						'st_cc_umin' => '1',
+						'st_cc_min'  => '1',
+					),
+				),
+			)
+		);
+
+		$cntl = SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache()['post']['ext_topic'];
+		$this->assertSame( 1, $cntl['st_cc_min'] );
+		$this->assertSame( 0, $cntl['st_cc_umax'] );
+		$this->assertSame( 0, $cntl['st_cc_max'] );
+	}
+
+	/**
 	 * Only administrators may save external settings.
 	 */
 	public function test_save_external_needs_manage_options() {

@@ -754,11 +754,11 @@ class SimpleTaxonomyRefreshed_Client {
 			'show_option_all' => $taxonomy['labels']['all_items'],
 			'orderby'         => 'name',
 			'order'           => 'ASC',
-			'show_count'      => (bool) $taxonomy['st_adm_count'],
-			'hide_empty'      => (bool) $taxonomy['st_adm_h_e'],
-			'hide_if_empty'   => (bool) $taxonomy['st_adm_h_i_e'],
+			'show_count'      => ! empty( $taxonomy['st_adm_count'] ),
+			'hide_empty'      => ! empty( $taxonomy['st_adm_h_e'] ),
+			'hide_if_empty'   => ! empty( $taxonomy['st_adm_h_i_e'] ),
 			'selected'        => filter_input( INPUT_GET, $query_var, FILTER_SANITIZE_FULL_SPECIAL_CHARS ),
-			'hierarchical'    => (bool) $taxonomy['st_adm_hier'],
+			'hierarchical'    => ! empty( $taxonomy['st_adm_hier'] ),
 			'name'            => $query_var,
 			'value_field'     => 'slug',
 		);
@@ -1059,6 +1059,16 @@ class SimpleTaxonomyRefreshed_Client {
 							continue;
 						}
 						$taxonomy['objects'] = (array) $tax_obj->object_type;
+						// Settings saved by earlier versions may lack fields the form did not send (disabled minimum or maximum).
+						$taxonomy = array_merge(
+							array(
+								'st_cc_umin' => 0,
+								'st_cc_min'  => 0,
+								'st_cc_umax' => 0,
+								'st_cc_max'  => 0,
+							),
+							$taxonomy
+						);
 						// add to post types list.
 						if ( ! empty( $taxonomy['objects'] ) ) {
 							$cc_post_types = ( isset( $taxonomy['st_cc_types'] ) && ! empty( $taxonomy['st_cc_types'] ) ? (array) $taxonomy['st_cc_types'] : $taxonomy['objects'] );
