@@ -370,7 +370,7 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 		$this->assertSame( 'Test Term', $this->value( $html, 'labels-singular_name' ) );
 		$this->assertSame( '', $this->value( $html, 'labels-menu_name' ), 'Menu name is kept for editing' );
 		$this->assertSame( 'test_hier', $this->value( $html, 'query_var' ) );
-		$this->assertStringContainsString( 'Current value: <span id="show_ui_2">True</span>', $html, 'Term Control tab shows Display on admin' );
+		$this->assertMatchesRegularExpression( '#Current value:\s*<span id="show_ui_2">True</span>#', $html, 'Term Control tab shows Display on admin' );
 
 		$this->assertMatchesRegularExpression( '/id="submit"[^>]*>Update taxonomy/', $html );
 		$this->assertDoesNotMatchRegularExpression( '/id="submit"[^>]*disabled/', $html );
