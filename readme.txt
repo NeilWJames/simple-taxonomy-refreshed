@@ -121,8 +121,18 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 	* DEV: PHPUnit test suite (154 tests) with shared fixtures covering configuration import, Terms Import, Terms Merge, term counts, taxonomy add/update/delete, Export PHP, Terms Conversion, Rename Slug, Terms Control, front-end output, Taxonomy List Order and a capability/nonce sweep of every admin handler.
 	* DEV: Export PHP code is built by `SimpleTaxonomyRefreshed_Admin::build_php_export()`.
 	* DEV: Configuration export file content is built by `SimpleTaxonomyRefreshed_Admin_Config::build_config_export()`.
+	* DEV: End-to-end tests with Playwright against wp-env (Playground runtime locally, Docker in CI), starting with the Add Taxonomy screen.
 	* FIX: Configuration export keeps any taxonomy missing from the chosen order and ignores names that are not stored taxonomies (they raised PHP warnings and could drop taxonomies from the file).
 	* FIX: Taxonomy List Order page markup when no post type has more than one taxonomy.
+	* FIX: The taxonomy name links on the All Taxonomies page had an empty tooltip (title attribute).
+	* FIX: External taxonomies with WPGraphQL turned on caused a fatal error when the taxonomy was registered (the settings were written to the taxonomy object as if it were an array).
+	* FIX: Term Count now works for taxonomies that use WordPress's standard count, such as categories and tags, and those registered by other plugins with `_update_post_term_count`; the options were not offered for them.
+	* NEW: Term Count for an external taxonomy with a count function of its own: the tab warns that counts made with these options may not match its own, and a new "Use these options" box (setting `st_cb_override`) replaces its count function with WordPress's standard one and the statuses chosen. Without the tick, its own function is kept.
+	* NEW: Block editor: a hierarchical taxonomy whose Terms Control allows one term at most is shown with radio buttons, as in the classic editor, with its search and Add New Term form (the term checkboxes are replaced through the `editor.PostTaxonomyType` filter). Without a minimum, a "No term" choice is offered.
+	* FIX: Block editor: the Terms Control notice for a post already outside the limits was never shown (its script was added after the page head had been printed).
+	* FIX: Block editor: Terms Control notices showed HTML entities, such as `&#039;` for an apostrophe in the taxonomy label.
+	* FIX: Block editor: Terms Control checks as terms are changed now work for a taxonomy with its own REST base.
+	* DEV: New `build:editor` script builds the block editor radio term selector (`src/editor`) to `build/editor`; `npm run build` includes it.
 
 * Version 3.4.1  (03/09/2026)
 	* FIX: Taxonomy counts work within iFramed content.

@@ -7,6 +7,8 @@
 /.distignore
 /.gitattributes
 /.gitignore
+/.wp-env.json
+/artifacts
 /bin
 /docs
 /images
@@ -26,4 +28,5 @@ phpcs.ruleset.xml
 phpstan-baseline.neon
 phpstan.neon.dist
 phpunit9.xml
+playwright.config.js
 webpack.config.js.txt

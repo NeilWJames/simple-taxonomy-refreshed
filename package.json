@@ -6,12 +6,16 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run build:blocks && npm run build:js && npm run build:css",
+    "build": "npm run build:blocks && npm run build:editor && npm run build:js && npm run build:css",
     "build:blocks": "wp-scripts build --webpack-src-dir=src/blocks --output-path=build/blocks",
+    "build:editor": "wp-scripts build src/editor/index.js --output-path=build/editor",
     "build:js": "terser src/common/staxo-admin.js -o build/common/staxo-admin.js -c -m && terser src/common/staxo-client.js -o build/common/staxo-client.js -c -m",
     "build:css": "cleancss -o build/common/staxo-admin.css src/common/staxo-admin.css && cleancss -o build/common/staxo-widget.css src/common/staxo-widget.css",
     "start": "wp-scripts start --webpack-src-dir=src/blocks --output-path=build/blocks",
-    "wp-env": "wp-env"
+    "wp-env": "wp-env",
+    "env:start": "wp-playground-cli server --port 8888 --php 8.2 --no-login --blueprint tests/e2e/blueprint.json --mount-dir . /wordpress/wp-content/plugins/simple-taxonomy-refreshed --mount-dir tests/e2e/mu-plugins /wordpress/wp-content/mu-plugins",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "repository": {
     "type": "git",
@@ -24,6 +28,8 @@
   "author": "Neil W. James",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@wordpress/e2e-test-utils-playwright": "^2.1.0",
     "@wordpress/env": "^11.15.0",
     "@wordpress/scripts": "^36.0.0",
     "clean-css-cli": "^5.6.3",

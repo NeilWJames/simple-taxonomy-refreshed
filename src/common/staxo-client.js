@@ -7,8 +7,24 @@
 
 /**
  * Placeholder for control options and error/warning message texts.
+ *
+ * Each entry (built by PHP term_limits_push()):
+ * 0 slug, 1 post status control type, 2 minimum (or null), 3 minimum message,
+ * 4 maximum (or null), 5 maximum message, 6 hierarchical, 7 "No term" label,
+ * 8 post status, 9 "cannot convert to radio" message, 10 REST base.
  */
 const tax_cntl = [];
+
+/**
+ * The REST base of a taxonomy: the post attribute that holds its terms in the
+ * block editor stores. It differs from the slug when the taxonomy sets rest_base.
+ *
+ * @param {Array} cntl Entry of tax_cntl.
+ * @return {string} REST base.
+ */
+function rest_base_of( cntl ) {
+	return cntl[ 10 ] ? cntl[ 10 ] : cntl[ 0 ];
+}
 
 /**
  * Routine to retrieve the row of tax_cntl being processed.
@@ -742,6 +758,19 @@ const block_limit = function ( wpx, slug ) {
 	const tax_slug = slug;
 	const cntl = get_cntl( tax_slug );
 
+	/**
+	 * The messages are HTML-escaped (the classic screens write them with innerHTML);
+	 * block editor notices show text, so decode them first.
+	 *
+	 * @param {string} html Escaped message.
+	 * @return {string} Plain text.
+	 */
+	function notice_text( html ) {
+		const area = document.createElement( 'textarea' );
+		area.innerHTML = html;
+		return area.value;
+	}
+
 	let locked = false;
 	let nopubl = false;
 	let last_err = '';
@@ -767,10 +796,14 @@ const block_limit = function ( wpx, slug ) {
 		const isPublish = cn.includes( 'editor-post-publish-button__button' );
 		if ( isPublish && ( nopubl || locked ) ) {
 			// Re-show the (non-dismissible) notice rather than using a blocking alert().
-			dispatch( 'core/notices' ).createNotice( 'error', last_err, {
-				id: 'str_notice_' + tax_slug,
-				isDismissible: false,
-			} );
+			dispatch( 'core/notices' ).createNotice(
+				'error',
+				notice_text( last_err ),
+				{
+					id: 'str_notice_' + tax_slug,
+					isDismissible: false,
+				}
+			);
 			event.stopPropagation();
 			event.preventDefault();
 			event.target.disabled = true;
@@ -805,10 +838,14 @@ const block_limit = function ( wpx, slug ) {
 			set_disabled( 'editor-post-switch-to-draft', true );
 			set_disabled( 'editor-post-saved-state', true );
 			// show notice.
-			dispatch( 'core/notices' ).createNotice( 'error', err_text, {
-				id: 'str_notice_' + tax_slug,
-				isDismissible: false,
-			} );
+			dispatch( 'core/notices' ).createNotice(
+				'error',
+				notice_text( err_text ),
+				{
+					id: 'str_notice_' + tax_slug,
+					isDismissible: false,
+				}
+			);
 
 			if ( ! publishd ) {
 				if ( ! locked ) {
@@ -851,7 +888,7 @@ const block_limit = function ( wpx, slug ) {
 	const getstat = () =>
 		select( 'core/editor' ).getEditedPostAttribute( 'status' );
 	const gettax = () =>
-		select( 'core/editor' ).getEditedPostAttribute( tax_slug );
+		select( 'core/editor' ).getEditedPostAttribute( rest_base_of( cntl ) );
 
 	const btn = document.getElementById( 'editor' );
 	btn.addEventListener(

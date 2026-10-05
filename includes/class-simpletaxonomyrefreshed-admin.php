@@ -213,6 +213,8 @@ class SimpleTaxonomyRefreshed_Admin {
 
 		// called if block editor to render screen.
 		add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'block_editor_active' ) );
+		// radio term selector for taxonomies limited to one term.
+		add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_radio_editor' ) );
 
 		// help text.
 		add_action( 'load-toplevel_page_' . self::ADMIN_SLUG, array( __CLASS__, 'add_help_tab' ) );
@@ -773,7 +775,9 @@ class SimpleTaxonomyRefreshed_Admin {
 			$taxonomy['labels']                   = (array) $tax_obj->labels;
 			$taxonomy['objects']                  = (array) $tax_obj->object_type;
 			$taxonomy['hierarchical']             = $tax_obj->hierarchical;
-			$taxonomy['st_update_count_callback'] = $tax_obj->update_count_callback;
+			// Only a callback that counts in its own way stops the Term Count options.
+			$callback                             = $tax_obj->update_count_callback;
+			$taxonomy['st_update_count_callback'] = ( SimpleTaxonomyRefreshed_Client::counts_by_post_status( $callback ) ? '' : ( is_string( $callback ) ? $callback : 'callable' ) );
 			self::page_form( $taxonomy, false );
 			return;
 		}
@@ -835,7 +839,7 @@ class SimpleTaxonomyRefreshed_Admin {
 								$lname = $_t['labels']['name'];
 								// phpcs:disable  WordPress.Security.EscapeOutput
 								// translators: %s is the taxonomy name.
-								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), $lname ) );
+								$edit_msg = sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), stripslashes( $lname ) );
 								// translators: %s is the taxonomy name.
 								$del_msg = esc_js( sprintf( __( "You are about to delete this taxonomy '%s'\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-refreshed' ), $lname ) );
 								// translators: %s is the taxonomy name.
@@ -844,7 +848,7 @@ class SimpleTaxonomyRefreshed_Admin {
 								?>
 								<tr id="taxonomy-<?php echo esc_attr( $i ); ?>" class="<?php esc_attr( $class ); ?>">
 									<td class="name column-name has-row-actions column-primary page-title">
-										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php esc_attr( $edit_msg ); ?>" aria-label="<?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php echo esc_html( stripslashes( $lname ) ); ?></a></strong>
+										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php echo esc_attr( $edit_msg ); ?>" aria-label="<?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php echo esc_html( stripslashes( $lname ) ); ?></a></strong>
 										<br />
 										<div class="row-actions">
 											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" aria-label="<?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php esc_html_e( 'Modify', 'simple-taxonomy-refreshed' ); ?></a> | </span>
@@ -936,14 +940,14 @@ class SimpleTaxonomyRefreshed_Admin {
 								$lname = $_t->labels->name;
 								// phpcs:disable  WordPress.Security.EscapeOutput
 								// translators: %s is the taxonomy name.
-								$edit_msg = esc_html( sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), $lname ) );
+								$edit_msg = sprintf( __( "Edit the taxonomy '%s'", 'simple-taxonomy-refreshed' ), stripslashes( $lname ) );
 								// translators: %s is the taxonomy name.
 								$del_msg = esc_js( sprintf( __( "You are about to delete the extra functions of taxonomy '%s'\n  'Cancel' to stop, 'OK' to delete.", 'simple-taxonomy-refreshed' ), $lname ) );
 								// phpcs:enable  WordPress.Security.EscapeOutput
 								?>
 								<tr id="external-<?php echo esc_attr( $i ); ?>" class="<?php esc_attr( $class ); ?>">
 									<td class="name column-name has-row-actions column-primary page-title">
-										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php esc_attr( $edit_msg ); ?>" aria-label="<?php esc_html_e( 'Extra Functions', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php echo esc_html( stripslashes( $lname ) ); ?></a></strong>
+										<strong><a class="row-title" href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" title="<?php echo esc_attr( $edit_msg ); ?>" aria-label="<?php esc_html_e( 'Extra Functions', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php echo esc_html( stripslashes( $lname ) ); ?></a></strong>
 										<br />
 										<div class="row-actions">
 											<span class="edit"><a href="<?php echo esc_url( $admin_url ); ?>&amp;action=edit&amp;taxonomy_name=<?php echo esc_attr( $_t_name ); ?>" aria-label="<?php esc_html_e( 'Extra Functions', 'simple-taxonomy-refreshed' ); ?> - <?php echo esc_html( stripslashes( $lname ) ); ?>"><?php esc_html_e( 'Extra Functions', 'simple-taxonomy-refreshed' ); ?></a></span>
@@ -1873,12 +1877,12 @@ class SimpleTaxonomyRefreshed_Admin {
 							<h3 class="hndle"><span><?php esc_html_e( 'Term Count', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
 							<div class="inside">
-								<span id="count_tab_0" <?php echo ( empty( $taxonomy['st_update_count_callback'] ) ? 'class="is-hidden"' : '' ); ?>>
+								<span id="count_tab_0" <?php echo ( SimpleTaxonomyRefreshed_Client::counts_by_post_status( $taxonomy['st_update_count_callback'] ) ? 'class="is-hidden"' : '' ); ?>>
 									<p><?php esc_html_e( 'A function has been defined for calculating term counts. This function is therefore not available.', 'simple-taxonomy-refreshed' ); ?></p>
 								<table  class="form-table" style="clear:none;">
 								</table>
 								</span>
-								<span id="count_tab_1" <?php echo ( empty( $taxonomy['st_update_count_callback'] ) ? '' : 'class="is-hidden"' ); ?>>
+								<span id="count_tab_1" <?php echo ( SimpleTaxonomyRefreshed_Client::counts_by_post_status( $taxonomy['st_update_count_callback'] ) ? '' : 'class="is-hidden"' ); ?>>
 								<table class="form-table" style="clear:none;">
 									<p id="cb_descr"><?php esc_html_e( 'Term counts are normally based on Published posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
 									<tr>
@@ -2933,7 +2937,10 @@ class SimpleTaxonomyRefreshed_Admin {
 							// Show in rest needed and hard error will put out message later.
 							if ( $cntl['show_in_rest'] && $cntl['st_cc_hard'] < 2 ) {
 								// Message and ids are JSON-encoded so quotes in labels or translations cannot break the script.
-								wp_add_inline_script( 'staxo_placeholder', self::notice_script( $err, $text_1 . '  ' . $text_2 . '  ' . $text_3, $tax ), 'after' );
+								// Added to the client script, which is printed in the footer: this runs after the
+								// head scripts (such as staxo_placeholder) have been printed.
+								self::enqueue_client_libs();
+								wp_add_inline_script( 'staxo_client', self::notice_script( $err, $text_1 . '  ' . $text_2 . '  ' . $text_3, $tax ) );
 							}
 						} else {
 							$err_notice = true;
@@ -2967,7 +2974,10 @@ class SimpleTaxonomyRefreshed_Admin {
 							// Show in rest needed and hard error will put out message later.
 							if ( $cntl['show_in_rest'] && $cntl['st_cc_hard'] < 2 ) {
 								// Message and ids are JSON-encoded so quotes in labels or translations cannot break the script.
-								wp_add_inline_script( 'staxo_placeholder', self::notice_script( $err, $text_1 . '  ' . $text_2 . '  ' . $text_3, $tax ), 'after' );
+								// Added to the client script, which is printed in the footer: this runs after the
+								// head scripts (such as staxo_placeholder) have been printed.
+								self::enqueue_client_libs();
+								wp_add_inline_script( 'staxo_client', self::notice_script( $err, $text_1 . '  ' . $text_2 . '  ' . $text_3, $tax ) );
 							}
 						} else {
 							$err_notice = true;
@@ -3129,24 +3139,31 @@ class SimpleTaxonomyRefreshed_Admin {
 		// Generally we're not bothered about the status with radio buttons.
 		// But if there are existing multiple ones, then we need to leave as checkboxes.
 
-		if ( self::is_block_editor() ) {
-			// not yet supported.
-			// look for stuff within editor-post-taxonomies__hierarchical-terms-list with aria-label of the Taxonomy Name.
+		global $post;
+		if ( is_null( $post ) || ! isset( $post->post_status ) ) {
 			return;
-		} else {
-			global $post;
-			if ( is_null( $post ) || ! isset( $post->post_status ) ) {
-				return;
-			}
-			$stat = $post->post_status;
-			$text = self::term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, 1, $hier, $nt_label, $stat );
-
-			self::enqueue_client_libs();
-			wp_add_inline_script(
-				'staxo_client',
-				$text . self::on_dom_ready( 'dom_radio_client( ' . wp_json_encode( $tax_name ) . ' )', true )
-			);
 		}
+		if ( self::is_block_editor() ) {
+			// Block editor: the radio term selector (src/editor) replaces the checkboxes for the taxonomies listed here.
+			// With no minimum, a "No term" choice is offered.
+			$no_term  = ( isset( $nt_label ) && '' !== $nt_label ? $nt_label : __( 'No term', 'simple-taxonomy-refreshed' ) );
+			$settings = array( 'noTerm' => ( 0 === (int) $min_bound ? (string) $no_term : null ) );
+			wp_add_inline_script(
+				'staxo_radio_editor',
+				'window.staxo_radio = window.staxo_radio || {};' . PHP_EOL .
+				'window.staxo_radio[ ' . wp_json_encode( $tax_name ) . ' ] = ' . wp_json_encode( $settings ) . ';',
+				'before'
+			);
+			return;
+		}
+
+		$stat = $post->post_status;
+		$text = self::term_limits_push( $tax_name, $tax_label, $pstat, $min_bound, 1, $hier, $nt_label, $stat );
+		self::enqueue_client_libs();
+		wp_add_inline_script(
+			'staxo_client',
+			$text . self::on_dom_ready( 'dom_radio_client( ' . wp_json_encode( $tax_name ) . ' )', true )
+		);
 	}
 
 	/**
@@ -3210,8 +3227,11 @@ class SimpleTaxonomyRefreshed_Admin {
 		$no_term = ( isset( $nt_label ) ? $nt_label : __( 'No term', 'simple-taxonomy-refreshed' ) );
 		// translators: %1$s is the taxonomy label name.
 		$radio = esc_html( sprintf( __( 'More than one term for taxonomy (%1$s) has already been attached. List cannot be converted to a radio list', 'simple-taxonomy-refreshed' ), $tax_label ) );
+		// The block editor stores hold the terms under the taxonomy's REST base.
+		$tax_obj   = get_taxonomy( $tax_name );
+		$rest_base = ( $tax_obj && ! empty( $tax_obj->rest_base ) ? $tax_obj->rest_base : $tax_name );
 		// Messages stay HTML-escaped (the client writes some with innerHTML); JSON encoding makes them safe as JS strings.
-		$entry = array( (string) $tax_name, (int) $pstat, $mib, $less, $mab, $more, (int) $hier, (string) $no_term, (string) $status, $radio );
+		$entry = array( (string) $tax_name, (int) $pstat, $mib, $less, $mab, $more, (int) $hier, (string) $no_term, (string) $status, $radio, (string) $rest_base );
 		return 'tax_cntl.push( ' . wp_json_encode( $entry ) . ' );' . "\n";
 	}
 
@@ -3417,6 +3437,41 @@ class SimpleTaxonomyRefreshed_Admin {
 		}
 
 		return $prepared_post;
+	}
+
+	/**
+	 * Enqueue the block editor radio term selector (build/editor, built from src/editor).
+	 *
+	 * It only changes the taxonomies that script_radio() lists in window.staxo_radio.
+	 * If the build is missing, the editor keeps its own checkboxes.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @return void
+	 */
+	public static function enqueue_radio_editor() {
+		$dir   = dirname( __DIR__ ) . '/build/editor';
+		$asset = $dir . '/index.asset.php';
+		if ( ! file_exists( $asset ) ) {
+			return;
+		}
+		$asset = include $asset;
+		wp_enqueue_script(
+			'staxo_radio_editor',
+			plugins_url( 'build/editor/index.js', __DIR__ ),
+			$asset['dependencies'],
+			$asset['version'],
+			true
+		);
+		wp_set_script_translations( 'staxo_radio_editor', 'simple-taxonomy-refreshed' );
+		if ( file_exists( $dir . '/style-index.css' ) ) {
+			wp_enqueue_style(
+				'staxo_radio_editor',
+				plugins_url( 'build/editor/style-index.css', __DIR__ ),
+				array( 'wp-components' ),
+				$asset['version']
+			);
+		}
 	}
 
 	/**

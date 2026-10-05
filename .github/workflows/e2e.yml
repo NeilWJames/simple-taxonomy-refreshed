@@ -1,0 +1,52 @@
+# End-to-end (browser) tests with Playwright against a wp-env WordPress (Docker runtime, MySQL).
+# Locally the same tests run against the Playground runtime: see tests/test_suite.md, "End-to-end tests".
+name: E2E simple-taxonomy-refreshed
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # Build from src/ so the tests use the scripts and blocks as src/ defines them.
+      - name: Install and build
+        run: |
+          npm install
+          npm run build
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # playwright.config.js starts wp-env (Docker runtime, because CI is set) and waits for it.
+      - name: Run e2e tests
+        run: npm run test:e2e
+
+      - name: Upload traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-artifacts
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 7

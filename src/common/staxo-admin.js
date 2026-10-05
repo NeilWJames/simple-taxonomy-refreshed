@@ -240,9 +240,13 @@ function linkH( evt ) {
 }
 
 function hideCnt( evt ) {
+	// Term Count options apply with no callback, or with WordPress's own
+	// _update_post_term_count (it applies the post status filter).
+	const callback = document
+		.getElementById( 'st_update_count_callback' )
+		.value.trim();
 	const tab_visible =
-		document.getElementById( 'st_update_count_callback' ).value.length ===
-		0;
+		callback.length === 0 || callback === '_update_post_term_count';
 	if ( tab_visible ) {
 		document.getElementById( 'count_tab_0' ).classList.add( 'is-hidden' );
 		document

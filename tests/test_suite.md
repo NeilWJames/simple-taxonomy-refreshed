@@ -4,16 +4,17 @@ Summary of the PHPUnit test suite for Simple Taxonomy Refreshed. **Keep this fil
 
 Full design and rationale: `STR-test-suite-plan.md` in the Claude project "STR Plugin Development".
 
-_Last updated: 1 Oct 2026_
+_Last updated: 4 Oct 2026_
 
 ## Status
 
 | Item | State |
 |---|---|
-| Tests written | 179 in 13 classes (A–L + the original main test) |
-| Run in CI | All 169 pass (9,534 assertions) — 2 Oct 2026, including the blocks rebuilt from `src/` by the new `build-blocks` CI job. Class L (10) not yet run |
-| Coverage (Codecov, 2 Oct 2026) | Plan target ≥ 80%: merge 91.0%, conversion 84.3% met; import 78.0%, rename 42.3%, config 23.0% not met (see "Planned") |
+| Tests written | 193 in 14 classes (A–M + the original main test); class M (externals, 14) written 5 Oct 2026, not yet run |
+| Run in CI | All 179 pass (9,520 assertions in the job reported) — 2 Oct 2026; CI rebuilds `build/blocks` from `src/` when it changes |
+| Coverage (Codecov, 2 Oct 2026, after class L) | Plan target ≥ 80% met for all five files: conversion 98.9%, import 97.7%, rename 96.8%, merge 95.7%, config 85.2%. Others (not in the target): order 97.7%, client 75.8%, widget 49.8%, admin 23.3% |
 | Still to write | None — plan complete (see "Planned" for follow-ups) |
+| End-to-end (Playwright) | 24 tests in 6 specs: full run all pass locally (Playground, 2.9 min) — 5 Oct 2026. Not yet run in CI — see "End-to-end tests" |
 
 ## Running
 
@@ -54,6 +55,8 @@ CI (`.github/workflows/ci.yml`) runs the suite on PHP 8.2–8.4 × WP 6.9/latest
 | `test_count` | yes | post | Term count: type 2, publish + draft |
 
 Other config files: `staxo-config-test-hier.json` (single taxonomy), `staxo-config-test-callback.json` (callback fields), `staxo-config-bad.json` (no header).
+
+End-to-end config files (one taxonomy each, for posts, built from the suite entries): `staxo-config-e2e-notice.json` (`e2e_notes`, label `Writer's "Notes"`, flat, Terms Control any status, checked when saved, min 1 max 2), `staxo-config-e2e-hard.json` (`e2e_hard`, label `Editor's Terms`, the same but checked as terms are changed), `staxo-config-e2e-merge.json` (`e2e_genre`, label `Genres`, hierarchical, no control), `staxo-config-e2e-radio.json` (`e2e_kind`, label `Kinds`, hierarchical, REST base `kinds`, exactly one term on any saved post, checked when saved).
 
 **Terms** — loaded through Terms Import:
 
@@ -149,15 +152,86 @@ Multisite flag as expected; plugin loaded.
 ### L. Admin screens — `class-test-staxo-admin-pages.php` (`@group pages`, 10)
 
 The admin screen classes as WordPress loads them in wp-admin: each is a singleton whose constructor hooks its menu (instance cleared by reflection so the constructor runs); each adds its page under Taxonomies with its help tabs on the page's load hook; each adds help tabs to the screen; Configuration and List Order load the sortable script and the plugin's admin script and style. Pages: Configuration (several taxonomies → sortable list and Export/Import forms; one taxonomy → no reordering; no custom taxonomies; no configuration → no Export form); Rename (a radio and script per taxonomy; no taxonomies → stops); Terms Import (posted taxonomy and hierarchy kept selected); List Order (post type tabs and sortable lists). Configuration export (plan A4): `build_config_export()` output re-imported gives the same settings; chosen order applied, unknown names ignored, unlisted taxonomies kept, no settings → empty export.
+
+### M. External taxonomies — `class-test-staxo-externals.php` (`@group externals`, 14)
+
+STR settings on taxonomies registered by someone else. Two are registered in `set_up` as another plugin would (no count callback): `ext_topic` (flat, REST base `topics`) and `ext_area` (hierarchical). Saving the external form (`merge-external` → `update_external()`): stores only the integration settings under `externals` (no labels, objects, `public`…), redirects with `message=updated`; Term Count statuses kept only for "Selection"; editors refused. Control cache built from the registered taxonomy (integers, REST base, label); not cached for other post types or an unregistered external. REST check refuses a published post with no `topics` term. Term Count "Selection" (publish + draft) counts a draft but not a pending post. WPGraphQL settings set on the `WP_Taxonomy` object by `registered_taxonomy()`. The external edit form (`page_manage()`): "External Taxonomy : Topics", `merge-external`, hidden name, no Main Options tab, saved control shown; an unknown taxonomy stops with a message. Categories (count callback `_update_post_term_count`) get Term Count "Selection" too, and their form shows the options; a taxonomy with its own callback (`_update_generic_term_count`) keeps it and gets no statuses unless "use these options" (`st_cb_override`) is ticked; the form warns, names the function and shows the options and the box. With the box ticked, `init_2()` replaces the callback with `_update_post_term_count`, `original_count_callback()` still names the own function, and a draft is counted but not a pending post.
+## End-to-end tests (Playwright)
+
+Browser tests of the admin screens, with `@playwright/test` and `@wordpress/e2e-test-utils-playwright`, against a WordPress started by `@wordpress/env`.
+
+| Where | WordPress runtime | Database |
+|---|---|---|
+| Locally (Windows, Node only) | **WordPress Playground** (`npm run env:start`, blueprint `tests/e2e/blueprint.json`): WebAssembly, no Docker, a new site at every start | SQLite |
+| CI (`e2e.yml`) | wp-env **Docker** runtime | MySQL |
+
+The site is `http://127.0.0.1:8888` locally (Playground listens on IPv4 only and uses that as its site URL) and `http://localhost:8888` in CI; log in as `admin` / `password`. Time limits are raised (test 5 min, action 30 s, navigation 60 s, `expect` 20 s) because an admin page takes several seconds from the network share. PHP 8.2 (the minimum supported), latest WordPress, `WP_DEBUG` on: a PHP notice on a visited admin page fails the test.
+
+Locally Playground is started directly, not through wp-env: wp-env's Playground runtime stops the server if it is not ready within 120 seconds, and a start with the plugin on the network share takes longer (first start about 10 minutes, mostly downloading WordPress, which is then cached in `%USERPROFILE%\.wordpress-playground`). The `lockWholeFile: unlock failed` lines Playground prints on Windows are harmless.
+
+### Running
+
+```bash
+npm install                      # once, and after package.json changes
+npx playwright install chromium  # once per computer (the browser goes in the user profile)
+
+npm run env:start                # start WordPress and leave it running (separate window; Ctrl+C to stop)
+npm run test:e2e                 # runs all specs; starts WordPress for the run if it is not running
+npm run test:e2e:ui              # Playwright's UI mode: pick tests, watch them, time-travel
+npx playwright test add-taxonomy # one spec
+```
+
+For repeated runs keep `env:start` running in its own window: otherwise each `test:e2e` starts and stops WordPress. The tests reset the STR settings themselves. Failures leave a trace, screenshot and video in `artifacts/test-results/`; open a trace with `npx playwright show-trace <file>`.
+
+Playground's SQLite is not MySQL: anything that depends on SQL behaviour (merge, counts) stays covered by PHPUnit and by the CI run.
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `tests/e2e/blueprint.json` | Local Playground site: activates the plugin, `WP_DEBUG`. No `login` step, and `env:start` passes `--no-login` (the CLI's `server` command turns auto-login on by default): Playground's auto-login redirects any request without its cookie, so Playwright's readiness check looped on redirects. Playwright logs in itself (`admin` / `password`). `npm run env:start` mounts the plugin folder and the helper below |
+| `.wp-env.json` | The same site for wp-env (used in CI with the Docker runtime): this plugin, the helper as a must-use plugin, PHP 8.2, `WP_DEBUG`, no separate tests site |
+| `playwright.config.js` | Extends the `@wordpress/scripts` Playwright config: specs in `tests/e2e/specs`, site on port 8888; starts `npm run env:start` locally or `wp-env start` when `CI` is set, and waits up to 15 minutes for the site to answer |
+| `tests/e2e/mu-plugins/staxo-e2e-helper.php` | Classic editor switch (`staxo_e2e_classic=1` on `post.php`, through `use_block_editor_for_post`, kept on the redirect after a save, so no Classic Editor plugin is needed). Test-only REST routes (`staxo-e2e/v1`, administrators only): `POST /reset` deletes the STR settings and the terms of their taxonomies; `POST /config` with `{ "file": "<name>.json" }` loads a fixture from `tests/files` as the STR settings. Not shipped (`tests/` is in `.distignore`) |
+| `tests/e2e/helpers.js` | Shared helpers: admin URLs (`LIST_URL`, `ADD_URL`, `editUrl()`), `resetStaxo()` and `loadConfig()` (the helper routes), `taxonomyForm()` locators (fields whose label is used on several tabs are looked up in their tab panel), `enterSlug()`, `createTerms()`, `getPost()`, `editPostClassic()`, `openQuickEdit()`, `collectPageErrors()` |
+| `tests/e2e/specs/*.spec.js` | The tests |
+| `artifacts/` | Output (login state, traces); gitignored |
+
+Test data is set through the REST API (`requestUtils`) and the helper routes, not WP-CLI, because the Playground runtime has no `wp-env run`.
+
+### Specs
+
+| Spec | Tests |
+|---|---|
+| `add-taxonomy.spec.js` | Add Taxonomy screen (4): the submit button stays disabled until a name is entered; tabs show one panel at a time (`aria-selected`); adding a hierarchical taxonomy for posts shows the confirmation and the list row, and WordPress registers it (its terms screen, with a Parent field); a name already used (`category`) is refused. Settings reset before each test and at the end |
+| `edit-taxonomy.spec.js` | Edit Taxonomy screen (7), with `staxo-config-suite.json` loaded before each test: the list links to each taxonomy's form (name read-only, Update enabled); saved values shown on Main Options and Labels (`test_hier`), REST base and default term (`test_flat`), Term Count selection and statuses (`test_count`), Term Control type, timing and limits (`test_cntl`); changed labels of a custom taxonomy are saved and used by WordPress; Term Control settings for an external taxonomy (`category`) are saved and shown again (`update_external()`, not covered by PHPUnit) |
+| `block-editor.spec.js` | Terms Control in the block editor (5); the draft is created before the fixture is loaded. Checked when saved (`e2e_notes`): opening a draft with no term shows the PHP inline-script notice with the quoted label and no script error (review H2); Save draft is refused by the REST check ("Not enough terms…"); with a term added the draft saves. Checked as terms change (`e2e_hard`, `block_limit()`): saving locked and notice shown with no term; one term unlocks; three terms (max 2) lock with the maximum notice; two terms unlock and the draft saves. Notice checks look only at `.components-notice__content` (the screen-reader live region keeps notice text after the notice has gone); the post is edited before "Save draft", which is only offered for a changed post |
+| `merge.spec.js` | Terms Merge page, all steps in the browser (3), with terms and posts created over REST (Music > Jazz > Bebop, Art): Bebop into Jazz (button disabled until a taxonomy is chosen, destination disabled as a source, "already linked" notice, count 2, Bebop deleted, both posts on Jazz once); Music into Art moves Jazz under Art by default; or up a level when chosen |
+| `radio.spec.js` | Radio buttons for a one-term taxonomy (3, review H3), `e2e_kind`: block editor (radio term selector from `src/editor`, needs `npm run build:editor`: a `radiogroup` of radio buttons and no checkboxes, no "No term" as a term is required, choosing Jazz replaces Rock, Add New Category creates Blues and chooses it, saved over REST base `kinds`); classic editor (`dom_radio_client()`: radio inputs only, choosing one clears the other, Save Draft saves it); Quick Edit (`dom_qe_radio_client()`: radio inputs, list role `radiogroup`, Update saves). No script errors on any page |
+| `classic-limits.spec.js` | Terms Control checked as terms change, classic editor and Quick Edit (2, review H3), `e2e_hard`: classic (`dom_tag_cntl_check()`: reason shown, Save Draft stopped, one tag hides the reason, two tags make the tag field read-only, then saves); Quick Edit (`dom_qe_cntl_check()`: reason shown and Update disabled, one tag clears it, Update saves). No script errors |
+
 ## Planned
 
 The test plan (A–K) is complete. Follow-ups:
 
 | Area | Notes |
 |---|---|
-| Coverage of the plan's five files | Import, rename and config were below 80% (2 Oct): their pages, help tabs, menus and constructors were never run, and config export ends in `die()`. Class L added for these (2 Oct); check the figures after its first run. The `ABSPATH` guard line at the top of each file cannot be covered: it only runs outside WordPress, and it ends the process before coverage is saved |
 | Config import sanitising | Review finding M1 is still open: imported configurations are stored without the form's sanitising |
-| Browser tests | Block-editor JavaScript (notices, radio buttons, iframe) needs e2e tests (Playwright) |
+| Phase 2: browser tests (in progress) | Playwright tests for the taxonomy admin form, decided 2 Oct 2026; set-up and the first spec written 4 Oct 2026 (see "End-to-end tests"). Next: edit an existing taxonomy (loaded with the `config` helper route), the other form tabs, then block-editor JavaScript (terms-control notices, radio buttons, iframe canvas) |
+
+### Further coverage (from Codecov line data)
+
+Source: the Codecov upload for the CI run of 2 Oct 2026, 16:18 UTC (one PHP flag; its config figure is 84.7%, against 85.2% on the Codecov summary). Whole plugin: 2,177 of 3,994 statements (54.5%). In priority order, after Phase 2:
+
+| # | Area | Uncovered | What to do |
+|---|---|---|---|
+| 1 | **External taxonomies** (STR settings on a taxonomy it doesn't own, e.g. `category`) | `admin.php` `update_external()` never called; externals branches of `check_merge_taxonomy()` (lines 2164–2170); `client.php` `init()` externals (124–131) and `refresh_term_cntl_cache()` externals (966–996) | **Written 5 Oct 2026:** class M (11 tests, not yet run). Was: a real feature gap. Add an `externals` entry to a fixture (term count + terms control on `post_tag` or a test-registered taxonomy) and test: saving through the admin form, registration changes in `init()`/`init_2()`, the control cache, counts |
+| 2 | **Add/edit taxonomy form rendered** | `page_manage()` 183, `form_merge_custom_type()` 792, `page_form()` and `option_*()` helpers ~50 (~1,025 statements, about half of `admin.php`) | Render with output buffering as class L does (new, edit custom, edit external, list screen). Brings `admin.php` to about 76% and the plugin to about 80%. Complements the Phase 2 Playwright tests rather than replacing them |
+| 3 | **Terms-control notices on the post and edit screens** | `check_posts_outside_limits()`, `_edit()`, `_post()` (~130), `notice_script()`, `on_dom_ready()`, `script_radio*()`, `hard_term_limits_edit()`, `term_limits_push()`, `is_block_editor()` (~100) | Set `$post` / `$current_screen`, capture `all_admin_notices` output; classic and block editor; each post status group |
+| 4 | **Configuration import error branches; download handlers** | `admin-config.php`: upload error (121–122), prefix OK but JSON not an array (132), non-array taxonomy entry (143–144), no known keys (166), `taxo_list_arr` order (107–109). Export download headers + `die()` (85–101) and `check_export_taxonomy()` (2200–2221) | Small tests for the branches. Move the headers and `die()` of both downloads into one `send_download()` helper and mark only that `@codeCoverageIgnore` (as done for `build_config_export()`) |
+| 5 | **Code that runs while the plugin loads** | `simple-taxonomy-refreshed.php` (44), client and widget constructors, `str_widgets_init()`, `registered_taxonomy()`, `admin_menu()`, `add_help_tab()`, `activity_box_end()`, enqueue functions | Runs in `tests/bootstrap.php` before coverage starts, so shows as 0. Call again from a test, or accept. Also: `prepare_args()` optional args (`rest_base`, `rest_namespace`, `rest_controller_class`, GraphQL, meta box callbacks, `update_count_callback`) via one "kitchen-sink" taxonomy; `wp_title()`, `template_redirect()`, classic widget `form()` (67), block registration |
+
+Smaller gaps in the target files: merge `move_children()` (7 lines, child-term edge cases), `posts_below_minimum()` (4); rename `page_rename()` (4). The `ABSPATH` guard line in each file cannot be covered (it only runs outside WordPress and ends the process).
 
 ## Behaviour decided for tests
 
@@ -192,3 +266,25 @@ The test plan (A–K) is complete. Follow-ups:
 - **2 Oct 2026** — Capabilities for Terms Merge (Neil): manage_options (as the page) plus the taxonomy's manage_terms, delete_terms (sources are deleted) and assign_terms (posts get the destination); edit_terms as well when a source has child terms to move. Taxonomies without them are listed but disabled; the page no longer stops with a permissions message when the first taxonomy it checks is one the user cannot merge. `register_locked_taxonomy()` now uses `assign_locked` for assign_terms. Merge: 31 (+3); security sweep: Terms Merge minimum role now administrator. Total 169.
 - **2 Oct 2026** — CI clean: all 169 tests pass (9,534 assertions). CI now rebuilds `build/blocks` when `src/` changes, runs with read-only permissions and uploads coverage to Codecov (one flag per matrix job). First coverage figures for the plan's five files recorded in Status; three are below the 80% target.
 - **2 Oct 2026** — Class L (admin screens, 10) for coverage of the plan's files: singletons and constructors, menu pages, help tabs, sortable scripts, Configuration / Rename / Terms Import / List Order pages, and the configuration export round trip (plan A4). Plugin changes: configuration export content built by `SimpleTaxonomyRefreshed_Admin_Config::build_config_export()` (export keeps taxonomies missing from the chosen order and ignores unknown names); List Order page markup fixed for the no-multiple case. Total 179.
+- **2 Oct 2026** — CI clean: all 179 tests pass, including class L on its first run. Coverage target (plan §7, ≥ 80% for import, merge, rename, conversion and config) met for all five; figures in Status. Test-suite phase complete.
+- **2 Oct 2026** — Phase 2 decided (Neil): Playwright tests for the admin form.
+- **4 Oct 2026** — Codecov line data for the 2 Oct run analysed; the optional coverage follow-up replaced by a prioritised list under "Planned" (external taxonomies first). No tests changed.
+- **4 Oct 2026** — Phase 2 started: Playwright set-up (`.wp-env.json`, `playwright.config.js`, helper must-use plugin with `reset` and `config` routes, npm scripts `test:e2e`, `test:e2e:ui`, `env:start`, `env:stop`) and the first spec, `add-taxonomy.spec.js` (4 tests). Lint clean; not yet run. CI workflow `e2e.yml` drafted in the Claude folder (`work/workflows/`).
+- **4 Oct 2026** — Local e2e site: wp-env's Playground runtime timed out after 120 s with the plugin on the network share (first start took about 10 minutes). `npm run env:start` now runs Playground directly with `tests/e2e/blueprint.json`; Playwright waits for the site URL (Playground answers 502 while booting), up to 15 minutes. `.wp-env.json` kept for CI, with `testsEnvironment: false`. `env:stop` removed (Ctrl+C).
+- **4 Oct 2026** — First local run hung on Playwright's check of `http://localhost:8888` (Playground listens on 127.0.0.1 only). Local base URL is now `http://127.0.0.1:8888`, the Playground site URL; time limits raised for the network share.
+- **4 Oct 2026** — Readiness check still hung: the blueprint's `login` step turns on Playground auto-login, which answers every cookie-less request with a redirect (curl: 302 after 120 s of redirects). `login` step removed; the Playwright global setup logs in with `admin` / `password`.
+- **5 Oct 2026** — Still looping after the blueprint change: Playground CLI's `server` command enables auto-login by default. `env:start` now passes `--no-login`.
+- **5 Oct 2026** — First local runs: 3 of 4 passed at once; "adds a hierarchical taxonomy" failed because "Hierarchical ?" and "Post types" each label three fields on different tabs (strict-mode violation). Those locators are now scoped to the Main Options panel (`#mainopts`). All 4 pass (1.9 min). The "Failed to load resource: 500" console line comes from the duplicate-name test: `wp_die()` answers with HTTP 500, as expected.
+- **5 Oct 2026** — Second spec `edit-taxonomy.spec.js` (7 tests, not yet run). Shared helpers moved to `tests/e2e/helpers.js`; `add-taxonomy.spec.js` uses them (`addButton` replaces `submit`).
+- **5 Oct 2026** — First run of all 11: 8 passed. The 3 tests that save the form failed only on their URL check: WordPress removes `message` from the address bar after load (removable query args), and on this run it did so before Playwright looked. The page snapshots show the save and its notice worked. The URL checks now look for `page=staxo_settings…&staxo=<name>`; the notice text is still checked.
+- **5 Oct 2026** — All 11 e2e tests pass locally (3.8 min), including the external-taxonomy save (`update_external()`).
+- **5 Oct 2026** — Specs `block-editor.spec.js` (5) and `merge.spec.js` (3), with fixtures `staxo-config-e2e-notice.json`, `staxo-config-e2e-hard.json`, `staxo-config-e2e-merge.json`. Not yet run. 19 e2e tests.
+- **5 Oct 2026** — First run of `block-editor.spec.js` and `merge.spec.js`: merge 3/3 pass; block editor 1/5. Plugin bugs found and fixed: (1) the notice for a post already outside the limits was added to `staxo_placeholder`, which is printed in the page head before the check runs, so it never appeared; it now goes on `staxo_client` (printed in the footer); (2) `block_limit()` showed the HTML-escaped messages as text (`Editor&#039;s`); it now decodes them. Test fixes: notices are looked up in `.components-notice__content` only; the post is edited before "Save draft".
+- **5 Oct 2026** — Review H3 before 4.0 (Neil): radio buttons in the block editor implemented (`block_radio()` in `staxo-client.js`, called from `script_radio()`); `tax_cntl` entries gain the REST base (10) and label (11), and `block_limit()` reads the terms under the REST base. Specs `radio.spec.js` (3) and `classic-limits.spec.js` (2), fixture `staxo-config-e2e-radio.json`, classic-editor switch in the helper plugin, more shared helpers. 24 e2e tests.
+- **5 Oct 2026** — Block editor radio redesigned (Neil): instead of `block_radio()` (removed from `staxo-client.js`), the plugin's radio term selector (`src/editor/radio-term-selector.js`, adapted from WordPress's `HierarchicalTermSelector`, with search and Add New Term) replaces the checkboxes through the `editor.PostTaxonomyType` filter for the taxonomies `script_radio()` lists in `window.staxo_radio`. Built with `npm run build:editor` to `build/editor`, enqueued on `enqueue_block_editor_assets`. `tax_cntl` entry 11 (label) dropped. `radio.spec.js` block test rewritten (real radio inputs, Add New Category).
+- **5 Oct 2026** — Run of block-editor, radio (old store version) and classic-limits: 8 of 10 passed, including all 5 block-editor tests after the fixes. The two classic-editor saves did save, but WordPress redirected to `post.php` without the classic switch, so the block editor opened and "Post draft updated." was not shown. The helper plugin now keeps the switch on the redirect (`redirect_post_location`).
+- **5 Oct 2026** — After `npm run build:editor`: block-editor, radio and classic-limits all pass (10/10, 1.7 min), including the new block-editor radio term selector with Add New Category and the classic-editor saves. All 24 e2e tests have now passed locally.
+- **5 Oct 2026** — Class M (externals, 11) for the first coverage follow-up. Plugin fix made while writing it: `SimpleTaxonomyRefreshed_Client::registered_taxonomy()` wrote the WPGraphQL settings for an external taxonomy into `$wp_taxonomies[ $taxonomy ]` as an array, but registered taxonomies are `WP_Taxonomy` objects, so with WPGraphQL turned on for an external taxonomy the next registration of it ended in a fatal error; it now sets the properties on the object. Note: `phpunit9.xml` has `disableCodeCoverageIgnore="true"`, so the planned `@codeCoverageIgnore` on a download helper would not take effect without changing that setting. 190 tests.
+- **5 Oct 2026** — Full e2e run: 24/24 pass (2.9 min).
+- **5 Oct 2026** — Term Count for taxonomies counted by WordPress's `_update_post_term_count()` (categories, tags, and other plugins' taxonomies with that callback or none), decided by Neil: that function applies the `update_post_term_count_statuses` filter, so the counts are the ones STR would make. New `SimpleTaxonomyRefreshed_Client::counts_by_post_status()` used by `init()`, `term_count_sel_cache()`, the external form (`page_manage()`) and the Term Count tab; `staxo-admin.js` `hideCnt()` likewise. Other callbacks are left alone. Class M +2 (13); 192 tests. `phpunit9.xml`: `disableCodeCoverageIgnore` now `false` (Neil), so `@codeCoverageIgnore` takes effect.
+- **5 Oct 2026** — External taxonomies with a count function of their own (Neil): the Term Count tab shows a warning naming the function, the options, and a new box "Use these options to count terms, instead of the taxonomy's own function" (new setting `st_cb_override`, stored with the external's settings; hidden 0 so unticking is saved). Ticked: `SimpleTaxonomyRefreshed_Client::apply_count_overrides()` (from `init_2()`) replaces the callback with `_update_post_term_count`; `original_count_callback()` keeps the own name for the form; `init()` and `term_count_sel_cache()` honour the setting. Also fixed a stray `"` after the `count_sel_0` / `count_sel_1` span attributes. Class M: own-callback test rewritten, override test added (14); 193 tests.

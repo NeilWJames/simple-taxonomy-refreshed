@@ -1,0 +1,30 @@
+/* Radio term selector (block editor sidebar). */
+.staxo-radio-terms {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.staxo-radio-terms__list {
+	max-height: 226px;
+	overflow: auto;
+	padding-inline-start: 2px;
+}
+
+.staxo-radio-terms__choice {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.staxo-radio-terms__choice input[type="radio"] {
+	margin: 0;
+}
+
+.staxo-radio-terms__add {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	align-items: flex-start;
+}

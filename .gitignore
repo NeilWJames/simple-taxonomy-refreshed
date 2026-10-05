@@ -6,3 +6,5 @@ junit.xml
 node_modules/
 package-lock.json
 vendor
+artifacts/
+.wp-env.override.json

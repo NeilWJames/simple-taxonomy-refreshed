@@ -108,7 +108,7 @@ class SimpleTaxonomyRefreshed_Client {
 				$args = self::prepare_args( $taxonomy );
 
 				// Update callback if term count callback wanted.
-				if ( '' === $args['update_count_callback'] && isset( $taxonomy['st_cb_type'] ) && $taxonomy['st_cb_type'] > 0 ) {
+				if ( self::counts_by_post_status( $args['update_count_callback'] ) && isset( $taxonomy['st_cb_type'] ) && $taxonomy['st_cb_type'] > 0 ) {
 					$terms_count = true;
 				}
 
@@ -127,7 +127,7 @@ class SimpleTaxonomyRefreshed_Client {
 
 					// Update callback if term count callback wanted.
 					// If not yet registered, go via init_2 to update.
-					if ( false === $taxonomy || empty( $taxonomy->update_count_callback ) ) {
+					if ( false === $taxonomy || self::counts_by_post_status( $taxonomy->update_count_callback ) ) {
 						$terms_count = true;
 					}
 				}
@@ -197,13 +197,19 @@ class SimpleTaxonomyRefreshed_Client {
 		$options = get_option( OPTION_STAXO );
 		if ( isset( $options['externals'] ) && is_array( $options['externals'] ) ) {
 			$externals = $options['externals'];
-			if ( isset( $externals[ $taxonomy ] ) && (bool) $externals[ $taxonomy ]['st_show_in_graphql'] ) {
-				global $wp_taxonomies;
-				// phpcs:disable WordPress.WP.GlobalVariablesOverride.Prohibited
-				$wp_taxonomies[ $taxonomy ]['show_in_graphql'] = true;
-				$wp_taxonomies[ $taxonomy ]['graphql_single']  = $externals[ $taxonomy ]['st_graphql_single'];
-				$wp_taxonomies[ $taxonomy ]['graphql_plural']  = $externals[ $taxonomy ]['st_graphql_plural'];
-				// phpcs:enable WordPress.WP.GlobalVariablesOverride.Prohibited
+			if ( isset( $externals[ $taxonomy ] ) && ! empty( $externals[ $taxonomy ]['st_show_in_graphql'] ) ) {
+				// Registered taxonomies are WP_Taxonomy objects (not arrays), so set the properties WPGraphQL reads.
+				$tax_obj = get_taxonomy( $taxonomy );
+				if ( $tax_obj instanceof WP_Taxonomy ) {
+					$graphql = array(
+						'show_in_graphql' => true,
+						'graphql_single'  => (string) ( $externals[ $taxonomy ]['st_graphql_single'] ?? '' ),
+						'graphql_plural'  => (string) ( $externals[ $taxonomy ]['st_graphql_plural'] ?? '' ),
+					);
+					foreach ( $graphql as $property => $value ) {
+						$tax_obj->$property = $value;
+					}
+				}
 			}
 		}
 	}
@@ -834,7 +840,7 @@ class SimpleTaxonomyRefreshed_Client {
 			$tax_obj  = get_taxonomy( $taxonomy );
 			$callback = ( false === $tax_obj ? '' : $tax_obj->update_count_callback );
 			$statuses = array();
-			if ( empty( $callback ) && isset( $taxo['st_cb_type'] ) ) {
+			if ( self::counts_by_post_status( $callback ) && isset( $taxo['st_cb_type'] ) ) {
 				switch ( $taxo['st_cb_type'] ) {
 					case '1':
 						$statuses = get_post_stati();
@@ -885,6 +891,24 @@ class SimpleTaxonomyRefreshed_Client {
 		}
 
 		return $tax_details;
+	}
+
+	/**
+	 * Whether a taxonomy with this update count callback counts its terms through
+	 * _update_post_term_count(), which applies the 'update_post_term_count_statuses'
+	 * filter, so the Term Count options of this plugin take effect.
+	 *
+	 * True for no callback (WordPress then uses _update_post_term_count() for post types)
+	 * and for _update_post_term_count() itself, which categories and tags use. Any other
+	 * callback counts in its own way, so the options are not applied.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param mixed $callback update_count_callback of the taxonomy.
+	 * @return bool
+	 */
+	public static function counts_by_post_status( $callback ) {
+		return ( empty( $callback ) || '_update_post_term_count' === $callback );
 	}
 
 	/**

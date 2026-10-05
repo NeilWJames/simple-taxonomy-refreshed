@@ -1,0 +1,16 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"landingPage": "/wp-admin/",
+	"steps": [
+		{
+			"step": "activatePlugin",
+			"pluginPath": "/wordpress/wp-content/plugins/simple-taxonomy-refreshed"
+		},
+		{
+			"step": "defineWpConfigConsts",
+			"consts": {
+				"WP_DEBUG": true
+			}
+		}
+	]
+}
