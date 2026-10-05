@@ -31,6 +31,17 @@ jobs:
       - name: Run Build
         run: npm run build
 
+      # Stop here if a part of the build is missing, rather than opening a PR without it.
+      - name: Check build output
+        run: |
+          for f in build/blocks/staxo-terms/index.js build/blocks/staxo-widget/index.js \
+                   build/editor/index.js build/editor/index.asset.php build/editor/style-index.css \
+                   build/common/staxo-admin.js build/common/staxo-client.js \
+                   build/common/staxo-admin.css build/common/staxo-widget.css; do
+            test -s "$f" || { echo "::error::Missing build output: $f"; exit 1; }
+          done
+          find build -type f | sort
+
       - name: Upload build output
         uses: actions/upload-artifact@v7
         with:

@@ -757,6 +757,7 @@ class SimpleTaxonomyRefreshed_Admin {
 				'st_cb_pnd'          => 0,
 				'st_cb_prv'          => 0,
 				'st_cb_tsh'          => 0,
+				'st_cb_override'     => 0,
 				'st_cc_type'         => 0,
 				'st_cc_types'        => array(),
 				'st_cc_hard'         => 0,
@@ -771,12 +772,12 @@ class SimpleTaxonomyRefreshed_Admin {
 				$taxonomy = array_merge( $taxonomy, (array) $options['externals'][ $tax_name ] );
 			}
 			// add data from taxonomy . Not stored.
-			$tax_obj                              = get_taxonomy( $tax_name );
-			$taxonomy['labels']                   = (array) $tax_obj->labels;
-			$taxonomy['objects']                  = (array) $tax_obj->object_type;
-			$taxonomy['hierarchical']             = $tax_obj->hierarchical;
+			$tax_obj                  = get_taxonomy( $tax_name );
+			$taxonomy['labels']       = (array) $tax_obj->labels;
+			$taxonomy['objects']      = (array) $tax_obj->object_type;
+			$taxonomy['hierarchical'] = $tax_obj->hierarchical;
 			// Only a callback that counts in its own way stops the Term Count options.
-			$callback                             = $tax_obj->update_count_callback;
+			$callback                             = SimpleTaxonomyRefreshed_Client::original_count_callback( $tax_name );
 			$taxonomy['st_update_count_callback'] = ( SimpleTaxonomyRefreshed_Client::counts_by_post_status( $callback ) ? '' : ( is_string( $callback ) ? $callback : 'callable' ) );
 			self::page_form( $taxonomy, false );
 			return;
@@ -1240,7 +1241,7 @@ class SimpleTaxonomyRefreshed_Admin {
 											<select name="auto" id="auto">
 												<?php
 												foreach ( self::get_auto_content_types() as $type_key => $type_name ) {
-													echo '<option ' . esc_attr( selected( $taxonomy['auto'], $type_key, false ) ) . ' value="' . esc_attr( $type_key ) . '">' . esc_html( $type_name ) . '</option>' . "\n";
+													echo '<option ' . selected( $taxonomy['auto'], $type_key, false ) . ' value="' . esc_attr( $type_key ) . '">' . esc_html( $type_name ) . '</option>' . "\n";
 												}
 												?>
 											</select>
@@ -1584,20 +1585,20 @@ class SimpleTaxonomyRefreshed_Admin {
 										<td>
 											<select name="st_ep_mask_s[]" id="st_ep_mask_s" multiple size="6">
 												<?php
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'], 0, false ) ) . ' value="0">' . esc_html__( 'EP_NONE', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 1, 1, false ) ) . ' value="1">' . esc_html__( 'EP_PERMALINK', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 2, 2, false ) ) . ' value="2">' . esc_html__( 'EP_ATTACHMENT', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 4, 4, false ) ) . ' value="4">' . esc_html__( 'EP_DATE', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 8, 8, false ) ) . ' value="8">' . esc_html__( 'EP_YEAR', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 16, 16, false ) ) . ' value="16">' . esc_html__( 'EP_MONTH', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 32, 32, false ) ) . ' value="32">' . esc_html__( 'EP_DAY', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 64, 64, false ) ) . ' value="64">' . esc_html__( 'EP_ROOT', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 128, 128, false ) ) . ' value="128">' . esc_html__( 'EP_COMMENTS', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 256, 256, false ) ) . ' value="256">' . esc_html__( 'EP_SEARCH', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 512, 512, false ) ) . ' value="512">' . esc_html__( 'EP_CATEGORIES', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 1024, 1024, false ) ) . ' value="1024">' . esc_html__( 'EP_TAGS', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 2048, 2048, false ) ) . ' value="2048">' . esc_html__( 'EP_AUTHORS', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
-												echo '<option ' . esc_attr( selected( (int) $taxonomy['st_ep_mask'] & 4096, 4096, false ) ) . ' value="4096">' . esc_html__( 'EP_PAGES', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'], 0, false ) . ' value="0">' . esc_html__( 'EP_NONE', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 1, 1, false ) . ' value="1">' . esc_html__( 'EP_PERMALINK', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 2, 2, false ) . ' value="2">' . esc_html__( 'EP_ATTACHMENT', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 4, 4, false ) . ' value="4">' . esc_html__( 'EP_DATE', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 8, 8, false ) . ' value="8">' . esc_html__( 'EP_YEAR', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 16, 16, false ) . ' value="16">' . esc_html__( 'EP_MONTH', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 32, 32, false ) . ' value="32">' . esc_html__( 'EP_DAY', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 64, 64, false ) . ' value="64">' . esc_html__( 'EP_ROOT', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 128, 128, false ) . ' value="128">' . esc_html__( 'EP_COMMENTS', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 256, 256, false ) . ' value="256">' . esc_html__( 'EP_SEARCH', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 512, 512, false ) . ' value="512">' . esc_html__( 'EP_CATEGORIES', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 1024, 1024, false ) . ' value="1024">' . esc_html__( 'EP_TAGS', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 2048, 2048, false ) . ' value="2048">' . esc_html__( 'EP_AUTHORS', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
+												echo '<option ' . selected( (int) $taxonomy['st_ep_mask'] & 4096, 4096, false ) . ' value="4096">' . esc_html__( 'EP_PAGES', 'simple-taxonomy-refreshed' ) . '</option>' . "\n";
 												?>
 											</select>
 											<span class="description"><?php esc_html_e( 'Assign an endpoint mask.', 'simple-taxonomy-refreshed' ); ?></span>
@@ -1877,12 +1878,25 @@ class SimpleTaxonomyRefreshed_Admin {
 							<h3 class="hndle"><span><?php esc_html_e( 'Term Count', 'simple-taxonomy-refreshed' ); ?></span></h3>
 
 							<div class="inside">
-								<span id="count_tab_0" <?php echo ( SimpleTaxonomyRefreshed_Client::counts_by_post_status( $taxonomy['st_update_count_callback'] ) ? 'class="is-hidden"' : '' ); ?>>
+								<?php $own_count = ! SimpleTaxonomyRefreshed_Client::counts_by_post_status( $taxonomy['st_update_count_callback'] ); ?>
+								<span id="count_tab_0" <?php echo ( $own_count ? '' : 'class="is-hidden"' ); ?>>
+								<?php if ( $custom ) { ?>
 									<p><?php esc_html_e( 'A function has been defined for calculating term counts. This function is therefore not available.', 'simple-taxonomy-refreshed' ); ?></p>
+								<?php } else { ?>
+									<div class="notice notice-warning inline"><p>
+									<?php
+									// translators: %s is the name of the taxonomy's own count function.
+									echo esc_html( sprintf( __( 'This taxonomy has its own function for counting terms (%s). Counts made with the options below may not match the counts it would make.', 'simple-taxonomy-refreshed' ), $taxonomy['st_update_count_callback'] ) );
+									?>
+									</p></div>
+									<input type="hidden" name="st_cb_override" value="0" />
+									<p><label><input type="checkbox" id="st_cb_override" name="st_cb_override" value="1" <?php checked( 1, (int) $taxonomy['st_cb_override'] ); ?> />
+									<?php esc_html_e( 'Use these options to count terms, instead of the taxonomy\'s own function', 'simple-taxonomy-refreshed' ); ?></label></p>
+								<?php } ?>
 								<table  class="form-table" style="clear:none;">
 								</table>
 								</span>
-								<span id="count_tab_1" <?php echo ( SimpleTaxonomyRefreshed_Client::counts_by_post_status( $taxonomy['st_update_count_callback'] ) ? '' : 'class="is-hidden"' ); ?>>
+								<span id="count_tab_1" <?php echo ( $own_count && $custom ? 'class="is-hidden"' : '' ); ?>>
 								<table class="form-table" style="clear:none;">
 									<p id="cb_descr"><?php esc_html_e( 'Term counts are normally based on Published posts. This option provides some no-coding configuration.', 'simple-taxonomy-refreshed' ); ?></p>
 									<tr>
@@ -1896,10 +1910,10 @@ class SimpleTaxonomyRefreshed_Admin {
 										</div></td>
 									</tr>
 								</table>
-								<span id="count_sel_0" <?php echo ( 2 === (int) $taxonomy['st_cb_type'] ? 'class="is-hidden"' : '' ); ?>">
+								<span id="count_sel_0" <?php echo ( 2 === (int) $taxonomy['st_cb_type'] ? 'class="is-hidden"' : '' ); ?>>
 									<p><?php esc_html_e( 'Additional parameters not shown as they are not applicable.', 'simple-taxonomy-refreshed' ); ?></p>
 								</span>
-								<span id="count_sel_1" <?php echo ( 2 === (int) $taxonomy['st_cb_type'] ? '' : 'class="is-hidden"' ); ?>">
+								<span id="count_sel_1" <?php echo ( 2 === (int) $taxonomy['st_cb_type'] ? '' : 'class="is-hidden"' ); ?>>
 								<table class="form-table" style="clear:none;">
 									<tr>
 										<th scope="row"><label id="post_status"><?php esc_html_e( 'Status Selection', 'simple-taxonomy-refreshed' ); ?></label></th>
@@ -2629,14 +2643,12 @@ class SimpleTaxonomyRefreshed_Admin {
 		unset( $taxonomy['st_ep_mask'] );
 		unset( $taxonomy['st_update_count_callback'] );
 
-		// remove some possible inconsistencies.
-		if ( 2 !== (int) $taxonomy['st_cb_type'] ) {
-			$taxonomy['st_cb_pub'] = 0;
-			$taxonomy['st_cb_fut'] = 0;
-			$taxonomy['st_cb_dft'] = 0;
-			$taxonomy['st_cb_pnd'] = 0;
-			$taxonomy['st_cb_prv'] = 0;
-			$taxonomy['st_cb_tsh'] = 0;
+		// Statuses only apply to a selection. Unticked boxes are not posted, so store them as 0.
+		$selection = ( isset( $taxonomy['st_cb_type'] ) && 2 === (int) $taxonomy['st_cb_type'] );
+		foreach ( array( 'st_cb_pub', 'st_cb_fut', 'st_cb_dft', 'st_cb_pnd', 'st_cb_prv', 'st_cb_tsh' ) as $status ) {
+			if ( ! $selection || ! isset( $taxonomy[ $status ] ) ) {
+				$taxonomy[ $status ] = 0;
+			}
 		}
 
 		$current_options['externals'][ $staxo ] = $taxonomy;
@@ -3093,12 +3105,12 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @since 3.4.0
 	 *
-	 * @param string   $tax_name  The taxonomy name.
-	 * @param string   $tax_label The taxonomy label name.
-	 * @param int      $pstat     Post status control type.
-	 * @param int|null $min_bound minimum number of terms (null if no minimum).
-	 * @param bool     $hier      taxonomy is hierarchical.
-	 * @param string   $nt_label  The taxonomy label name for No term.
+	 * @param string      $tax_name  The taxonomy name.
+	 * @param string      $tax_label The taxonomy label name.
+	 * @param int         $pstat     Post status control type.
+	 * @param int|null    $min_bound minimum number of terms (null if no minimum).
+	 * @param bool        $hier      taxonomy is hierarchical.
+	 * @param string|null $nt_label  The taxonomy label name for No term (null for the default).
 	 */
 	private static function script_radio_edit( $tax_name, $tax_label, $pstat, $min_bound, $hier, $nt_label ) {
 		global $post;
@@ -3122,12 +3134,12 @@ class SimpleTaxonomyRefreshed_Admin {
 	 *
 	 * @since 1.2.0
 	 *
-	 * @param string $tax_name  The taxonomy slug.
-	 * @param string $tax_label The taxonomy label.
-	 * @param int    $pstat     Post status control type.
-	 * @param int    $min_bound minimum number of terms (0 or 1).
-	 * @param bool   $hier      Whether taxonomy is hierarchical.
-	 * @param string $nt_label  The taxonomy label name for No term.
+	 * @param string      $tax_name  The taxonomy slug.
+	 * @param string      $tax_label The taxonomy label.
+	 * @param int         $pstat     Post status control type.
+	 * @param int         $min_bound minimum number of terms (0 or 1).
+	 * @param bool        $hier      Whether taxonomy is hierarchical.
+	 * @param string|null $nt_label  The taxonomy label name for No term (null for the default).
 	 */
 	private static function script_radio( $tax_name, $tax_label, $pstat, $min_bound, $hier, $nt_label ) {
 		// Logic is that there are two tabs for the taxonomy - all and popular.

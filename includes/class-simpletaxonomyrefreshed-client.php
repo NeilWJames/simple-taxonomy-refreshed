@@ -127,7 +127,7 @@ class SimpleTaxonomyRefreshed_Client {
 
 					// Update callback if term count callback wanted.
 					// If not yet registered, go via init_2 to update.
-					if ( false === $taxonomy || self::counts_by_post_status( $taxonomy->update_count_callback ) ) {
+					if ( false === $taxonomy || self::counts_by_post_status( $taxonomy->update_count_callback ) || ! empty( $args['st_cb_override'] ) ) {
 						$terms_count = true;
 					}
 				}
@@ -153,6 +153,7 @@ class SimpleTaxonomyRefreshed_Client {
 	 */
 	public static function init_2() {
 		$options = get_option( OPTION_STAXO );
+		self::apply_count_overrides( $options );
 		// Make sure done late to allow for other cpt being defined later.
 		if ( isset( $options['taxonomies'] ) && is_array( $options['taxonomies'] ) ) {
 			foreach ( (array) $options['taxonomies'] as $taxonomy ) {
@@ -207,7 +208,7 @@ class SimpleTaxonomyRefreshed_Client {
 						'graphql_plural'  => (string) ( $externals[ $taxonomy ]['st_graphql_plural'] ?? '' ),
 					);
 					foreach ( $graphql as $property => $value ) {
-						$tax_obj->$property = $value;
+						$tax_obj->$property = $value; // @phpstan-ignore-line
 					}
 				}
 			}
@@ -840,7 +841,7 @@ class SimpleTaxonomyRefreshed_Client {
 			$tax_obj  = get_taxonomy( $taxonomy );
 			$callback = ( false === $tax_obj ? '' : $tax_obj->update_count_callback );
 			$statuses = array();
-			if ( self::counts_by_post_status( $callback ) && isset( $taxo['st_cb_type'] ) ) {
+			if ( ( self::counts_by_post_status( $callback ) || ! empty( $taxo['st_cb_override'] ) ) && isset( $taxo['st_cb_type'] ) ) {
 				switch ( $taxo['st_cb_type'] ) {
 					case '1':
 						$statuses = get_post_stati();
@@ -850,22 +851,22 @@ class SimpleTaxonomyRefreshed_Client {
 						unset( $statuses['auto-draft'] );
 						break;
 					case '2':
-						if ( (bool) $taxo['st_cb_pub'] ) {
+						if ( ! empty( $taxo['st_cb_pub'] ) ) {
 							$statuses[] = 'publish';
 						}
-						if ( (bool) $taxo['st_cb_fut'] ) {
+						if ( ! empty( $taxo['st_cb_fut'] ) ) {
 							$statuses[] = 'future';
 						}
-						if ( (bool) $taxo['st_cb_dft'] ) {
+						if ( ! empty( $taxo['st_cb_dft'] ) ) {
 							$statuses[] = 'draft';
 						}
-						if ( (bool) $taxo['st_cb_pnd'] ) {
+						if ( ! empty( $taxo['st_cb_pnd'] ) ) {
 							$statuses[] = 'pending';
 						}
-						if ( (bool) $taxo['st_cb_prv'] ) {
+						if ( ! empty( $taxo['st_cb_prv'] ) ) {
 							$statuses[] = 'private';
 						}
-						if ( (bool) $taxo['st_cb_tsh'] ) {
+						if ( ! empty( $taxo['st_cb_tsh'] ) ) {
 							$statuses[] = 'trash';
 						}
 						break;
@@ -891,6 +892,61 @@ class SimpleTaxonomyRefreshed_Client {
 		}
 
 		return $tax_details;
+	}
+
+	/**
+	 * Count functions of external taxonomies replaced by apply_count_overrides(), keyed by taxonomy.
+	 *
+	 * @var array
+	 */
+	private static $replaced_count_callbacks = array();
+
+	/**
+	 * Use this plugin's Term Count options for external taxonomies that have a count function
+	 * of their own, where the user ticked "use these options" (st_cb_override).
+	 *
+	 * The taxonomy's count function is replaced by WordPress's standard _update_post_term_count(),
+	 * which applies the post statuses chosen. Run late (init_2) so taxonomies registered by other
+	 * plugins exist.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param mixed $options plugin settings.
+	 * @return void
+	 */
+	private static function apply_count_overrides( $options ) {
+		if ( ! isset( $options['externals'] ) || ! is_array( $options['externals'] ) ) {
+			return;
+		}
+		foreach ( $options['externals'] as $key => $args ) {
+			if ( empty( $args['st_cb_override'] ) || empty( $args['st_cb_type'] ) ) {
+				continue;
+			}
+			$tax_obj = get_taxonomy( $key );
+			if ( $tax_obj instanceof WP_Taxonomy && ! self::counts_by_post_status( $tax_obj->update_count_callback ) ) {
+				self::$replaced_count_callbacks[ $key ] = $tax_obj->update_count_callback;
+				$tax_obj->update_count_callback         = '_update_post_term_count';
+			}
+		}
+	}
+
+	/**
+	 * The count function a taxonomy was registered with, before any replacement by apply_count_overrides().
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param string $taxonomy taxonomy name.
+	 * @return mixed callback ('' when none).
+	 */
+	public static function original_count_callback( $taxonomy ) {
+		$tax_obj = get_taxonomy( $taxonomy );
+		if ( false === $tax_obj ) {
+			return '';
+		}
+		if ( isset( self::$replaced_count_callbacks[ $taxonomy ] ) && '_update_post_term_count' === $tax_obj->update_count_callback ) {
+			return self::$replaced_count_callbacks[ $taxonomy ];
+		}
+		return $tax_obj->update_count_callback;
 	}
 
 	/**
@@ -1090,6 +1146,7 @@ class SimpleTaxonomyRefreshed_Client {
 			'st_cb_pnd'                => 0,
 			'st_cb_prv'                => 0,
 			'st_cb_tsh'                => 0,
+			'st_cb_override'           => 0,
 			'st_cc_type'               => 0,
 			'st_cc_types'              => array(),
 			'st_cc_hard'               => 0,
