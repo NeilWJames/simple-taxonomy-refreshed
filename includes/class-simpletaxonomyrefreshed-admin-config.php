@@ -233,7 +233,7 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 			if ( is_array( $config['list_order'] ) ) {
 				foreach ( $config['list_order'] as $post_type => $taxonomies ) {
 					$list = ( is_array( $taxonomies ) ? array_values( array_filter( array_map( 'sanitize_key', array_filter( $taxonomies, 'is_string' ) ) ) ) : array() );
-					if ( ! is_array( $taxonomies ) || $list !== array_values( $taxonomies ) || sanitize_key( $post_type ) !== (string) $post_type ) {
+					if ( ! is_array( $taxonomies ) || array_values( $taxonomies ) !== $list || sanitize_key( $post_type ) !== (string) $post_type ) {
 						++$ignored;
 					}
 					if ( ! empty( $list ) ) {
