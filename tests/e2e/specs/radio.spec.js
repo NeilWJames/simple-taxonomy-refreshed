@@ -225,19 +225,21 @@ test.describe( 'Radio buttons with notification-only Terms Control', () => {
 		await expect( group.getByRole( 'checkbox' ) ).toHaveCount( 0 );
 		await expect( radio( 'No term' ) ).toBeChecked();
 
+		// The "Draft saved" notice from one save can still be showing at the next,
+		// so wait for the stored terms rather than the notice.
+		const savedKinds = async () =>
+			( await getPost( requestUtils, postId ) ).kinds;
+
 		await radio( 'Jazz' ).check();
 		await expect( radio( 'No term' ) ).not.toBeChecked();
 		await editor.saveDraft();
-		expect( ( await getPost( requestUtils, postId ) ).kinds ).toEqual( [
-			jazz,
-		] );
+		await expect.poll( savedKinds ).toEqual( [ jazz ] );
 
 		// Back to no term.
 		await radio( 'No term' ).check();
+		await expect( radio( 'Jazz' ) ).not.toBeChecked();
 		await editor.saveDraft();
-		expect( ( await getPost( requestUtils, postId ) ).kinds ).toEqual(
-			[]
-		);
+		await expect.poll( savedKinds ).toEqual( [] );
 		expect( errors ).toEqual( [] );
 	} );
 

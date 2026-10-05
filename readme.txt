@@ -62,81 +62,90 @@ Functionally replaces [Simple Taxonomy](https://wordpress.org/plugins/simple-tax
 == Changelog ==
 
 * Version 4.0.0  (xx/xx/2026)
-	* NEW: Filter `staxo_can_edit_callbacks` controls who may edit the callback fields.
-	* NEW: Terms Import lists any lines it skips, with the line number, term and reason.
-	* NEW: Terms Merge asks where the child terms of merged terms should go: under the destination term (the default) or up a level (as before).
-	* NEW: Terms Merge lists any posts the merge would leave below the Terms Control minimum, and lets you choose whether to merge anyway.
-	* FIX: Terms Merge now merges and deletes every selected source term, not just the first.
-	* FIX: Block editor notices no longer break when a label or translation contains a quote.
-	* FIX: Editor scripts wait for the page and the block editor iframe to be ready.
-	* FIX: Block editor term limits only report too many terms when the maximum is exceeded.
-	* FIX: Publish sidebar is disabled and re-enabled correctly when term limits are not met.
-	* FIX: REST term-limit check uses the request data, falling back to the post's existing terms.
-	* FIX: Editing an external taxonomy now loads its saved settings.
-	* FIX: Terms Merge shows the terms-control warning.
-	* FIX: Spacing check for the "after" text of post terms.
-	* FIX: Taxonomy List Order page script error that stopped sorting.
-	* FIX: Taxonomy List Order cache used the wrong cache group, so it was never reused.
-	* FIX: Bold text in the Flush & Delete warning on the settings screen.
-	* FIX: Widget no longer raises PHP warnings when its taxonomy is not registered, and shows a message for an empty list.
-	* FIX: Term counts for external taxonomies that are not yet registered no longer raise PHP warnings.
-	* FIX: Changing Hierarchical now updates the Admin List Filter options in all browsers, not just Firefox.
-	* FIX: Terms Import places terms correctly when the first line is indented or a line skips a level.
-	* FIX: Terms Import no longer stops with a fatal error when WordPress refuses a term.
-	* FIX: Deleting a taxonomy removes it from the admin list orderings.
-	* FIX: Rename reports the correct number of migrated terms.
-	* FIX: Terms Merge term labels select their checkbox or radio button for hierarchical taxonomies.
-	* FIX: No PHP warning when counting terms on a site with no external taxonomies configured.
-	* FIX: Rename Slug keeps the taxonomy's default term setting.
-	* FIX: Rename Slug uses a new query_var when the old one was the default.
-	* FIX: Export PHP: text from the taxonomy settings can no longer break out of comments in the generated code.
-	* FIX: Terms Conversion lists one term per line (it showed `&#013;` between the terms), and names containing `&` are shown as typed.
-	* FIX: PHP deprecation notice when adding the first taxonomy on a site.
-	* FIX: Terms Control "published and scheduled only" (type 1) is applied; drafts were being checked as for type 2.
-	* FIX: Terms Control no longer raises a PHP warning when all terms are removed in the classic editor.
-	* FIX: Terms Control no longer raises PHP errors for external taxonomies that are not registered or have no post types selected.
-	* FIX: Post terms display adds the space after the "before" text when the separator has spaces (such as the default ", ").
-	* FIX: Post terms "before", separator and "after" text is escaped (plain text) or filtered as post HTML when displayed.
-	* FIX: Admin list filter no longer raises a PHP warning for an external taxonomy that is not registered.
-	* FIX: Display Post Terms and Taxonomy Cloud blocks only use block wrapper attributes while one of their own blocks is rendering, so their output can also be produced outside a block.
-	* FIX: Display Post Terms and Taxonomy Cloud blocks use the plugin's standard block supports: alignment, text and background colour (including gradients), margin, padding, font size and line height. Link colour is no longer offered.
-	* FIX: Terms Merge screen loads the plugin's admin stylesheet, so its term lists are laid out correctly.
-	* FIX: Taxonomy List Order keeps an order saved for a single post type (it was discarded).
-	* FIX: Taxonomy List Order only accepts the post type's own taxonomies, and the admin list ignores taxonomies no longer shown.
-	* DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
-	* DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
-	* DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.
-	* DEV: Rename Slug requires the manage_options capability, as its page does.
-	* DEV: Terms Migrate: "Copy From" needs the taxonomy's manage_terms capability and "Copy To" its edit_terms capability; other taxonomies are listed but cannot be selected, and the request is checked again when sent.
-	* DEV: Terms Import requires the manage_options capability, as its page does, and the taxonomy's edit_terms capability (it accepted the taxonomy's manage_terms alone); other taxonomies are listed but cannot be chosen.
-	* DEV: Terms Merge requires the manage_options capability, as its page does, and the taxonomy's manage_terms, delete_terms and assign_terms capabilities (it accepted manage_terms alone); edit_terms is also needed when source terms have child terms to move. Other taxonomies are listed but cannot be selected.
-	* FIX: Terms Merge page no longer stops with a permissions message when the first taxonomy it checks is one the user cannot merge.
-	* FIX: Terms Migrate page no longer has a script error when a taxonomy cannot be copied to.
-	* DEV: Widget numeric settings are sanitised.
-	* DEV: Notice about the original Simple Taxonomy plugin is shown only to administrators in admin.
-	* DEV: Minimum WordPress version increased to 6.9.
-	* DEV: Removed term-count code for WordPress before 5.7, including `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version`.
-	* DEV: JavaScript reviewed with wp-scripts lint-js.
-	* DEV: Code checked with PHPStan (level 5).
-	* DEV: PHPUnit test suite (154 tests) with shared fixtures covering configuration import, Terms Import, Terms Merge, term counts, taxonomy add/update/delete, Export PHP, Terms Conversion, Rename Slug, Terms Control, front-end output, Taxonomy List Order and a capability/nonce sweep of every admin handler.
-	* DEV: Export PHP code is built by `SimpleTaxonomyRefreshed_Admin::build_php_export()`.
-	* DEV: Configuration export file content is built by `SimpleTaxonomyRefreshed_Admin_Config::build_config_export()`.
-	* DEV: End-to-end tests with Playwright against wp-env (Playground runtime locally, Docker in CI), starting with the Add Taxonomy screen.
-	* FIX: Configuration export keeps any taxonomy missing from the chosen order and ignores names that are not stored taxonomies (they raised PHP warnings and could drop taxonomies from the file).
-	* FIX: Taxonomy List Order page markup when no post type has more than one taxonomy.
-	* FIX: The taxonomy name links on the All Taxonomies page had an empty tooltip (title attribute).
-	* FIX: External taxonomies with WPGraphQL turned on caused a fatal error when the taxonomy was registered (the settings were written to the taxonomy object as if it were an array).
-	* FIX: Term Count now works for taxonomies that use WordPress's standard count, such as categories and tags, and those registered by other plugins with `_update_post_term_count`; the options were not offered for them.
-	* NEW: Term Count for an external taxonomy with a count function of its own: the tab warns that counts made with these options may not match its own, and a new "Use these options" box (setting `st_cb_override`) replaces its count function with WordPress's standard one and the statuses chosen. Without the tick, its own function is kept.
-	* FIX: The taxonomy form's "Display Terms with Posts" and EP_MASK lists, and the widget settings lists, marked the chosen option with escaped quotes (`selected=&#039;selected&#039;`).
-	* FIX: Term Count "Selection" for an external taxonomy raised PHP warnings for each status left unticked (unticked boxes were not saved).
-	* FIX: The Term Control tab showed nothing after "Current value:" (the taxonomy's Display on admin setting) until that setting was changed.
-	* FIX: Term Control "When user cannot change terms give notification message" did nothing: the taxonomy was left out of the controls, so it got neither the notice nor radio buttons (maximum 1). It now gives both; saving is still never blocked.
-	* NEW: Block editor: a hierarchical taxonomy whose Terms Control allows one term at most is shown with radio buttons, as in the classic editor, with its search and Add New Term form (the term checkboxes are replaced through the `editor.PostTaxonomyType` filter). Without a minimum, a "No term" choice is offered.
-	* FIX: Block editor: the Terms Control notice for a post already outside the limits was never shown (its script was added after the page head had been printed).
-	* FIX: Block editor: Terms Control notices showed HTML entities, such as `&#039;` for an apostrophe in the taxonomy label.
-	* FIX: Block editor: Terms Control checks as terms are changed now work for a taxonomy with its own REST base.
-	* DEV: New `build:editor` script builds the block editor radio term selector (`src/editor`) to `build/editor`; `npm run build` includes it.
+	* Post editing: Terms Control (block editor, classic editor, Quick Edit and REST API)
+		* NEW: Block editor: a hierarchical taxonomy whose Terms Control allows one term at most is shown with radio buttons, as in the classic editor, with its search and Add New Term form (the term checkboxes are replaced through the `editor.PostTaxonomyType` filter). Without a minimum, a "No term" choice is offered.
+		* FIX: Term Control "When user cannot change terms give notification message" did nothing: the taxonomy was left out of the controls, so it got neither the notice nor radio buttons (maximum 1). It now gives both; saving is still never blocked.
+		* FIX: Terms Control "published and scheduled only" (type 1) is applied; drafts were being checked as for type 2.
+		* FIX: Block editor: the Terms Control notice for a post already outside the limits was never shown (its script was added after the page head had been printed).
+		* FIX: Block editor: Terms Control notices showed HTML entities, such as `&#039;` for an apostrophe in the taxonomy label.
+		* FIX: Block editor notices no longer break when a label or translation contains a quote.
+		* FIX: Block editor: Terms Control checks as terms are changed now work for a taxonomy with its own REST base.
+		* FIX: Block editor term limits only report too many terms when the maximum is exceeded.
+		* FIX: Publish sidebar is disabled and re-enabled correctly when term limits are not met.
+		* FIX: Editor scripts wait for the page and the block editor iframe to be ready.
+		* FIX: REST term-limit check uses the request data, falling back to the post's existing terms.
+		* FIX: Terms Control no longer raises a PHP warning when all terms are removed in the classic editor.
+		* FIX: Terms Control no longer raises PHP errors for external taxonomies that are not registered or have no post types selected.
+		* FIX: Classic editor: a one-term taxonomy without a minimum stayed as checkboxes when it had no Most Used terms yet (adding the "No term" choice stopped the script).
+	* Front end: post terms, blocks and widget
+		* FIX: Post terms "before", separator and "after" text is escaped (plain text) or filtered as post HTML when displayed.
+		* FIX: Post terms display adds the space after the "before" text when the separator has spaces (such as the default ", ").
+		* FIX: Spacing check for the "after" text of post terms.
+		* FIX: Display Post Terms and Taxonomy Cloud blocks only use block wrapper attributes while one of their own blocks is rendering, so their output can also be produced outside a block.
+		* FIX: Display Post Terms and Taxonomy Cloud blocks use the plugin's standard block supports: alignment, text and background colour (including gradients), margin, padding, font size and line height. Link colour is no longer offered.
+		* FIX: Widget no longer raises PHP warnings when its taxonomy is not registered, and shows a message for an empty list.
+		* FIX: The widget settings lists marked the chosen option with escaped quotes (`selected=&#039;selected&#039;`).
+		* DEV: Widget numeric settings are sanitised.
+	* Taxonomy settings screens (custom and external taxonomies)
+		* NEW: Term Count for an external taxonomy with a count function of its own: the tab warns that counts made with these options may not match its own, and a new "Use these options" box (setting `st_cb_override`) replaces its count function with WordPress's standard one and the statuses chosen. Without the tick, its own function is kept.
+		* FIX: Term Count now works for taxonomies that use WordPress's standard count, such as categories and tags, and those registered by other plugins with `_update_post_term_count`; the options were not offered for them.
+		* FIX: Term Count "Selection" for an external taxonomy raised PHP warnings for each status left unticked (unticked boxes were not saved).
+		* FIX: Term counts for external taxonomies that are not yet registered no longer raise PHP warnings.
+		* FIX: No PHP warning when counting terms on a site with no external taxonomies configured.
+		* FIX: Editing an external taxonomy now loads its saved settings.
+		* FIX: External taxonomies with WPGraphQL turned on caused a fatal error when the taxonomy was registered (the settings were written to the taxonomy object as if it were an array).
+		* FIX: The Term Control tab showed nothing after "Current value:" (the taxonomy's Display on admin setting) until that setting was changed.
+		* FIX: The taxonomy form's "Display Terms with Posts" and EP_MASK lists marked the chosen option with escaped quotes (`selected=&#039;selected&#039;`).
+		* FIX: Changing Hierarchical now updates the Admin List Filter options in all browsers, not just Firefox.
+		* FIX: Admin list filter no longer raises a PHP warning for an external taxonomy that is not registered.
+		* FIX: The taxonomy name links on the All Taxonomies page had an empty tooltip (title attribute).
+		* FIX: Bold text in the Flush & Delete warning on the settings screen.
+		* FIX: Deleting a taxonomy removes it from the admin list orderings.
+		* FIX: PHP deprecation notice when adding the first taxonomy on a site.
+		* FIX: Export PHP: text from the taxonomy settings can no longer break out of comments in the generated code.
+		* FIX: Configuration export keeps any taxonomy missing from the chosen order and ignores names that are not stored taxonomies (they raised PHP warnings and could drop taxonomies from the file).
+	* Taxonomy List Order
+		* FIX: Taxonomy List Order page script error that stopped sorting.
+		* FIX: Taxonomy List Order cache used the wrong cache group, so it was never reused.
+		* FIX: Taxonomy List Order keeps an order saved for a single post type (it was discarded).
+		* FIX: Taxonomy List Order only accepts the post type's own taxonomies, and the admin list ignores taxonomies no longer shown.
+		* FIX: Taxonomy List Order page markup when no post type has more than one taxonomy.
+	* Term tools: Terms Import, Terms Merge, Terms Migrate and Rename Slug
+		* NEW: Terms Import lists any lines it skips, with the line number, term and reason.
+		* NEW: Terms Merge asks where the child terms of merged terms should go: under the destination term (the default) or up a level (as before).
+		* NEW: Terms Merge lists any posts the merge would leave below the Terms Control minimum, and lets you choose whether to merge anyway.
+		* FIX: Terms Import places terms correctly when the first line is indented or a line skips a level.
+		* FIX: Terms Import no longer stops with a fatal error when WordPress refuses a term.
+		* FIX: Terms Merge now merges and deletes every selected source term, not just the first.
+		* FIX: Terms Merge shows the terms-control warning.
+		* FIX: Terms Merge term labels select their checkbox or radio button for hierarchical taxonomies.
+		* FIX: Terms Merge screen loads the plugin's admin stylesheet, so its term lists are laid out correctly.
+		* FIX: Terms Merge page no longer stops with a permissions message when the first taxonomy it checks is one the user cannot merge.
+		* FIX: Terms Conversion lists one term per line (it showed `&#013;` between the terms), and names containing `&` are shown as typed.
+		* FIX: Terms Migrate page no longer has a script error when a taxonomy cannot be copied to.
+		* FIX: Rename reports the correct number of migrated terms.
+		* FIX: Rename Slug keeps the taxonomy's default term setting.
+		* FIX: Rename Slug uses a new query_var when the old one was the default.
+	* Security and permissions
+		* NEW: Filter `staxo_can_edit_callbacks` controls who may edit the callback fields.
+		* DEV: Capability checks added to merge, convert, configuration export/import, delete and PHP export.
+		* DEV: Callback fields are read-only for users without `unfiltered_html` (super admin on multisite).
+		* DEV: Rename validates the new slug and only renames taxonomies defined by this plugin.
+		* DEV: Rename Slug requires the manage_options capability, as its page does.
+		* DEV: Terms Migrate: "Copy From" needs the taxonomy's manage_terms capability and "Copy To" its edit_terms capability; other taxonomies are listed but cannot be selected, and the request is checked again when sent.
+		* DEV: Terms Import requires the manage_options capability, as its page does, and the taxonomy's edit_terms capability (it accepted the taxonomy's manage_terms alone); other taxonomies are listed but cannot be chosen.
+		* DEV: Terms Merge requires the manage_options capability, as its page does, and the taxonomy's manage_terms, delete_terms and assign_terms capabilities (it accepted manage_terms alone); edit_terms is also needed when source terms have child terms to move. Other taxonomies are listed but cannot be selected.
+		* DEV: Notice about the original Simple Taxonomy plugin is shown only to administrators in admin.
+	* Development
+		* DEV: Minimum WordPress version increased to 6.9.
+		* DEV: Removed term-count code for WordPress before 5.7, including `SimpleTaxonomyRefreshed_Client::term_count_cb_sel()`, `term_count_query_filter_sel()` and `$wp_version`.
+		* DEV: Export PHP code is built by `SimpleTaxonomyRefreshed_Admin::build_php_export()`.
+		* DEV: Configuration export file content is built by `SimpleTaxonomyRefreshed_Admin_Config::build_config_export()`.
+		* DEV: New `build:editor` script builds the block editor radio term selector (`src/editor`) to `build/editor`; `npm run build` includes it.
+		* DEV: JavaScript reviewed with wp-scripts lint-js.
+		* DEV: Code checked with PHPStan (level 5).
+		* DEV: PHPUnit test suite (240 tests) with shared fixtures, covering configuration import and export, Terms Import, Terms Merge, Terms Conversion, Rename Slug, term counts, taxonomy add, update and delete, the taxonomy settings screens, external taxonomies, Export PHP, Terms Control on save and on the post screens, front-end output, the widget, Taxonomy List Order, and a capability and nonce check of every admin handler.
+		* DEV: End-to-end tests with Playwright (WordPress Playground locally, wp-env with Docker in CI): the Add and Edit Taxonomy screens, Terms Control in the block editor, classic editor and Quick Edit, radio buttons, and Terms Merge.
 
 * Version 3.4.1  (03/09/2026)
 	* FIX: Taxonomy counts work within iFramed content.

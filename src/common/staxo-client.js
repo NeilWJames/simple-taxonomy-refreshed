@@ -101,6 +101,10 @@ function add_nt_element( tax, terms_found, no_term_str ) {
 		return true;
 	}
 	const inp = tax.getElementsByTagName( 'li' );
+	// An empty list (such as Most Used before any term is used) has nothing to copy.
+	if ( 0 === inp.length ) {
+		return false;
+	}
 	// create clone.
 	const no_term = inp[ 0 ].cloneNode( true );
 	const no_term_inp = no_term.getElementsByTagName( 'input' )[ 0 ];
