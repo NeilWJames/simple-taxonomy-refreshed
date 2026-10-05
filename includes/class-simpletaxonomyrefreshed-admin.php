@@ -2111,7 +2111,7 @@ class SimpleTaxonomyRefreshed_Admin {
 	public static function clean_taxonomy_fields( $source, $missing = 'empty' ) {
 		$taxonomy = array();
 		foreach ( SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields() as $field => $default_value ) {
-			if ( ! is_array( $source ) || ! array_key_exists( $field, $source ) ) {
+			if ( ! array_key_exists( $field, $source ) ) {
 				if ( 'skip' !== $missing ) {
 					$taxonomy[ $field ] = ( 'default' === $missing ? $default_value : '' );
 				}
@@ -2169,9 +2169,6 @@ class SimpleTaxonomyRefreshed_Admin {
 			}
 
 			if ( ! empty( $taxonomy['name'] ) ) { // Label exist ?
-				// Values exist ? or build it from label ?
-				$taxonomy['name'] = ( empty( $taxonomy['name'] ) ) ? $taxonomy['labels']['name'] : $taxonomy['name'];
-
 				// Clean sanitize value.
 				$taxonomy['name'] = sanitize_title( $taxonomy['name'] );
 
