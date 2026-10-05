@@ -323,7 +323,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 				<?php
 				$taxonomies = $this->get_taxonomies();
 				foreach ( $taxonomies as $key => $label ) {
-					echo '<option ' . esc_attr( selected( $current_taxonomy, $key, false ) ) . ' value="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</option>';
+					echo '<option ' . selected( $current_taxonomy, $key, false ) . ' value="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</option>';
 				}
 				?>
 			</select>
@@ -337,7 +337,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 					'cloud' => __( 'Cloud', 'simple-taxonomy-refreshed' ),
 					'list'  => __( 'List', 'simple-taxonomy-refreshed' ),
 				) as $optval => $option ) {
-					echo '<option ' . esc_attr( selected( $instance['disptype'], $optval, false ) ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
+					echo '<option ' . selected( $instance['disptype'], $optval, false ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
 				}
 				?>
 			</select>
@@ -363,7 +363,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 					'right'   => __( 'Right', 'simple-taxonomy-refreshed' ),
 					'justify' => __( 'Justify', 'simple-taxonomy-refreshed' ),
 				) as $optval => $option ) {
-					echo '<option ' . esc_attr( selected( $instance['alignment'], $optval, false ) ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
+					echo '<option ' . selected( $instance['alignment'], $optval, false ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
 				}
 				?>
 			</select>
@@ -377,7 +377,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 					'count' => __( 'Count', 'simple-taxonomy-refreshed' ),
 					'name'  => __( 'Name', 'simple-taxonomy-refreshed' ),
 				) as $optval => $option ) {
-					echo '<option ' . esc_attr( selected( $instance['orderby'], $optval, false ) ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
+					echo '<option ' . selected( $instance['orderby'], $optval, false ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
 				}
 				?>
 			</select>
@@ -392,7 +392,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 					'DESC' => __( 'Descending', 'simple-taxonomy-refreshed' ),
 					'RAND' => __( 'Random', 'simple-taxonomy-refreshed' ),
 				) as $optval => $option ) {
-					echo '<option ' . esc_attr( selected( $instance['order'], $optval, false ) ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
+					echo '<option ' . selected( $instance['order'], $optval, false ) . ' value="' . esc_attr( $optval ) . '">' . esc_html( $option ) . '</option>';
 				}
 				?>
 			</select>

@@ -81,7 +81,7 @@
 * FIX: External taxonomies with WPGraphQL turned on caused a fatal error when the taxonomy was registered (the settings were written to the taxonomy object as if it were an array).
 * FIX: Term Count now works for taxonomies that use WordPress's standard count, such as categories and tags, and those registered by other plugins with `_update_post_term_count`; the options were not offered for them.
 * NEW: Term Count for an external taxonomy with a count function of its own: the tab warns that counts made with these options may not match its own, and a new "Use these options" box (setting `st_cb_override`) replaces its count function with WordPress's standard one and the statuses chosen. Without the tick, its own function is kept.
-* FIX: The taxonomy form's "Display Terms with Posts" and EP_MASK lists marked the chosen option with escaped quotes (`selected=&#039;selected&#039;`).
+* FIX: The taxonomy form's "Display Terms with Posts" and EP_MASK lists, and the widget settings lists, marked the chosen option with escaped quotes (`selected=&#039;selected&#039;`).
 * FIX: Term Count "Selection" for an external taxonomy raised PHP warnings for each status left unticked (unticked boxes were not saved).
 * FIX: The Term Control tab showed nothing after "Current value:" (the taxonomy's Display on admin setting) until that setting was changed.
 * FIX: Term Control "When user cannot change terms give notification message" did nothing: the taxonomy was left out of the controls, so it got neither the notice nor radio buttons (maximum 1). It now gives both; saving is still never blocked.
