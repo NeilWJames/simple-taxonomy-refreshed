@@ -29,4 +29,5 @@ phpstan-baseline.neon
 phpstan.neon.dist
 phpunit9.xml
 playwright.config.js
+readme.md
 webpack.config.js.txt
