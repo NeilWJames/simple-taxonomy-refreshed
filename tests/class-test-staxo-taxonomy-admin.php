@@ -237,6 +237,73 @@ class Test_STaxo_Taxonomy_Admin extends STaxo_Test_Case {
 	}
 
 	/**
+	 * A taxonomy whose REST name is a field of posts, or another taxonomy's REST name, is refused.
+	 */
+	public function test_add_rest_name_conflict_refused() {
+		$conflicts = array(
+			'format'     => array(),
+			'status'     => array(),
+			'test_genre' => array( 'rest_base' => 'type' ),
+			'test_tint'  => array( 'rest_base' => 'tags' ),
+		);
+		foreach ( $conflicts as $name => $fields ) {
+			$rest_name = ( isset( $fields['rest_base'] ) ? $fields['rest_base'] : $name );
+			try {
+				$this->submit_form( 'add-taxonomy', $this->taxonomy_form( $name, $fields ) );
+				$this->fail( "Adding $name should be refused" );
+			} catch ( WPDieException $e ) {
+				$this->assertStringContainsString( 'REST name &quot;' . $rest_name . '&quot; is already used', $e->getMessage(), $name );
+			}
+		}
+		$this->assertFalse( get_option( OPTION_STAXO ), 'Nothing stored' );
+	}
+
+	/**
+	 * A field added to posts by a plugin (register_rest_field) is also a clash.
+	 */
+	public function test_add_rest_name_plugin_field_refused() {
+		register_rest_field( 'post', 'test_extra', array( 'get_callback' => '__return_empty_string' ) );
+		try {
+			$this->submit_form( 'add-taxonomy', $this->taxonomy_form( 'test_extra' ) );
+			$this->fail( 'Adding test_extra should be refused' );
+		} catch ( WPDieException $e ) {
+			$this->assertStringContainsString( 'REST name &quot;test_extra&quot; is already used', $e->getMessage() );
+		} finally {
+			global $wp_rest_additional_fields;
+			unset( $wp_rest_additional_fields['post']['test_extra'] );
+		}
+	}
+
+	/**
+	 * A REST Base that does not clash makes the name usable; without REST there is no clash.
+	 */
+	public function test_add_rest_name_conflict_avoided() {
+		$this->submit_form( 'add-taxonomy', $this->taxonomy_form( 'format', array( 'rest_base' => 'formats' ) ) );
+		$this->submit_form( 'add-taxonomy', $this->taxonomy_form( 'status', array( 'show_in_rest' => '0' ) ) );
+
+		$taxonomies = get_option( OPTION_STAXO )['taxonomies'];
+		$this->assertSame( 'formats', $taxonomies['format']['rest_base'] );
+		$this->assertArrayHasKey( 'status', $taxonomies );
+		$this->assertSame( '', SimpleTaxonomyRefreshed_Admin::rest_base_conflict( $taxonomies['format'] ) );
+	}
+
+	/**
+	 * An update that gives the taxonomy a clashing REST Base is refused and the settings are kept.
+	 */
+	public function test_update_rest_name_conflict_refused() {
+		$this->submit_form( 'add-taxonomy', $this->taxonomy_form( 'test_genre' ) );
+		$before = get_option( OPTION_STAXO );
+
+		try {
+			$this->submit_form( 'merge-taxonomy', $this->taxonomy_form( 'test_genre', array( 'rest_base' => 'author' ) ) );
+			$this->fail( 'The update should be refused' );
+		} catch ( WPDieException $e ) {
+			$this->assertStringContainsString( 'REST name &quot;author&quot; is already used', $e->getMessage() );
+		}
+		$this->assertSame( $before, get_option( OPTION_STAXO ) );
+	}
+
+	/**
 	 * Updating a taxonomy stores the new settings.
 	 */
 	public function test_update_taxonomy() {

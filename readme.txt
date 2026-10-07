@@ -46,7 +46,9 @@ Again the term manipulation tool applies to terms of any taxonomy.
 
 Additional information on plugin usage is available in the help pulldown area of the screens.
 
-For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md) page.
+For full information go to the [Simple Taxonomy Refreshed documentation](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md).
+
+To try the plugin without installing it, open the [demo site in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/NeilWJames/simple-taxonomy-refreshed/master/playground/blueprint.json). It runs in your browser, with example taxonomies, posts and blocks already set up.
 
 == Frequently Asked Questions ==
 
@@ -66,7 +68,7 @@ Enter just the Name (slug) whether Hierarchical or not and the Post Types used o
 
 1. Download, unzip and upload to your WordPress plugins directory
 2. Activate the plugin within you WordPress Administration Backend
-3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/addmod.md) page.
+3. Go to Taxonomies > Add Taxonomy to define a taxonomy, or Taxonomies > All Taxonomies to add functions to an existing one. See the [Taxonomies](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/taxonomies.md) page.
 
 == Changelog ==
 
@@ -98,6 +100,8 @@ Enter just the Name (slug) whether Hierarchical or not and the Post Types used o
 
 	* CHG: Display Post Terms and Taxonomy Cloud blocks use the plugin's standard block supports: alignment, text and background colour (including gradients), margin, padding, font size and line height. Link colour is no 
  	* FIX: Post terms display "before", separator and "after" text reviewed.
+	* FIX: Taxonomy Cloud block and widget: a cloud showed its terms as a bulleted list, one per line, in themes that do not style tag clouds (such as Twenty Twenty-Five). A small stylesheet now shows them on one line, without bullets, keeping the list for screen readers.
+	* FIX: Taxonomy Cloud block: "Maximum number of terms to display" could not be set back to 0 (all terms), and showed 1 for a block that shows all the terms.
 	* FIX: Widget no longer raises PHP warnings when its taxonomy is not registered, and shows a message for an empty list.
 	* FIX: Display Post Terms and Taxonomy Cloud blocks use block wrapper attributes.
 	* FIX: The widget settings lists marked the chosen option with escaped quotes (`selected=&#039;selected&#039;`).
@@ -105,6 +109,7 @@ Enter just the Name (slug) whether Hierarchical or not and the Post Types used o
 
 	* Taxonomy settings screens (custom and external taxonomies)
 
+	* NEW: A taxonomy whose REST name (its REST Base, or its name) is already a field of posts in the REST API, such as "format", "status" or "type", or another taxonomy's REST name, is refused when it is added, changed or renamed, and skipped by the configuration import. WordPress leaves such a taxonomy out of the posts' REST data, so the block editor could not set its terms. Setting a different REST Base makes the name usable.
 	* CHG: Term Count now available for taxonomies using WordPress's standard count (`_update_post_term_count`) entered in their taxonomy registration, i.e. categories and tags, and also those registered by other plugins.
 	* CHG: Term Count for an external taxonomy with a count function of its own: the tab warns that counts made with these options may not match its own, and a new "Use these options" box (setting `st_cb_override`) replaces its count function with WordPress's standard one and the statuses chosen. Without the explicit setting, its own function is kept.
 	* FIX: Some PHP warnings removed.

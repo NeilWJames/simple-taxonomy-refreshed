@@ -112,6 +112,21 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 				wp_die( esc_html__( 'You do not have the necessary permissions.', 'simple-taxonomy-refreshed' ) );
 			}
 
+			// Without a REST Base, the new slug is also the taxonomy's name in the REST API data of posts.
+			$renamed  = array_merge( (array) $current_options['taxonomies'][ $taxonomy ], array( 'name' => $new_slug ) );
+			$conflict = SimpleTaxonomyRefreshed_Admin::rest_base_conflict( $renamed, array( $taxonomy ) );
+			if ( '' !== $conflict ) {
+				wp_die(
+					esc_html(
+						sprintf(
+							// translators: %s is the taxonomy's REST name (its REST Base, or its new slug).
+							__( 'The taxonomy has not been renamed. Its REST name "%s" would already be used in the REST API data of posts (by WordPress, a plugin or another taxonomy). Choose a different slug, or set a REST Base for the taxonomy first.', 'simple-taxonomy-refreshed' ),
+							$conflict
+						)
+					)
+				);
+			}
+
 			// Modify the taxonomy settings.
 			$new_taxonomy         = $current_options['taxonomies'][ $taxonomy ];
 			$new_taxonomy['name'] = $new_slug;

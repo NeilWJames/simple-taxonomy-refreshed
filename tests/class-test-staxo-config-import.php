@@ -284,6 +284,29 @@ class Test_STaxo_Config_Import extends STaxo_Test_Case {
 	}
 
 	/**
+	 * A taxonomy whose REST name clashes with a field of posts or another taxonomy is skipped.
+	 */
+	public function test_rest_name_conflict_skipped() {
+		$errors = $this->import(
+			array(
+				'taxonomies' => array(
+					'test_hier'   => $this->taxonomy( 'test_hier' ),
+					'format'      => $this->taxonomy( 'format' ),
+					'test_status' => $this->taxonomy( 'test_status', array( 'rest_base' => 'status' ) ),
+					'test_tags'   => $this->taxonomy( 'test_tags', array( 'rest_base' => 'tags' ) ),
+					'test_kinds'  => $this->taxonomy( 'test_kinds', array( 'rest_base' => 'kinds' ) ),
+				),
+			)
+		);
+
+		$this->assertSame( array( 'test_hier', 'test_kinds' ), array_keys( get_option( OPTION_STAXO )['taxonomies'] ) );
+		$skipped = $this->notice( $errors, 'config_skipped' );
+		foreach ( array( 'format' => 'format', 'test_status' => 'status', 'test_tags' => 'tags' ) as $name => $rest_name ) {
+			$this->assertStringContainsString( '&quot;' . $name . '&quot;: its REST name &quot;' . $rest_name . '&quot; is already used', $skipped, $name );
+		}
+	}
+
+	/**
 	 * With nothing valid in the file, the current configuration is kept.
 	 */
 	public function test_nothing_valid_keeps_configuration() {

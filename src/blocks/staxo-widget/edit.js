@@ -223,10 +223,16 @@ export default function Edit( { attributes, setAttributes } ) {
 							'Maximum number of terms to display',
 							'simple-taxonomy-refreshed'
 						) }
+						help={ __(
+							'Set to 0 to show all the terms.',
+							'simple-taxonomy-refreshed'
+						) }
 						onChange={ ( val ) =>
-							setAttributes( { numdisp: parseInt( val, 10 ) } )
+							setAttributes( {
+								numdisp: parseInt( val, 10 ) || 0,
+							} )
 						}
-						min={ 1 }
+						min={ 0 }
 						max={ 100 }
 					/>
 
@@ -241,7 +247,9 @@ export default function Edit( { attributes, setAttributes } ) {
 							'simple-taxonomy-refreshed'
 						) }
 						onChange={ ( val ) =>
-							setAttributes( { minposts: parseInt( val, 10 ) } )
+							setAttributes( {
+								minposts: parseInt( val, 10 ) || 0,
+							} )
 						}
 						min={ 0 }
 					/>

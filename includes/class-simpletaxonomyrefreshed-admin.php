@@ -22,6 +22,56 @@ class SimpleTaxonomyRefreshed_Admin {
 	const ADD_SLUG   = 'staxo_settings&action=add';
 
 	/**
+	 * Fields of posts in the REST API (WP_REST_Posts_Controller and WP_REST_Attachments_Controller).
+	 *
+	 * A taxonomy shown in REST appears in a post's REST data under its REST base (its name
+	 * when no REST Base is set). If that is one of these fields, WordPress leaves the
+	 * taxonomy out of the post's REST data, so the block editor cannot set its terms.
+	 *
+	 * @since 4.0.0
+	 */
+	const REST_POST_FIELDS = array(
+		'_embedded',
+		'_links',
+		'alt_text',
+		'author',
+		'caption',
+		'class_list',
+		'comment_status',
+		'content',
+		'date',
+		'date_gmt',
+		'description',
+		'excerpt',
+		'featured_media',
+		'format',
+		'generated_slug',
+		'guid',
+		'id',
+		'link',
+		'media_details',
+		'media_type',
+		'menu_order',
+		'meta',
+		'mime_type',
+		'missing_image_sizes',
+		'modified',
+		'modified_gmt',
+		'parent',
+		'password',
+		'permalink_template',
+		'ping_status',
+		'post',
+		'slug',
+		'source_url',
+		'status',
+		'sticky',
+		'template',
+		'title',
+		'type',
+	);
+
+	/**
 	 * Option fields holding PHP callback or class names.
 	 *
 	 * These are executed by WordPress, so changing them is equivalent to running code.
@@ -675,6 +725,55 @@ class SimpleTaxonomyRefreshed_Admin {
 		echo esc_html( $status_label ) . '</label><br/>';
 	}
 
+
+	/**
+	 * The REST name of a taxonomy, if it clashes with a field of posts in the REST API.
+	 *
+	 * The REST name is the taxonomy's REST Base, or its name when no REST Base is set. It
+	 * clashes with a field of posts (such as "format" or "status", or a field added by a
+	 * plugin with register_rest_field()), or with the REST name of another taxonomy. Only
+	 * taxonomies shown in REST are checked.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array    $taxonomy taxonomy settings (name, rest_base, show_in_rest, objects).
+	 * @param string[] $ignore   names of other taxonomies to leave out of the check, such as those being replaced.
+	 * @return string the clashing REST name, or '' if there is no clash.
+	 */
+	public static function rest_base_conflict( $taxonomy, $ignore = array() ) {
+		if ( isset( $taxonomy['show_in_rest'] ) && ! (bool) $taxonomy['show_in_rest'] ) {
+			return '';
+		}
+		$name = ( isset( $taxonomy['name'] ) ? (string) $taxonomy['name'] : '' );
+		$base = ( empty( $taxonomy['rest_base'] ) || ! is_scalar( $taxonomy['rest_base'] ) ? $name : (string) $taxonomy['rest_base'] );
+		if ( '' === $base ) {
+			return '';
+		}
+
+		// Fields of posts, including those that plugins add to the taxonomy's post types.
+		global $wp_rest_additional_fields;
+		$fields = self::REST_POST_FIELDS;
+		foreach ( ( empty( $taxonomy['objects'] ) ? array() : (array) $taxonomy['objects'] ) as $post_type ) {
+			if ( is_string( $post_type ) && isset( $wp_rest_additional_fields[ $post_type ] ) && is_array( $wp_rest_additional_fields[ $post_type ] ) ) {
+				$fields = array_merge( $fields, array_keys( $wp_rest_additional_fields[ $post_type ] ) );
+			}
+		}
+		if ( in_array( $base, $fields, true ) ) {
+			return $base;
+		}
+
+		// The REST names of the other taxonomies.
+		$ignore[] = $name;
+		foreach ( get_taxonomies( array( 'show_in_rest' => true ), 'objects' ) as $other ) {
+			if ( in_array( $other->name, $ignore, true ) ) {
+				continue;
+			}
+			if ( ( empty( $other->rest_base ) ? $other->name : $other->rest_base ) === $base ) {
+				return $base;
+			}
+		}
+		return '';
+	}
 
 	/**
 	 * Default values of the settings stored for an external taxonomy.
@@ -2138,6 +2237,32 @@ class SimpleTaxonomyRefreshed_Admin {
 	}
 
 	/**
+	 * Stop saving a taxonomy whose REST name clashes with a field of posts or another taxonomy.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param array $taxonomy taxonomy settings from the form.
+	 * @return void
+	 */
+	private static function refuse_rest_base_conflict( $taxonomy ) {
+		$conflict = self::rest_base_conflict( $taxonomy );
+		if ( '' === $conflict ) {
+			return;
+		}
+		wp_die(
+			esc_html(
+				sprintf(
+					// translators: %s is the taxonomy's REST name (its REST Base, or its name).
+					__( 'The taxonomy has not been saved. Its REST name "%s" is already used in the REST API data of posts (by WordPress, a plugin or another taxonomy), so the block editor could not set its terms. Enter a different REST Base on the REST tab, or use a different name.', 'simple-taxonomy-refreshed' ),
+					$conflict
+				)
+			),
+			'',
+			array( 'back_link' => true )
+		);
+	}
+
+	/**
 	 * Check $_POST datas for add/merge taxonomy
 	 *
 	 * @return boolean
@@ -2198,9 +2323,11 @@ class SimpleTaxonomyRefreshed_Admin {
 					if ( taxonomy_exists( $taxonomy['name'] ) ) { // Default Taxo already exist ?
 						wp_die( esc_html__( 'You are trying to add a taxonomy with a name already used by another taxonomy.', 'simple-taxonomy-refreshed' ) );
 					}
+					self::refuse_rest_base_conflict( $taxonomy );
 					self::add_taxonomy( $taxonomy );
 				} elseif ( 'merge-taxonomy' === $action ) {
 					check_admin_referer( 'staxo_edit_taxo' );
+					self::refuse_rest_base_conflict( $taxonomy );
 					self::update_taxonomy( $taxonomy );
 				} else {
 					check_admin_referer( 'staxo_edit_taxo' );

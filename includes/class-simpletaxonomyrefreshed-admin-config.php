@@ -279,6 +279,14 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 		if ( 'taxonomies' === $group && taxonomy_exists( $name ) && ! in_array( $name, $own, true ) && ! SimpleTaxonomyRefreshed_Client::registered_by_plugin( $name ) ) {
 			return __( 'WordPress or another plugin already has a taxonomy with this name.', 'simple-taxonomy-refreshed' );
 		}
+		if ( 'taxonomies' === $group ) {
+			// The taxonomies defined now are replaced by the import, so they cannot clash.
+			$conflict = SimpleTaxonomyRefreshed_Admin::rest_base_conflict( array_merge( $data, array( 'name' => $name ) ), $own );
+			if ( '' !== $conflict ) {
+				// translators: %s is the taxonomy's REST name (its REST Base, or its name).
+				return sprintf( __( 'its REST name "%s" is already used in the REST API data of posts, so the block editor could not set its terms. Set a different REST Base.', 'simple-taxonomy-refreshed' ), $conflict );
+			}
+		}
 		return '';
 	}
 

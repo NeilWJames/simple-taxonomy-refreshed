@@ -1,223 +1,116 @@
-# Example Plug-in Usage
+# The demo site
 
-## Creation of a Taxonomy
+The demo site is a small music and arts magazine. It shows the main features of the plugin, and every screenshot in this documentation was taken from it.
 
-We will add a taxonomy called test_hier with a few minimal attributes on the various panels:
+**[Open the demo in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/NeilWJames/simple-taxonomy-refreshed/master/playground/blueprint.json)**
 
-<u>Main Options</u>       
+[WordPress Playground](https://wordpress.org/playground/) runs a whole WordPress site in your browser. The demo opens logged in as the administrator, on the **Taxonomies** screen. You can change anything you like: the site only exists in your browser tab, and closing the tab discards it.
 
-	Name: test_hier
-	Type: Hierarchical
-	Attached to: Posts
-	Display Terms with Posts: Content
-	Display Terms Before text: Test Terms :
+## What the demo contains
 
-<u>Labels</u>
+### Five taxonomies defined by the plugin
 
-	Name: Test Terms
-	Singular Name: Test Term
+Each one is based on a taxonomy used by the plugin's test suite, so the demo shows the behaviour that the tests check.
 
-And then added using the *Add Taxonomy* button.
+| Taxonomy | Name (slug) | Type | Used on | What it shows |
+| -------- | ----------- | ---- | ------- | ------------- |
+| Genres | `genre` | Hierarchical | Posts | Terms shown after the post content, with the text "Genres:" before them. Readable term URLs that follow the hierarchy, such as `/genre/music/jazz/`. |
+| Colours | `colour` | Flat | Posts and pages | Terms shown after the content and the excerpt. REST base `colours`. A default term, "Unsorted". |
+| Audiences | `audience` | Flat | Posts | Term limits: every post, whatever its status, needs 1 or 2 Audiences, checked when it is saved. |
+| Topics | `topic` | Hierarchical | Posts | Term counts include drafts as well as published posts. A filter on the admin post list, showing the hierarchy and the counts. |
+| Sections | `section` | Hierarchical | Posts | At most one Section, so the editor shows radio buttons with a "No term" choice. The limit never stops a save: it only gives a notice to users who cannot change the terms. |
 
-## Display of a Taxonomy
+The settings of each taxonomy are described in [Taxonomies](taxonomies.md), and the term limits in [Editing posts](post-editing.md).
 
-The listing will now contain the Taxonomy:
+### Extra functions on Tags
 
-![Taxonomy Listing](../images/AddTaxList.png)
+Tags is WordPress's own taxonomy, so the plugin cannot change its definition, but it can add functions to it. In the demo, Tags has:
 
-Clicking on *Export PHP* will download a file called test_hier.php to the browser with the content:
+- a filter on the admin post list, with the number of posts for each tag;
+- term counts that include all posts except those in the trash.
 
-	 <?php
-	 /*
-	 Plugin Name: XXX - Test Terms
-	 Version: x.y.z
-	 Plugin URI: http://www.example.com
-	 Description: XXX - Taxonomy Test Terms
-	 Author: XXX - Simple Taxonomy Refreshed Generator
-	 Author URI: http://www.example.com
-	 
-	 ----
-	 
-	 Copyright 2024 - XXX-Author
-	 
-	 This program is free software; you can redistribute it and/or modify
-	 it under the terms of the GNU General Public License as published by
-	 the Free Software Foundation; either version 3 of the License, or
-	 (at your option) any later version.
-	 
-	 This program is distributed in the hope that it will be useful,
-	 but WITHOUT ANY WARRANTY; without even the implied warranty of
-	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	 GNU General Public License for more details.
-	 
-	 You should have received a copy of the GNU General Public License
-	 along with this program; if not, write to the Free Software
-	 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-	 */
-	 
-	 add_action( 'init', 'register_staxo_test_hier', 10 );
-	 
-	 function register_staxo_test_hier() {
-	 register_taxonomy( "test_hier", 
-	   array (
-	   0 => 'post',
-	 ),
-	   array (
-	   'name' => 'test_hier',
-	   'description' => '',
-	   'labels' => 
-	   array (
-	     'name' => 'Test Terms',
-	     'singular_name' => 'Test Term',
-	     'search_items' => 'Search Categories',
-	     'popular_items' => '',
-	     'all_items' => 'All Categories',
-	     'parent_item' => 'Parent Category',
-	     'parent_item_colon' => 'Parent Category:',
-	     'name_field_description' => 'The name is how it appears on your site.',
-	     'slug_field_description' => 'The “slug” is the URL-friendly version of the name. It is usually all lower case and contains only letters, numbers, and hyphens.',
-	     'parent_field_description' => 'Assign a parent term to create a hierarchy. The term Jazz, for example, would be the parent of Bebop and Big Band.',
-	     'desc_field_description' => 'The description is not prominent by default; however, some themes may show it.',
-	     'edit_item' => 'Edit Category',
-	     'view_item' => 'View Category',
-	     'update_item' => 'Update Category',
-	     'add_new_item' => 'Add New Category',
-	     'new_item_name' => 'New Category Name',
-	     'separate_items_with_commas' => '',
-	     'add_or_remove_items' => '',
-	     'choose_from_most_used' => '',
-	     'not_found' => 'No categories found.',
-	     'no_terms' => 'No categories',
-	     'filter_by_item' => 'Filter by category',
-	     'items_list_navigation' => 'Categories list navigation',
-	     'items_list' => 'Categories list',
-	     'most_used' => 'Most Used',
-	     'back_to_items' => '← Go to Categories',
-	     'item_link' => 'Category Link',
-	     'item_link_description' => 'A link to a category.',
-	     'name_admin_bar' => '',
-	     'archives' => 'All Categories',
-	   ),
-	   'public' => true,
-	   'publicly_queryable' => true,
-	   'hierarchical' => true,
-	   'show_ui' => true,
-	   'show_in_menu' => true,
-	   'show_in_nav_menus' => true,
-	   'show_tagcloud' => true,
-	   'show_in_quick_edit' => true,
-	   'show_admin_column' => true,
-	   'capabilities' => 
-	   array (
-	     'manage_terms' => 'manage_categories',
-	     'edit_terms' => 'manage_categories',
-	     'delete_terms' => 'manage_categories',
-	     'assign_terms' => 'edit_posts',
-	   ),
-	   'rewrite' => false,
-	   'query_var' => 'test_hier',
-	   'update_count_callback' => '',
-	   'show_in_rest' => true,
-	   'sort' => false,
-	 ) );
-	 }
-	 // Display Terms with Posts: content
-	 // Display Terms Before text: Test Terms:
-	 // Display Terms Separator: , 
-	 // Display Terms After text: 
-	 // Show Terms in Feeds: 0
+See [Extra functions for existing taxonomies](taxonomies.md#extra-functions-for-existing-taxonomies).
 
-This can be included in your own code - but then should be deleted as a plugin taxonomy. Any additional functionality may then need to be added.
+### Terms
 
-You can also use it as a single page reference, which is why the last comment lines have been added.
+| Taxonomy | Terms |
+| -------- | ----- |
+| Genres | Music › Jazz › Bebop and Big Band; Music › Rock › Punk; Art › Painting and Sculpture; Misc |
+| Topics | Science › Physics › Astronomy and Quantum; Science › Biology › Botany; Humanities › History and Philosophy; Misc |
+| Colours | Red, Green, Blue, Yellow, Cyan |
+| Audiences | Beginners, Experts, Students, Teachers, Everyone |
+| Sections | News; Reviews › Albums and Concerts; Interviews |
+| Tags | live, study |
 
-## Adding Terms to the taxonomy
-Since show_in_menu is set to true, it is available as a sub-menu from the Posts menu.
+### Posts
 
-However, we'll add some via the Terms import functionality.
+There is one post for each post status, so that term counts and term limits can be seen at work:
 
-Enter the four terms for the taxonomy using leading tabs to denote the levels:
+| Post | Status | Genres | Colours | Audiences | Topics | Sections |
+| ---- | ------ | ------ | ------- | --------- | ------ | ------- |
+| A night of jazz | Published | Jazz | Red, Green | Beginners | Physics | News |
+| Bebop basics | Published | Bebop | Green | Experts | Astronomy | Albums |
+| From jazz to bebop | Published | Jazz, Bebop | Blue | Beginners, Students | Physics | News |
+| The big band sound | Published | Big Band | Red, Blue | Students | – | Concerts |
+| Rock notes (draft) | Draft | Rock | Yellow | – | Biology | – |
+| Punk review (pending) | Pending | Punk | Yellow | – | Botany | – |
+| Painting diary (private) | Private | Painting | Cyan | – | History | – |
+| Sculpture next year (scheduled) | Scheduled | Sculpture | – | – | Philosophy | – |
+| Old jazz listings (trash) | Trash | Jazz | Red | – | Physics | – |
 
-![Enter terms](../images/AddTermImp.png)
+The last five posts have no Audience, so they are outside the Audiences limits. Open one of them in the editor to see the notice, and try to save it to see the save refused (see [Editing posts](post-editing.md)).
 
-Once the Import these words as Terms button have been pressed, we can see them in the Terms screen.
+### A page of blocks
 
-![Test terms](../images/AddTestTerms.png)
+The page **Taxonomy blocks** (Colours: Red) contains:
 
-## Using the Taxonomy in the Post
+- the Display Post Terms block, for Colours;
+- the Taxonomy Cloud block twice: Genres as a cloud, and Topics as a list with post counts;
+- the `[staxo_post_terms tax="colour"]` shortcode.
 
-Now create a post using the block editor with some Terms added:
+See [Showing terms on the site](display.md).
 
-![Create Post](../images/AddPostTerms.png)
+### Other settings
 
-When viewing the Post, we can see the terms that have been added:
+- The taxonomy columns of the Posts list are in this order: Genres, Topics, Sections, Audiences, Colours, Categories, Tags (see [Taxonomy List Order](tools.md#taxonomy-list-order)).
+- Permalinks use the post name, for example `/a-night-of-jazz/`.
+- WordPress's sample post and page are removed, and the taxonomies' labels use their own names ("Add New Genre", "All Topics") rather than WordPress's defaults for categories and tags.
 
-![View Post](../images/ShowPostTerms.png)
+## Things to try
 
-## Migrating Terms
+- Open **Posts > All Posts**: the taxonomy columns, and the Topics and Tags filters above the list.
+- Open **Posts > Add Post**: the Sections panel has radio buttons. Try to save the post without an Audience.
+- Open **Rock notes (draft)** and try to save it without an Audience.
+- View **A night of jazz** and the **Taxonomy blocks** page on the site.
+- Change a setting in **Taxonomies > All Taxonomies**, for example the maximum number of Audiences, and see the effect in the editor.
+- Merge the Colour Cyan into Blue with **Taxonomies > Terms Merge**.
 
-We can use the Terms migrator to copy the terms from one taxonomy to another.
+## How the demo is built
 
-We will copy the ones just entered into Categories. After clicking on the *Copy From* of the Test Terms taxonomy.
+The demo is part of the plugin, in its `playground` folder:
 
-![Terms migrate screen](../images/MigScreen1.png)
+| File | Purpose |
+| ---- | ------- |
+| `blueprint.json` | The [Playground blueprint](https://wordpress.github.io/wordpress-playground/blueprints/) used by the link above. It installs the plugin from GitHub, sets the site title and permalinks, runs `demo-content.php` and logs in. |
+| `blueprint-local.json` | The same, for a copy of the plugin on your own computer (see below). |
+| `demo-content.php` | Creates the plugin settings, the terms, the posts and the page. Its `staxo_demo_load()` function stores the settings in the `simple-taxonomy` option, the same way the plugin's own screens do. |
+| `playwright.config.js`, `screenshots.spec.js` | Take the screenshots used in this documentation. They are not included in the plugin download from WordPress.org. |
 
-Various options have been made unavailable as a result of that initial click. Click on the *To* option of the Category taxonomy. 
+## Running the demo on your computer
 
-![Terms migrate screen](../images/MigScreen2.png)
+You need [Node.js](https://nodejs.org/) 20 or later and a copy of the plugin's GitHub repository.
 
-Now that both options have been selected, the Copy Terms button has become available.
+```sh
+npm install
+npm run playground
+```
 
-![Terms migrate screen](../images/MigScreen3.png)
+The demo site starts at http://127.0.0.1:8889 (user `admin`, password `password`) with the plugin folder mounted, so changes to the plugin code show at once. Each start is a new site.
 
-Once this is clicked, it is now possible to click the *Copy Terms* button. This extracts the *all* the terms making them available in the Terms import form.
+To take the screenshots again, with or without the demo already running:
 
-### Importing the Terms
+```sh
+npm run screenshots
+```
 
-![Terms migrate screen](../images/MigScreen4.png)
-
-When the Import button is clicked, the data will be loaded. Confirmation messages are output.
-
-![Initial messages](../images/Imp1st.png)
-
-These show the number of non-blank lines processed, together with the number of terms created (if any).
-
-As the same screen (and data) is returned to the user, clicking the Import button again shows a slightly different message. The same number of items have been processed, but nothing has added as terms aleadt exist with those names. 
-
-![Update messages](../images/Imp2nd.png)
-
-When the data is entered, they can be seen within the Categories Terms
-
-![Terms migrate screen](../images/MigScreen5.png)
-
-As the data has been entered hierarchically, this is how it is loaded.
-
-![Terms migrate screen](../images/MigScreen6.png)
-
-## Changing the Taxonomy Slug
-
-Normally you cannot change the taxonomy slug since any terms that have been defined for it will use that slug.
-
-Whilst you can create a second custom taxonomy with similar parameters and use the export/import migration capabilities, this will not move any term usages across.
-
-A tool (Rename Taxonomy Slug) has been provided for just that purpose.
-
-![Rename Taxonomy Slug](../images/RenameTaxSlug.png)
-
-You select the taxonomy to be changed and it shows you its existing values. Enter the new slug name.
-
-Because the query_var and rewrite slug are closely related to the taxonomy slug, these are displayed and are optionally updatable here.
-
-Because the rewrite option was not defined with this basic example, it is not shown on this example screen.
-
-![New Slug Entered](../images/RenamedSlug.png)
-
-The Rename Taxinomy button is now active and once checked the data can be clicked. The processing done is given.
-
-![Rename messages](../images/RenameMessages.png)
-
-After this is done, you might wish to use the menu to look at the new taxonomy. If clicked on, then you will get an invalid taxonomy message.
-
-This is because it still has the old slug name - which no longer exists. So before doing this refresh the page.
-
-You will be able to see the terms using the new slug - and all the terms are there - and all the posts have the same terms attached.
+The images are written to the `images` folder.

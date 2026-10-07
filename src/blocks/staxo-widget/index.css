@@ -13,3 +13,17 @@
 	{
 		margin-bottom: 24px;
 	}
+
+/* Taxonomy cloud: the terms are a list (for screen readers), shown on one line without bullets. */
+.staxo-terms-cloud ul.wp-tag-cloud
+	{
+		list-style: none;
+		margin-left: 0;
+		padding-left: 0;
+	}
+
+.staxo-terms-cloud ul.wp-tag-cloud li
+	{
+		display: inline;
+		margin: 0 0.5em 0 0;
+	}

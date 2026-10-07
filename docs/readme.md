@@ -1,85 +1,53 @@
 # Simple Taxonomy Refreshed
 
-This plugin provides a no-code facility to manage your taxonomies - either by defining your own or by adding additional function to existing ones.
+Simple Taxonomy Refreshed lets you manage the taxonomies of a WordPress site without writing code. You can define your own taxonomies and add extra functions to existing ones, such as Categories, Tags or taxonomies from other plugins.
 
-* Contributors: nwjames, momo360modena
-* Tags: tags, taxonomies, custom taxonomies, taxonomy, category
-* Requires at least: 6.9
-* Tested up to: 7.1
-* Requires PHP: 8.2
-* Stable tag: 4.0.0
-* License: GPLv3 or later
-* License URI: https://www.gnu.org/licenses/gpl-3.0.html
+**[Try it in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/NeilWJames/simple-taxonomy-refreshed/master/playground/blueprint.json)**: a demo site opens in your browser with the plugin and some example taxonomies, posts and blocks already set up. Nothing is installed on your computer, and the site is discarded when you close the tab.
 
-## Description
+The examples and screenshots in these pages all come from that demo site. [The demo site](example.md) describes what it contains.
 
-This plugin provides a no-code process to manage your taxonomies - either by defining your own or by adding additional function to existing ones.
+## What the plugin does
 
-Supports adding one or more taxonomies (either hierarchical or tag) to any post type registered on your installation.
+- **Defines taxonomies.** Give a taxonomy a name, choose whether it is hierarchical (like Categories) or flat (like Tags), and choose the post types that use it. All the other settings of [`register_taxonomy()`](https://developer.wordpress.org/reference/functions/register_taxonomy/) are available, on the same screen.
+- **Controls the number of terms on a post.** Set a minimum and a maximum number of terms for a taxonomy. When a post can have only one term, its checkboxes become radio buttons.
+- **Adds filters to the admin post lists**, so posts can be listed by the terms of a taxonomy.
+- **Counts other post statuses.** Term counts can include drafts, scheduled or private posts, not only published ones.
+- **Orders the taxonomy columns** of the admin post lists.
+- **Shows the terms of a post** after its content, with a shortcode, or with the Display Post Terms block.
+- **Shows a term cloud or list** with the Taxonomy Cloud block or the widget.
+- **Provides tools for terms:** import a list of terms, copy terms from one taxonomy to another, merge terms, rename a taxonomy, and export or import the whole configuration.
+- **Supports WPGraphQL.**
 
-This plugin started as a functional conversion from [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) (now closed). It requires WordPress 6.9 or later and PHP 8.2 or later, and is tested up to WordPress 7.1.
+The extra functions (term limits, admin list filter, term counts, list order and WPGraphQL) work for any taxonomy, not only those defined by the plugin.
 
-This plugin allows you to add a taxonomy just by giving them a name and some options in the backend. It then creates the taxonomy for you and takes care of the URL rewrites.
+## Documentation
 
-It provides a widget that you can use to display a "taxonomy cloud" or a list of all the terms; it allows you to show the taxonomy contents at the end of posts and excerpts as well. To increase flexibility, a shortcode and block has been provided to output these terms wherever desired.
+| Page | Contents |
+| ---- | -------- |
+| [The demo site](example.md) | The Playground demo: its taxonomies, posts and page, and how to run it on your own computer. |
+| [Taxonomies](taxonomies.md) | The Taxonomies menu. Adding and changing a taxonomy: every tab of the form. Extra functions for existing taxonomies. Export PHP and deleting a taxonomy. |
+| [Editing posts](post-editing.md) | Term limits in the block editor, the classic editor and Quick Edit. The admin post lists: columns, filters and term counts. |
+| [Showing terms on the site](display.md) | Terms after the post content, the `[staxo_post_terms]` shortcode, the Display Post Terms and Taxonomy Cloud blocks, and the widget. |
+| [Tools](tools.md) | Taxonomy List Order, Configuration Export/Import, Rename Taxonomy Slug, Terms Migrate, Terms Import and Terms Merge. |
+| [Filters](filters.md) | Filters for developers. |
+| [Changelog](changelog.md) | Changes in each version. |
+| [Security](SECURITY.md) | How to report a security problem. |
 
-You can also export the Taxonomy definition to include it directly in your own code.
+Each plugin screen also has help in the Help tab at the top right of the screen.
 
-You can also create terms easily by typing them into a list; or by copying them from an existing taxonomy.
+## Requirements
 
-A tool has been provided to support changing the taxonomy slug. All terms and their usages will also be linked to the renamed slug.
+- WordPress 6.9 or later
+- PHP 8.2 or later
 
-For admin screens displaying multiple taxonomies it is possible to define their display column order.
+## Installing
 
-A tool is provided to merge a number of terms within a taxonomy into a single one. All usages of the selected terms are changed to the merged one.
+1. In the WordPress admin, go to **Plugins > Add New Plugin** and search for "Simple Taxonomy Refreshed".
+2. Click **Install Now**, then **Activate**.
+3. Go to **Taxonomies > Add Taxonomy** to define your first taxonomy (see [Taxonomies](taxonomies.md)), or to **Taxonomies > All Taxonomies** to add functions to an existing one.
 
-Options are provided to add a selection dropdown in the admin list and to define term counts using posts of selected statuses (and not just "published").
-These capabilities are available for any taxonomy whether defined using this taxonomy or elsewhere.
+You can also download the plugin from [WordPress.org](https://wordpress.org/plugins/simple-taxonomy-refreshed/) and upload it to `wp-content/plugins/`.
 
-For those wishing to modify its operation, this will require code, a number of filters are available. These are summarised on the [Filters](./filters.md) page.
+## Source code
 
-For full information go the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed) page.
-
-Also see the [example page](./example.md) to see usage of the update screen and the tools. 
-
-When using the admin screen, additional information is available in the help pulldown area.
-
-## Frequently Asked Questions
-
-### Does this plugin handle custom fields, roles or post types?
-
-No, it is focused only on registering and supporting Taxonomies and their terms.
-
-There are a number of very good plugins for these functions.
-
-### There are a very large number of options - are they all needed?
-
-The standard WordPress functionality provides many options and labels - and in the spirit of no-coding, this provides them all.
-
-Very few are required as the default value provides the most-used setting.
-
-Enter just the Name (slug) whether Hierarchical or not and the Post Types used on the Main Options tab and Name (label) on the Labels tab will get you going.
-
-## Migration process
-
-Functionally replaces and extends the now withdrawn [Simple Taxonomy](https://wordpress.org/plugins/simple-taxonomy/) so if this is installed, deactivate it first.
-
-If you are an existing user of the Simple Taxonomy plugin as this plugin uses the Simple Taxonomy options data to save setting it up again completely, before starting you can use the Simple Taxonomy export function to first take a copy of your data.
-
-You should review the parameters to ensure that your needs are correctly set.
-
-**NB.** The Export/Import functions are not compatible between plugins. So you need to use the file with its version of the plugin.
-
-## Installation
-
-**Required - Supported version of PHP.**
-
-1. Download, unzip and upload to your WordPress plugins directory
-2. Activate the plugin within you WordPress Administration Backend
-3. Go to Settings > Custom Taxonomies and follow the steps on the [Simple Taxonomy Refreshed](https://github.com/NeilWJames/simple-taxonomy-refreshed) page.
-
-See [Usage details](./usage.md) for more information on the usage of the plugin.
-
-## Changelog
-
-See [Change log](./changelog.md) for information on the changes made to the different versions of the plugin.
+The plugin is developed on [GitHub](https://github.com/NeilWJames/simple-taxonomy-refreshed). Issues and suggestions are welcome there.

@@ -88,6 +88,25 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 	}
 
 	/**
+	 * Enqueue the style of the term cloud: its terms are a list, shown on one line without bullets.
+	 *
+	 * @since 4.0.0
+	 * @return void
+	 */
+	private static function enqueue_cloud_style() {
+		$css = 'build/common/staxo-widget.css';
+		if ( ! is_readable( dirname( __DIR__ ) . '/' . $css ) ) {
+			return;
+		}
+		wp_enqueue_style(
+			'staxo-widget',
+			plugins_url( $css, __DIR__ ),
+			array(),
+			(string) filemtime( dirname( __DIR__ ) . '/' . $css )
+		);
+	}
+
+	/**
 	 * Client side widget render
 	 *
 	 * @param array $args      Display arguments including 'before_title', 'after_title', 'before_widget', and 'after_widget'.
@@ -136,6 +155,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 
 		// if we request a tag cloud, check that it has been allowed.
 		if ( 'cloud' === $instance['disptype'] && get_taxonomy( $current_taxonomy )->show_tagcloud ) {
+			self::enqueue_cloud_style();
 			/*
 			 *
 			 * Filters the cloud widget arguments.

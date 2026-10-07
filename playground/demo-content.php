@@ -15,7 +15,7 @@
  * | colour    | test_flat | Flat, posts and pages; REST base; default term; content+excerpt |
  * | audience  | test_cntl | Term Control: 1 or 2 terms on every saved post                |
  * | topic     | test_count| Term Count of published and draft posts; admin list filter    |
- * | format    | e2e_kind  | At most one term: radio buttons with "No term"               |
+ * | section   | e2e_kind  | At most one term: radio buttons with "No term"               |
  *
  * @package simple-taxonomy-refreshed
  */
@@ -35,8 +35,17 @@ function staxo_demo_taxonomy( $name, $singular, $plural, $settings ) {
 	$hier   = ! empty( $settings['hierarchical'] );
 	$labels = SimpleTaxonomyRefreshed_Client::get_taxonomy_default_labels( $hier ? 1 : 0 );
 
+	// The default labels speak of categories or tags: use the taxonomy's own names.
+	$from = $hier ? array( 'Categories', 'categories', 'Category', 'category' ) : array( 'Tags', 'tags', 'Tag', 'tag' );
+	$to   = array( $plural, strtolower( $plural ), $singular, strtolower( $singular ) );
+	foreach ( $labels as $key => $label ) {
+		if ( is_string( $label ) ) {
+			$labels[ $key ] = str_replace( $from, $to, $label );
+		}
+	}
 	$labels['name']          = $plural;
 	$labels['singular_name'] = $singular;
+	$labels['menu_name']     = $plural;
 
 	return array_merge(
 		SimpleTaxonomyRefreshed_Client::get_taxonomy_default_fields(),
@@ -157,10 +166,10 @@ function staxo_demo_load() {
 				'st_adm_count' => 1,
 			)
 		),
-		'format'   => staxo_demo_taxonomy(
-			'format',
-			'Format',
-			'Formats',
+		'section'  => staxo_demo_taxonomy(
+			'section',
+			'Section',
+			'Sections',
 			array(
 				'hierarchical' => 1,
 				'objects'      => array( 'post' ),
@@ -191,7 +200,7 @@ function staxo_demo_load() {
 		array(
 			'taxonomies' => $taxonomies,
 			'externals'  => $externals,
-			'list_order' => array( 'post' => array( 'genre', 'topic', 'format', 'audience', 'colour', 'category', 'post_tag' ) ),
+			'list_order' => array( 'post' => array( 'genre', 'topic', 'section', 'audience', 'colour', 'category', 'post_tag' ) ),
 		),
 		true
 	);
@@ -200,6 +209,14 @@ function staxo_demo_load() {
 	SimpleTaxonomyRefreshed_Client::init();
 	SimpleTaxonomyRefreshed_Client::init_2();
 	SimpleTaxonomyRefreshed_Client::refresh_term_cntl_cache();
+
+	// Remove WordPress's sample post and page, so that the site only holds the demo content.
+	foreach ( array( 'post' => 'hello-world', 'page' => 'sample-page' ) as $post_type => $slug ) {
+		$sample = get_page_by_path( $slug, OBJECT, $post_type );
+		if ( $sample ) {
+			wp_delete_post( $sample->ID, true );
+		}
+	}
 
 	// Terms: the test suite's trees and lists.
 	staxo_demo_terms(
@@ -238,14 +255,25 @@ function staxo_demo_load() {
 	);
 	staxo_demo_terms( 'colour', array_fill_keys( array( 'Red', 'Green', 'Blue', 'Yellow', 'Cyan' ), array() ) );
 	staxo_demo_terms( 'audience', array_fill_keys( array( 'Beginners', 'Experts', 'Students', 'Teachers', 'Everyone' ), array() ) );
-	staxo_demo_terms( 'format', array_fill_keys( array( 'Article', 'Review', 'Interview' ), array() ) );
+	staxo_demo_terms(
+		'section',
+		array(
+			'News'       => array(),
+			'Reviews'    => array(
+				'Albums'   => array(),
+				'Concerts' => array(),
+			),
+			'Interviews' => array(),
+		)
+	);
+	staxo_demo_terms( 'post_tag', array_fill_keys( array( 'live', 'study' ), array() ) );
 
 	// Posts: the test suite's post matrix, one post for each status.
 	$posts = array(
-		array( 'A night of jazz', 'publish', array( 'Jazz' ), array( 'Red', 'Green' ), array( 'Beginners' ), array( 'Physics' ), array( 'Article' ), array( 'live' ) ),
-		array( 'Bebop basics', 'publish', array( 'Bebop' ), array( 'Green' ), array( 'Experts' ), array( 'Astronomy' ), array( 'Review' ), array( 'study' ) ),
-		array( 'From jazz to bebop', 'publish', array( 'Jazz', 'Bebop' ), array( 'Blue' ), array( 'Beginners', 'Students' ), array( 'Physics' ), array( 'Article' ), array( 'study', 'live' ) ),
-		array( 'The big band sound', 'publish', array( 'Big Band' ), array( 'Red', 'Blue' ), array( 'Students' ), array(), array( 'Interview' ), array() ),
+		array( 'A night of jazz', 'publish', array( 'Jazz' ), array( 'Red', 'Green' ), array( 'Beginners' ), array( 'Physics' ), array( 'News' ), array( 'live' ) ),
+		array( 'Bebop basics', 'publish', array( 'Bebop' ), array( 'Green' ), array( 'Experts' ), array( 'Astronomy' ), array( 'Albums' ), array( 'study' ) ),
+		array( 'From jazz to bebop', 'publish', array( 'Jazz', 'Bebop' ), array( 'Blue' ), array( 'Beginners', 'Students' ), array( 'Physics' ), array( 'News' ), array( 'study', 'live' ) ),
+		array( 'The big band sound', 'publish', array( 'Big Band' ), array( 'Red', 'Blue' ), array( 'Students' ), array(), array( 'Concerts' ), array() ),
 		array( 'Rock notes (draft)', 'draft', array( 'Rock' ), array( 'Yellow' ), array(), array( 'Biology' ), array(), array() ),
 		array( 'Punk review (pending)', 'pending', array( 'Punk' ), array( 'Yellow' ), array(), array( 'Botany' ), array(), array() ),
 		array( 'Painting diary (private)', 'private', array( 'Painting' ), array( 'Cyan' ), array(), array( 'History' ), array(), array() ),
@@ -270,7 +298,7 @@ function staxo_demo_load() {
 				'colour'   => $post[3],
 				'audience' => $post[4],
 				'topic'    => $post[5],
-				'format'   => $post[6],
+				'section'  => $post[6],
 				'post_tag' => $post[7],
 			)
 		);

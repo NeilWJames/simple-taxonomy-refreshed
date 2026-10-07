@@ -234,6 +234,14 @@ class Test_STaxo_Rename extends STaxo_Test_Case {
 	}
 
 	/**
+	 * A new slug that would clash with a field of posts in the REST API is refused.
+	 */
+	public function test_rest_name_conflict_refused() {
+		$this->assert_rename_refused( 'test_hier', 'status', 'REST name &quot;status&quot; would already be used' );
+		$this->assert_rename_refused( 'test_hier', 'tags', 'REST name &quot;tags&quot; would already be used' );
+	}
+
+	/**
 	 * Only this plugin's taxonomies can be renamed.
 	 */
 	public function test_other_taxonomies_refused() {

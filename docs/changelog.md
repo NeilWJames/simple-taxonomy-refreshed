@@ -40,12 +40,15 @@
 * FIX: Spacing check for the "after" text of post terms.
 * FIX: Display Post Terms and Taxonomy Cloud blocks only use block wrapper attributes while one of their own blocks is rendering, so their output can also be produced outside a block.
 * FIX: Display Post Terms and Taxonomy Cloud blocks use the plugin's standard block supports: alignment, text and background colour (including gradients), margin, padding, font size and line height. Link colour is no longer offered.
+* FIX: Taxonomy Cloud block and widget: a cloud showed its terms as a bulleted list, one per line, in themes that do not style tag clouds (such as Twenty Twenty-Five). A small stylesheet now shows them on one line, without bullets, keeping the list for screen readers.
+* FIX: Taxonomy Cloud block: "Maximum number of terms to display" could not be set back to 0 (all terms), and showed 1 for a block that shows all the terms.
 * FIX: Widget no longer raises PHP warnings when its taxonomy is not registered, and shows a message for an empty list.
 * FIX: The widget settings lists marked the chosen option with escaped quotes (`selected=&#039;selected&#039;`).
 * DEV: Widget numeric settings are sanitised.
 
 #### Taxonomy settings screens (custom and external taxonomies)
 
+* NEW: A taxonomy whose REST name (its REST Base, or its name) is already a field of posts in the REST API, such as "format", "status" or "type", or another taxonomy's REST name, is refused when it is added, changed or renamed, and skipped by the configuration import. WordPress leaves such a taxonomy out of the posts' REST data, so the block editor could not set its terms. Setting a different REST Base makes the name usable.
 * NEW: Term Count for an external taxonomy with a count function of its own: the tab warns that counts made with these options may not match its own, and a new "Use these options" box (setting `st_cb_override`) replaces its count function with WordPress's standard one and the statuses chosen. Without the tick, its own function is kept.
 * FIX: Term Count now works for taxonomies that use WordPress's standard count, such as categories and tags, and those registered by other plugins with `_update_post_term_count`; the options were not offered for them.
 * FIX: Term Count "Selection" for an external taxonomy raised PHP warnings for each status left unticked (unticked boxes were not saved).
