@@ -8,3 +8,7 @@ package-lock.json
 vendor
 artifacts/
 .wp-env.override.json
+e2e_output.txt
+npm_error.txt
+webpack.config.js.txt
+/Claude outputs

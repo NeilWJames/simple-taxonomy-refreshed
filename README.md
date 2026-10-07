@@ -7,7 +7,7 @@ This WordPress plugin provides a no-code facility to manage your taxonomies - ei
 
 ## Quick Start
 
-**[Download from WordPress.org](https://wordpress.org/plugins/simple-taxonomy-refreshed/)** | **[View Documentation](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md/)**
+**[Download from WordPress.org](https://wordpress.org/plugins/simple-taxonomy-refreshed/)** | **[View Documentation](docs/readme.md)** | **[Try it in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/NeilWJames/simple-taxonomy-refreshed/master/playground/blueprint.json)**
 
 ## What is Simple Taxonomy Refreshed?
 
@@ -40,7 +40,7 @@ A number of support tools are available for managing all your taxonomies :
 - Creating that list by copying terms from an existing taxonomy.
 - Merge terms together - updating their usages to be the merged term.
 
-Additional information on plugin usage is available in the help pulldown area of the screens.
+Additional information on plugin usage is available in the help pulldown area of the screens, and in the [documentation](docs/readme.md).
 
 ## Requirements
 

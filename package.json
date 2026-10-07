@@ -14,6 +14,8 @@
     "start": "wp-scripts start --webpack-src-dir=src/blocks --output-path=build/blocks",
     "wp-env": "wp-env",
     "env:start": "wp-playground-cli server --port 8888 --php 8.2 --no-login --blueprint tests/e2e/blueprint.json --mount-dir . /wordpress/wp-content/plugins/simple-taxonomy-refreshed --mount-dir tests/e2e/mu-plugins /wordpress/wp-content/mu-plugins",
+    "playground": "wp-playground-cli server --port 8889 --php 8.2 --blueprint playground/blueprint-local.json --mount-dir . /wordpress/wp-content/plugins/simple-taxonomy-refreshed",
+    "screenshots": "playwright test --config playground/playwright.config.js",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

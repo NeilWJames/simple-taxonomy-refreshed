@@ -28,6 +28,8 @@ phpcs.ruleset.xml
 phpstan-baseline.neon
 phpstan.neon.dist
 phpunit9.xml
+/playground/playwright.config.js
+/playground/screenshots.spec.js
 playwright.config.js
 readme.md
 webpack.config.js.txt

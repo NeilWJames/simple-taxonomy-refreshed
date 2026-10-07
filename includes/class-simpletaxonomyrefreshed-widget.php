@@ -156,6 +156,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		// if we request a tag cloud, check that it has been allowed.
 		if ( 'cloud' === $instance['disptype'] && get_taxonomy( $current_taxonomy )->show_tagcloud ) {
 			self::enqueue_cloud_style();
+
 			/*
 			 *
 			 * Filters the cloud widget arguments.

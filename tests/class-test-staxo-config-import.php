@@ -301,7 +301,12 @@ class Test_STaxo_Config_Import extends STaxo_Test_Case {
 
 		$this->assertSame( array( 'test_hier', 'test_kinds' ), array_keys( get_option( OPTION_STAXO )['taxonomies'] ) );
 		$skipped = $this->notice( $errors, 'config_skipped' );
-		foreach ( array( 'format' => 'format', 'test_status' => 'status', 'test_tags' => 'tags' ) as $name => $rest_name ) {
+		$clashes = array(
+			'format'      => 'format',
+			'test_status' => 'status',
+			'test_tags'   => 'tags',
+		);
+		foreach ( $clashes as $name => $rest_name ) {
 			$this->assertStringContainsString( '&quot;' . $name . '&quot;: its REST name &quot;' . $rest_name . '&quot; is already used', $skipped, $name );
 		}
 	}
