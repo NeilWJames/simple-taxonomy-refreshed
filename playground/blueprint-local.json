@@ -1,0 +1,39 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"meta": {
+		"title": "Simple Taxonomy Refreshed demo",
+		"description": "A site with five custom taxonomies, extra functions on Tags, sample posts and a page of the plugin's blocks. Local version: uses the plugin folder mounted by npm run playground.",
+		"author": "NeilWJames",
+		"categories": [
+			"Content"
+		]
+	},
+	"landingPage": "/wp-admin/admin.php?page=staxo_settings",
+	"preferredVersions": {
+		"php": "8.2",
+		"wp": "latest"
+	},
+	"steps": [
+		{
+			"step": "activatePlugin",
+			"pluginPath": "/wordpress/wp-content/plugins/simple-taxonomy-refreshed"
+		},
+		{
+			"step": "setSiteOptions",
+			"options": {
+				"blogname": "STR Playground",
+				"blogdescription": "Simple Taxonomy Refreshed demo site",
+				"permalink_structure": "/%postname%/"
+			}
+		},
+		{
+			"step": "runPHP",
+			"code": "<?php require '/wordpress/wp-load.php'; require WP_PLUGIN_DIR . '/simple-taxonomy-refreshed/playground/demo-content.php'; staxo_demo_load();"
+		},
+		{
+			"step": "login",
+			"username": "admin",
+			"password": "password"
+		}
+	]
+}
