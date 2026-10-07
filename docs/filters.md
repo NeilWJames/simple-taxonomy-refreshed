@@ -8,7 +8,9 @@ The following filters are available for this plug-in:
 
 * staxo_can_edit_callbacks
 
-    Decides whether the current user may change the callback fields (update_count_callback, rest_controller_class, meta box callbacks). Default: users with unfiltered_html (super admins on multisite). Receives the default, the user and the taxonomy name (empty for a new taxonomy).
+    Decides whether the current user may change the callback fields (update_count_callback, rest_controller_class, meta box callbacks).
+    
+    Default: users with unfiltered_html (super admins on multisite). Receives the default, the user and the taxonomy name (empty for a new taxonomy).
 
 * staxo_check_merge
 

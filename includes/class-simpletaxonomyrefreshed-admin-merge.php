@@ -135,7 +135,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				echo '</span>';
 				echo '<input type="hidden" name="taxonomy" id="taxonomy" value="' . esc_attr( $taxonomy ) . '" />';
 				echo '<input type="hidden" name="phase" id="phase" value="three" />';
-				echo '<input type="hidden" name="destination" id="destination" value="' . esc_attr( $destination ) . '" />';
+				echo '<input type="hidden" name="destination" id="destination" value="' . esc_attr( (string) $destination ) . '" />';
 				// phpcs:ignore WordPress.Security.EscapeOutput
 				echo ob_get_clean();
 			}
@@ -216,7 +216,7 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 				}
 				echo '<input type="hidden" name="taxonomy" id="taxonomy" value="' . esc_attr( $taxonomy ) . '" />';
 				echo '<input type="hidden" name="phase" id="phase" value="four" />';
-				echo '<input type="hidden" name="destination" id="destination" value="' . esc_attr( $destination ) . '" />';
+				echo '<input type="hidden" name="destination" id="destination" value="' . esc_attr( (string) $destination ) . '" />';
 				echo '<input type="hidden" name="sources" id="sources" value="' . esc_attr( implode( ',', $sources ) ) . '" />';
 				echo '<input type="hidden" name="stt_ids" id="stt_ids" value="' . esc_attr( implode( ',', $tt_ids ) ) . '" />';
 				// phpcs:ignore WordPress.Security.EscapeOutput
