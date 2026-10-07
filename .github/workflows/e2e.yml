@@ -6,9 +6,15 @@ on:
   push:
     branches:
       - master
+    # A change to the translation template only (the Generate POT PR) needs no tests.
+    paths-ignore:
+      - 'languages/**'
   pull_request:
     branches:
       - master
+    # A change to the translation template only (the Generate POT PR) needs no tests.
+    paths-ignore:
+      - 'languages/**'
   workflow_dispatch:
 
 permissions:

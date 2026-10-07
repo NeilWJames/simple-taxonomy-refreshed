@@ -5,9 +5,15 @@ on:
   push:
     branches:
       - master
+    # A change to the translation template only (the Generate POT PR) needs no tests.
+    paths-ignore:
+      - 'languages/**'
   pull_request:
     branches:
       - master
+    # A change to the translation template only (the Generate POT PR) needs no tests.
+    paths-ignore:
+      - 'languages/**'
   # Manual run: no previous commit to compare with, so the blocks are always rebuilt.
   workflow_dispatch:
 

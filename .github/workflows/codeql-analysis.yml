@@ -3,9 +3,15 @@ name: "CodeQL"
 on:
   push:
     branches: [ master ]
+    # A change to the translation template only (the Generate POT PR) needs no tests.
+    paths-ignore:
+      - 'languages/**'
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ master ]
+    # A change to the translation template only (the Generate POT PR) needs no tests.
+    paths-ignore:
+      - 'languages/**'
   schedule:
     - cron: '41 4 13 * *'
 
