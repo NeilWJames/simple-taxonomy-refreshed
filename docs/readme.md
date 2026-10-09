@@ -4,6 +4,8 @@ Simple Taxonomy Refreshed lets you manage the taxonomies of a WordPress site wit
 
 **[Try it in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/NeilWJames/simple-taxonomy-refreshed/master/playground/blueprint.json)**: a demo site opens in your browser with the plugin and some example taxonomies, posts and blocks already set up. Nothing is installed on your computer, and the site is discarded when you close the tab.
 
+> **Development or released version?** This demo, like these pages, follows the plugin's latest development code on GitHub. The **Live Preview** button on the plugin's [WordPress.org page](https://wordpress.org/plugins/simple-taxonomy-refreshed/) opens the same demo with the released version. Between releases the two can differ, so something described here may not be in the released version yet.
+
 The examples and screenshots in these pages all come from that demo site. [The demo site](example.md) describes what it contains.
 
 ## What the plugin does

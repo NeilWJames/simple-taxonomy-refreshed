@@ -2,7 +2,7 @@
 	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
 	"meta": {
 		"title": "Simple Taxonomy Refreshed demo",
-		"description": "A site with five custom taxonomies, extra functions on Tags, sample posts and a page of the plugin's blocks.",
+		"description": "The latest development code from GitHub (master), with five custom taxonomies, extra functions on Tags, sample posts and a page of the plugin's blocks.",
 		"author": "NeilWJames",
 		"categories": [ "Content" ]
 	},

@@ -48,7 +48,7 @@ Additional information on plugin usage is available in the help pulldown area of
 
 For full information go to the [Simple Taxonomy Refreshed documentation](https://github.com/NeilWJames/simple-taxonomy-refreshed/blob/master/docs/readme.md).
 
-To try the plugin without installing it, open the [demo site in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/NeilWJames/simple-taxonomy-refreshed/master/playground/blueprint.json). It runs in your browser, with example taxonomies, posts and blocks already set up.
+To try the plugin without installing it, use the Live Preview button on this page. It opens a demo site in your browser, with this version of the plugin and example taxonomies, posts and blocks already set up. The documentation and its own demo follow the latest development code on GitHub, so they may differ from this version.
 
 == Frequently Asked Questions ==
 

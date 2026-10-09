@@ -9,6 +9,8 @@ This WordPress plugin provides a no-code facility to manage your taxonomies - ei
 
 **[Download from WordPress.org](https://wordpress.org/plugins/simple-taxonomy-refreshed/)** | **[View Documentation](docs/readme.md)** | **[Try it in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/NeilWJames/simple-taxonomy-refreshed/master/playground/blueprint.json)**
 
+The Playground link runs the latest development code from this repository. The Live Preview on the WordPress.org page runs the released version, so the two may differ.
+
 ## What is Simple Taxonomy Refreshed?
 
 A WordPress plugin that simplifies the management of Taxomonies and their Terms for a WordPress site. 

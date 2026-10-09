@@ -4,6 +4,8 @@ The demo site is a small music and arts magazine. It shows the main features of 
 
 **[Open the demo in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/NeilWJames/simple-taxonomy-refreshed/master/playground/blueprint.json)**
 
+> **Development or released version?** This demo, like these pages, follows the plugin's latest development code on GitHub. The **Live Preview** button on the plugin's [WordPress.org page](https://wordpress.org/plugins/simple-taxonomy-refreshed/) opens the same demo with the released version. Between releases the two can differ, so something described here may not be in the released version yet.
+
 [WordPress Playground](https://wordpress.org/playground/) runs a whole WordPress site in your browser. The demo opens logged in as the administrator, on the **Taxonomies** screen. You can change anything you like: the site only exists in your browser tab, and closing the tab discards it.
 
 ## What the demo contains
@@ -95,6 +97,29 @@ The demo is part of the plugin, in its `playground` folder:
 | `blueprint-local.json` | The same, for a copy of the plugin on your own computer (see below). |
 | `demo-content.php` | Creates the plugin settings, the terms, the posts and the page. Its `staxo_demo_load()` function stores the settings in the `simple-taxonomy` option, the same way the plugin's own screens do. |
 | `playwright.config.js`, `screenshots.spec.js` | Take the screenshots used in this documentation. They are not included in the plugin download from WordPress.org. |
+| `build-assets-blueprint.js` | Builds the Live Preview blueprint (see below). Not included in the plugin download either. |
+
+### Two versions of the demo
+
+| Blueprint | Used by | Installs |
+| --------- | ------- | -------- |
+| `playground/blueprint.json` | The links in this documentation | The latest development code, from the `master` branch on GitHub |
+| `assets/blueprints/blueprint.json` | The **Live Preview** button on the [WordPress.org plugin page](https://wordpress.org/plugins/simple-taxonomy-refreshed/) | The released version, from WordPress.org |
+
+The `assets` folder in the GitHub repository holds the files for the `assets` folder of the plugin's WordPress.org repository (SVN), where the Live Preview blueprint must be stored as `assets/blueprints/blueprint.json`. It is not part of the plugin itself.
+
+A blueprint on WordPress.org cannot load other files from the `assets` folder, so the Live Preview blueprint carries the demo code itself, in its `runPHP` step. It is built, not edited by hand:
+
+```sh
+npm run assets-blueprint
+```
+
+This takes `playground/blueprint.json`, replaces its first step with one that installs the released plugin from WordPress.org, and replaces the step that loads `demo-content.php` with the code of `playground/demo-content.php`. It writes `assets/blueprints/blueprint.json`, which is then committed to the WordPress.org `assets/blueprints` folder.
+
+So the two demos change separately:
+
+- The files in `playground` change with the plugin code on GitHub, and the GitHub demo follows them straight away.
+- The Live Preview only changes when the blueprint is built again and committed to WordPress.org, usually at a release. As its demo code runs against the released plugin, build it only once any plugin code the demo needs has been released.
 
 ## Running the demo on your computer
 

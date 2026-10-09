@@ -8,6 +8,7 @@
 /.gitattributes
 /.gitignore
 /.wp-env.json
+/assets
 /artifacts
 /bin
 /docs
@@ -30,6 +31,7 @@ phpstan.neon.dist
 phpunit9.xml
 /playground/playwright.config.js
 /playground/screenshots.spec.js
+/playground/build-assets-blueprint.js
 playwright.config.js
 readme.md
 webpack.config.js.txt
