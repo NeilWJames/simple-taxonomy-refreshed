@@ -87,11 +87,13 @@ jobs:
   run:
     needs: build
     runs-on: ${{ matrix.operating-system }}
+    # The PHP 8.6 job reports problems but does not fail the run (see the matrix).
+    continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       fail-fast: true
       matrix:
         operating-system: [ubuntu-latest]
-        php-versions: ['8.2', '8.3', '8.4']
+        php-versions: ['8.2', '8.3', '8.4', '8.5']
         wp-version: ['6.9', latest]
         wp-multisite: [0]
         phpunit-versions: ['9.5']
@@ -103,6 +105,18 @@ jobs:
             phpunit-versions: '9.5'
             phpunit-config: 'phpunit9.xml'
             operating-system: 'ubuntu-latest'
+          # PHP 8.6 was released on 19 Nov 2026, but setup-php still installs a build of its
+          # development branch, and no stable Xdebug supports it yet: run without coverage,
+          # on the latest WordPress only, and let it fail. Make it a normal entry of
+          # php-versions once setup-php and Xdebug support PHP 8.6.
+          - php-versions: '8.6'
+            wp-version: 'latest'
+            wp-multisite: 0
+            phpunit-versions: '9.6'
+            phpunit-config: 'phpunit9.xml'
+            operating-system: 'ubuntu-latest'
+            coverage: 'none'
+            experimental: true
     name: PHP ${{ matrix.php-versions }} Test WP ${{ matrix.wp-version }} MS ${{ matrix.wp-multisite }} ${{ matrix.operating-system }}
     steps:
     - name: Start DB
@@ -130,7 +144,7 @@ jobs:
       with:
         php-version: ${{ matrix.php-versions }}
         extensions: mysqli
-        coverage: xdebug
+        coverage: ${{ matrix.coverage || 'xdebug' }}
         tools: wp-cli, phpunit:${{ matrix.phpunit-versions }}
       env:
         COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -149,11 +163,12 @@ jobs:
     - name: phpunit tests
       run: |
         echo "define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '${{ github.workspace }}/vendor/yoast/phpunit-polyfills');" >> /tmp/wordpress-tests-lib/wp-tests-config.php
-        /usr/local/bin/phpunit --config=${{ matrix.phpunit-config }}
+        /usr/local/bin/phpunit --config=${{ matrix.phpunit-config }} ${{ matrix.coverage == 'none' && '--no-coverage' || '' }}
       env:
         WP_MULTISITE: ${{ matrix.wp-multisite }}
 
     - name: Codecov
+      if: matrix.coverage != 'none'
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
