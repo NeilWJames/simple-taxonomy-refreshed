@@ -22,6 +22,7 @@ import {
 	Spinner,
 	TextControl,
 	TreeSelect,
+	VisuallyHidden,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
@@ -362,11 +363,19 @@ export default function RadioTermSelector( { slug, noTerm } ) {
 						onChange={ setFilterValue }
 					/>
 				) }
-			{ loading && <Spinner /> }
+			{ loading && (
+				<>
+					<Spinner />
+					<VisuallyHidden>
+						{ __( 'Loading terms…', 'simple-taxonomy-refreshed' ) }
+					</VisuallyHidden>
+				</>
+			) }
 			<div
 				className="editor-post-taxonomies__hierarchical-terms-list staxo-radio-terms__list"
 				role="radiogroup"
 				aria-label={ groupLabel }
+				aria-busy={ loading }
 			>
 				{ null !== noTerm && '' === filterValue && (
 					<TermRadio

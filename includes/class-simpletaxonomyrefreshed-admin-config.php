@@ -449,19 +449,24 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 			}
 			?>
 			<h2><?php esc_html_e( 'Import Configuration', 'simple-taxonomy-refreshed' ); ?></h2>
-			<p>&nbsp;</p>
-			<a class="button" href="#" id="toggle-import_form"><?php esc_html_e( 'Import config file', 'simple-taxonomy-refreshed' ); ?></a>
+			<p aria-hidden="true">&nbsp;</p>
+			<button type="button" class="button hide-if-no-js" id="toggle-import_form" aria-expanded="false" aria-controls="import_form"><?php esc_html_e( 'Import config file', 'simple-taxonomy-refreshed' ); ?></button>
 			<script type="text/javascript">
-				jQuery( "#toggle-import_form" ).click(function(event) {
-					event.preventDefault();
-					jQuery( '#import_form' ).removeClass('hide-if-js');
-				});
+				// A button (Enter and Space), saying whether the form is shown; focus moves to the file field.
+				document.getElementById( 'toggle-import_form' ).addEventListener( 'click', function () {
+					var form  = document.getElementById( 'import_form' );
+					var shown = form.classList.toggle( 'hide-if-js' ) === false;
+					this.setAttribute( 'aria-expanded', shown ? 'true' : 'false' );
+					if ( shown ) {
+						document.getElementById( 'config_file' ).focus();
+					}
+				} );
 			</script>
 			<div id="import_form" class="hide-if-js">
 				<form action="<?php echo esc_url( 'admin.php?page=' . self::CONFIG_SLUG ); ?>" method="post" enctype="multipart/form-data">
 					<p>
-						<label><?php esc_html_e( 'Config file', 'simple-taxonomy-refreshed' ); ?></label>
-						<input type="file" name="config_file" />
+						<label for="config_file"><?php esc_html_e( 'Config file', 'simple-taxonomy-refreshed' ); ?></label>
+						<input type="file" name="config_file" id="config_file" />
 					</p>
 					<p class="submit">
 						<?php wp_nonce_field( esc_html( self::IMP_FILE_SLUG ) ); ?>
@@ -491,33 +496,17 @@ class SimpleTaxonomyRefreshed_Admin_Config {
 		}
 		echo '<p>' . esc_html__( 'You can reorder the custom taxonomies defined on export.', 'simple-taxonomy-refreshed' ) . '</p>';
 		echo '<p>' . esc_html__( 'On re-importing, they will be displayed in the order of the exported file.', 'simple-taxonomy-refreshed' ) . '</p>';
-		echo '<p>' . esc_html__( 'Drag the entries to create the required order.', 'simple-taxonomy-refreshed' ) . '</p>';
+		echo '<p>' . esc_html__( 'Drag the entries, or use their Move up and Move down buttons, to create the required order.', 'simple-taxonomy-refreshed' ) . '</p>';
 		echo '<div id="taxo_list_box" class="meta-box-sortabless">';
 		echo '<div class="postbox">';
-		echo '<div class="inside"><ul id="taxo_list">';
-		foreach ( $options['taxonomies'] as $li ) {
-			echo '<li class="sort-li" tabindex="0">' . esc_html( $li['name'] ) . '</li>';
-		}
-		echo '</ul></div></div></div>';
+		echo '<div class="inside">';
+		SimpleTaxonomyRefreshed_Admin::sortable_list( 'taxo_list', array_column( $options['taxonomies'], 'name' ) );
+		echo '</div></div></div>';
 		?>
 		<input type="hidden" name="taxo_list_arr" id="taxo_list_arr" value="" />
 		<script type="text/javascript">
-		function setSortable() {
-			jQuery( "#taxo_list" ).sortable({
-				placeholder : "ui-sortable-placeholder",
-				update : function(event, ui) {
-					set_array = new Array();
-					var set = document.getElementById("taxo_list").getElementsByClassName("sort-li");
-					for (const elt of set)  {
-						set_array.push(elt.innerText);
-					};
-					document.getElementById( "taxo_list_arr" ).value = JSON.stringify(set_array);
-				}
-			});
-		}
-
 		document.addEventListener('DOMContentLoaded', function(evt) {
-			setSortable();
+			staxo_sortable( 'taxo_list', 'taxo_list_arr' );
 		});
 		</script>
 		<?php

@@ -54,9 +54,10 @@ The block shows the terms of a taxonomy as a cloud, where the more posts a term 
 | Setting | Purpose |
 | ------- | ------- |
 | Title | A heading shown above the terms. |
+| Title heading level | Heading 2 (the default) to Heading 6, to fit the page's headings, or Not a heading. A heading lets screen reader users find the cloud. |
 | Taxonomy | The taxonomy to show. |
 | Display Type | Cloud or List. |
-| Tag size - Smallest, Largest | Cloud only: the font size of the terms with the fewest and the most posts, as a percentage of the normal size. |
+| Tag size - Smallest, Largest | Cloud only: the font size of the terms with the fewest and the most posts, as a percentage of the normal size. The smallest is at least 75% (default 80%), as smaller text is hard to read. |
 | Text Alignment | Cloud only: centre, left, right or justify. |
 | Order choice | Sort the terms by name or by number of posts. |
 | Order sequence | Ascending, descending or random. |

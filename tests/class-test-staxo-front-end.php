@@ -310,6 +310,10 @@ class Test_STaxo_Front_End extends STaxo_Test_Case {
 			}
 		);
 		$this->assertStringContainsString( "name='test_hier'", $post_list );
+		$this->assertMatchesRegularExpression( '#<label class="screen-reader-text" for="test_hier">([^<]+)</label><select\s+name=\'test_hier\' id=\'test_hier\'#', $post_list, 'The dropdown has a label (accessible name)' );
+		preg_match( '#<label class="screen-reader-text" for="test_hier">([^<]+)</label>#', $post_list, $label );
+		$labels = get_taxonomy( 'test_hier' )->labels;
+		$this->assertSame( esc_html( empty( $labels->filter_by_item ) ? 'Filter by ' . $labels->singular_name : $labels->filter_by_item ), $label[1] );
 		$this->assertStringContainsString( '>All Categories</option>', $post_list );
 		$this->assertStringContainsString( 'value="jazz"', $post_list );
 		$this->assertStringContainsString( 'value="misc"', $post_list, 'Empty terms shown (hide empty is off)' );
@@ -341,6 +345,61 @@ class Test_STaxo_Front_End extends STaxo_Test_Case {
 			}
 		);
 		$this->assertStringNotContainsString( 'not_there', $output );
+	}
+
+	/**
+	 * An empty label is left out when the taxonomy is registered, so WordPress uses its default
+	 * (an empty "Choose from the most used tags" button had no accessible name).
+	 */
+	public function test_empty_labels_use_defaults() {
+		$options = get_option( OPTION_STAXO );
+		$options['taxonomies']['test_cntl']['labels']['choose_from_most_used'] = '';
+		$options['taxonomies']['test_cntl']['labels']['add_new_item']          = 'Add New Control';
+		update_option( OPTION_STAXO, $options );
+		$this->register_taxonomies();
+
+		$labels = get_taxonomy( 'test_cntl' )->labels;
+		$this->assertSame( 'Choose from the most used tags', $labels->choose_from_most_used );
+		$this->assertSame( 'Add New Control', $labels->add_new_item, 'Labels that are set are kept' );
+	}
+
+	/**
+	 * No dropdown (hide if empty, no terms), no label; a flat taxonomy's label falls back to "Filter by" its singular name.
+	 */
+	public function test_admin_filter_label() {
+		$this->set_taxonomy(
+			'test_hier',
+			array(
+				'st_adm_types' => array( 'post' ),
+				'st_adm_h_i_e' => 1,
+				'st_adm_h_e'   => 1,
+			)
+		);
+		foreach ( get_terms(
+			array(
+				'taxonomy'   => 'test_hier',
+				'hide_empty' => false,
+				'fields'     => 'ids',
+			)
+		) as $term_id ) {
+			wp_delete_term( $term_id, 'test_hier' );
+		}
+		$output = $this->capture(
+			static function () {
+				SimpleTaxonomyRefreshed_Client::manage_filters( 'post' );
+			}
+		);
+		$this->assertStringNotContainsString( 'for="test_hier"', $output, 'No dropdown, so no label' );
+
+		$this->set_taxonomy( 'test_flat', array( 'st_adm_types' => array( 'post' ) ) );
+		$output  = $this->capture(
+			static function () {
+				SimpleTaxonomyRefreshed_Client::manage_filters( 'post' );
+			}
+		);
+		$tax_obj = get_taxonomy( 'test_flat' );
+		$label   = ( empty( $tax_obj->labels->filter_by_item ) ? 'Filter by ' . $tax_obj->labels->singular_name : $tax_obj->labels->filter_by_item );
+		$this->assertStringContainsString( '<label class="screen-reader-text" for="test_flat">' . esc_html( $label ) . '</label>', $output );
 	}
 
 	/**
@@ -435,9 +494,12 @@ class Test_STaxo_Front_End extends STaxo_Test_Case {
 	public function test_widget_block() {
 		$this->require_block( 'simple-taxonomy-refreshed/cloud-widget' );
 
-		$output = do_blocks( '<!-- wp:simple-taxonomy-refreshed/cloud-widget {"taxonomy":"test_hier","disptype":"list","minposts":2} /-->' );
+		$output = do_blocks( '<!-- wp:simple-taxonomy-refreshed/cloud-widget {"title":"Genres","taxonomy":"test_hier","disptype":"list","minposts":2} /-->' );
 
 		$this->assertStringContainsString( 'wp-block-simple-taxonomy-refreshed-cloud-widget', $output );
+		$this->assertStringContainsString( '<h2 class="staxo-widget-title">Genres</h2>', $output, 'In the block the title is a level 2 heading by default (review A10)' );
+		$output_p = do_blocks( '<!-- wp:simple-taxonomy-refreshed/cloud-widget {"title":"Genres","taxonomy":"test_hier","disptype":"list","headingLevel":0} /-->' );
+		$this->assertStringContainsString( '<p class="staxo-widget-title">Genres</p>', $output_p, 'Not a heading' );
 		$this->assertStringContainsString( '>Jazz</a>', $output );
 		$this->assertStringNotContainsString( '>Big Band</a>', $output );
 	}

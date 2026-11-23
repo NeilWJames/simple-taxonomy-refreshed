@@ -23,6 +23,7 @@ composer.lock
 coverage.xml
 eslint.config.cjs
 junit.xml
+.phpunit.result.cache
 package.json
 package-lock.json
 phpcs.ruleset.xml

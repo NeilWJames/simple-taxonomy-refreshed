@@ -5,8 +5,10 @@
  * Fixture staxo-config-e2e-hard.json: e2e_hard ("Editor's Terms"), flat, for posts,
  * 1 or 2 terms on any saved post, checked as terms are changed.
  *  - Classic editor: dom_tag_cntl_check() shows the reason, stops Save Draft while
- *    the count is outside the limits, and stops more tags being added at the maximum.
- *  - Quick Edit: dom_qe_cntl_check() shows the reason and disables Update.
+ *    the count is outside the limits (announcing the reason and moving focus to it),
+ *    and stops more tags being added at the maximum.
+ *  - Quick Edit: dom_qe_cntl_check() shows the reason and marks Update aria-disabled;
+ *    Update stays focusable, and using it announces the reason instead of saving.
  *
  * The draft is created before the fixture is loaded.
  */
@@ -62,6 +64,11 @@ test.describe( 'Terms Control in the classic editor and Quick Edit', () => {
 		await expect( page.getByText( 'Post draft updated.' ) ).toHaveCount(
 			0
 		);
+		// The reason is announced and focus moves to it (review finding A2).
+		await expect( error ).toBeFocused();
+		await expect( page.locator( '#a11y-speak-assertive' ) ).toContainText(
+			BELOW
+		);
 
 		// One tag: within the limits.
 		const box = page.locator( '#e2e_hard' );
@@ -96,7 +103,23 @@ test.describe( 'Terms Control in the classic editor and Quick Edit', () => {
 			exact: true,
 		} );
 		await expect( row.locator( '.e2e_hard-err' ) ).toContainText( BELOW );
+		// aria-disabled (Playwright counts it as disabled), but still focusable,
+		// and described by the message (review finding A3).
 		await expect( update ).toBeDisabled();
+		await expect( update ).toHaveAttribute( 'aria-disabled', 'true' );
+		await expect( update ).not.toHaveAttribute( 'disabled', /.*/ );
+		await expect( update ).toHaveAttribute(
+			'aria-describedby',
+			'staxo-qe-err-e2e_hard'
+		);
+
+		// Using Update announces the reason; the row stays open.
+		await update.focus();
+		await page.keyboard.press( 'Enter' );
+		await expect( page.locator( '#a11y-speak-assertive' ) ).toContainText(
+			BELOW
+		);
+		await expect( row.locator( '.e2e_hard-err' ) ).toBeVisible();
 
 		const tags = row.locator( 'textarea.tax_input_e2e_hard' );
 		await tags.fill( 'One' );

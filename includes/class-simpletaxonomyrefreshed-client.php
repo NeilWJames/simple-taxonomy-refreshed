@@ -131,6 +131,15 @@ class SimpleTaxonomyRefreshed_Client {
 					$terms_count = true;
 				}
 
+				// An empty label is left out, so WordPress uses its default: an empty one gives,
+				// for example, a "Choose from the most used tags" button with no name.
+				$args['labels'] = array_filter(
+					(array) $args['labels'],
+					static function ( $label ) {
+						return '' !== $label;
+					}
+				);
+
 				register_taxonomy( $taxonomy['name'], $taxonomy['objects'], $args );
 				self::$registered[ $taxonomy['name'] ] = true;
 
@@ -786,6 +795,41 @@ class SimpleTaxonomyRefreshed_Client {
 	}
 
 	/**
+	 * Output one admin list filter dropdown, with a label for screen readers.
+	 *
+	 * WordPress gives its own category filter a hidden label ("Filter by category"); without
+	 * one the dropdown has no accessible name.
+	 *
+	 * @since 4.0.1
+	 *
+	 * @param array $taxonomy taxonomy settings (as prepare_filter_args()).
+	 * @return void
+	 */
+	private static function dropdown_filter( $taxonomy ) {
+		$args         = self::prepare_filter_args( $taxonomy );
+		$args['id']   = $args['name'];
+		$args['echo'] = false;
+		$dropdown     = wp_dropdown_categories( $args );
+		if ( empty( $dropdown ) ) {
+			// Nothing to filter by (hide if empty).
+			return;
+		}
+		$tax_obj = get_taxonomy( $taxonomy['name'] );
+		if ( $tax_obj && ! empty( $tax_obj->labels->filter_by_item ) ) {
+			$label = $tax_obj->labels->filter_by_item;
+		} else {
+			$label = sprintf(
+				// translators: %s is the taxonomy name (its singular label).
+				__( 'Filter by %s', 'simple-taxonomy-refreshed' ),
+				( $tax_obj ? $tax_obj->labels->singular_name : $taxonomy['name'] )
+			);
+		}
+		echo '<label class="screen-reader-text" for="' . esc_attr( $args['id'] ) . '">' . esc_html( $label ) . '</label>';
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup built by wp_dropdown_categories().
+		echo $dropdown;
+	}
+
+	/**
 	 * Manage the dropdown filters.
 	 *
 	 * @since 1.3.0
@@ -805,7 +849,7 @@ class SimpleTaxonomyRefreshed_Client {
 					continue;
 				}
 				// Add the filter.
-				wp_dropdown_categories( self::prepare_filter_args( $taxonomy ) );
+				self::dropdown_filter( $taxonomy );
 			}
 		}
 		// External taxonomies.
@@ -827,7 +871,7 @@ class SimpleTaxonomyRefreshed_Client {
 				$taxonomy['query_var']           = $tax_obj->query_var;
 				$taxonomy['labels']['all_items'] = $tax_obj->labels->all_items;
 				// Add the filter.
-				wp_dropdown_categories( self::prepare_filter_args( $taxonomy ) );
+				self::dropdown_filter( $taxonomy );
 			}
 		}
 	}

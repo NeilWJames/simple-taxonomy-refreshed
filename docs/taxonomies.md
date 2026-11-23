@@ -44,7 +44,9 @@ Use **Taxonomies > Add Taxonomy**, or **Add New** on the All Taxonomies screen, 
 
 ![Add Taxonomy](../images/add-taxonomy.png)
 
-The form has eleven tabs. The first seven hold the settings of the taxonomy itself, which WordPress uses when it registers the taxonomy. The last four add the plugin's own functions. Nothing is saved until you click **Add taxonomy** or **Update taxonomy**, so you can move between the tabs freely.
+The form has eleven tabs. The first seven hold the settings of the taxonomy itself, which WordPress uses when it registers the taxonomy. The last four add the plugin's own functions. Nothing is saved until you click **Add taxonomy** or **Update taxonomy**, so you can move between the tabs freely. With the keyboard, Tab reaches the selected tab, the arrow keys (and Home and End) move to the other tabs, and Tab again moves into the tab's settings.
+
+**Add taxonomy** is available once a **Name (slug)** has been entered.
 
 Only a few settings are needed. To start, enter on the Main Options tab the **Name (slug)**, whether the taxonomy is **Hierarchical**, and the **Post types** that use it; then the **Name (label)** on the Labels tab. Everything else has a sensible default.
 

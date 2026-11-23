@@ -3,6 +3,7 @@ bin
 composer.lock
 coverage.xml
 junit.xml
+.phpunit.result.cache
 node_modules/
 package-lock.json
 vendor

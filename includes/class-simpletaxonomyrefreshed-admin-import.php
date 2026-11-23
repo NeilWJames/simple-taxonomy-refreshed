@@ -310,11 +310,13 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 					<br />
 					<?php
 					// Output the tag with PHP to avoid these leading format tabs being output in the textarea.
-					echo '<textarea name="import_content" id="import_content" rows="20" style="width:100%" onkeydown="insertTab(this, event);">';
+					echo '<textarea name="import_content" id="import_content" rows="20" style="width:100%" aria-describedby="import_content_keys" onkeydown="staxo_import_keydown(this, event);">';
 					// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput
 					echo esc_html( stripslashes( wp_unslash( $_POST['import_content'] ) ) );
 					echo '</textarea>';
 					?>
+					<br />
+					<span class="description" id="import_content_keys"><?php esc_html_e( 'When the hierarchy uses tab, the Tab key types a tab. To leave the field with the keyboard, press Escape and then Tab, or press Shift+Tab. Alternatively, use the space option and type a space for each level.', 'simple-taxonomy-refreshed' ); ?></span>
 				</p>
 
 				<p class="submit">
@@ -324,33 +326,32 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 			</form>
 		</div>
 		<script type="text/javascript">
-			function insertTab(o, e)
-			{
-				var kC = e.keyCode ? e.keyCode : e.charCode ? e.charCode : e.which;
-				if (kC == 9 && !e.shiftKey && !e.ctrlKey && !e.altKey)
-				{
-					var oS = o.scrollTop;
-					if (o.setSelectionRange)
-					{
-						var sS = o.selectionStart;
-						var sE = o.selectionEnd;
-						o.value = o.value.substring(0, sS) + "\t" + o.value.substr(sE);
-						o.setSelectionRange(sS + 1, sS + 1);
-						o.focus();
-					}
-					else if (o.createTextRange)
-					{
-						document.selection.createRange().text = "\t";
-						e.returnValue = false;
-					}
-					o.scrollTop = oS;
-					if (e.preventDefault)
-					{
-						e.preventDefault();
-					}
-					return false;
+			/*
+			 * Tab key in the terms list (WCAG 2.1.2: the user must be able to leave the field with the keyboard).
+			 * The Tab key types a tab only when the hierarchy uses tabs. Escape, then Tab, moves on as usual;
+			 * Shift+Tab always moves back. The help text under the field (aria-describedby) says so.
+			 */
+			var staxo_tab_leaves = false;
+			function staxo_import_keydown( area, evt ) {
+				if ( 'Escape' === evt.key ) {
+					staxo_tab_leaves = true;
+					return;
 				}
-				return true;
+				var leave = staxo_tab_leaves;
+				staxo_tab_leaves = false;
+				if ( 'Tab' !== evt.key || evt.shiftKey || evt.ctrlKey || evt.altKey || evt.metaKey || leave ) {
+					return;
+				}
+				var hier = document.getElementById( 'hierarchy' );
+				if ( ! hier || 'tab' !== hier.value ) {
+					return;
+				}
+				evt.preventDefault();
+				var top   = area.scrollTop;
+				var start = area.selectionStart;
+				area.value = area.value.substring( 0, start ) + "\t" + area.value.substring( area.selectionEnd );
+				area.setSelectionRange( start + 1, start + 1 );
+				area.scrollTop = top;
 			}
 		</script>
 		<?php
@@ -378,6 +379,7 @@ class SimpleTaxonomyRefreshed_Admin_Import {
 				__( 'The simplest option is to enter a list of terms where each one is its name. Its slug will be generated automatically.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'This is entered as a list with no hierarchy. It is appropriate for either non-hierarchical taxonomies or a few entries of a hierarchical one.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'You can also enter entries hierarchically into a hierarchical taxonomy. For this, you need to indent the entries to identify the hierarchy of terms wanted.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'When the hierarchy uses tab, the Tab key types a tab in the list. To leave the list with the keyboard, press Escape and then Tab, or press Shift+Tab.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'In particular, you may want to add terms into an existing hierarchy. So to identify where the entries are to go, you need to enter the existing term (either name or slug) in the list with no indent - and then to follow it by the sub-tree of terms to be added.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'An implication of this is that it tries to identify if the term entered already exists and does not try to enter it again.', 'simple-taxonomy-refreshed' ) . '</p>' .
 				__( 'Thus the count of terms added displayed will not be the number of lines present.', 'simple-taxonomy-refreshed' ) . '</p><p>',

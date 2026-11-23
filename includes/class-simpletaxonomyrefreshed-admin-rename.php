@@ -290,12 +290,12 @@ class SimpleTaxonomyRefreshed_Admin_Rename {
 			<p><?php esc_html_e( 'All usages of these terms will be updated as well.', 'simple-taxonomy-refreshed' ); ?></p>
 			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 			<form action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::RENAME_SLUG ) ); ?>" method="post">
-				<p><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></p>
 				<fieldset>
-					<div role="radiogroup">
+					<legend><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></legend>
+					<div>
 					<?php
 					foreach ( $taxos as $taxo ) {
-						echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . esc_attr( $taxo['name'] ) . '" value="' . esc_attr( $taxo['name'] ) . '" onclick="c' . (int) $taxo['n'] . '()" >';
+						echo '<input type="radio" name="taxonomy" class="taxonomy" id="' . esc_attr( $taxo['name'] ) . '" value="' . esc_attr( $taxo['name'] ) . '" onclick="c' . (int) $taxo['n'] . '()" >';
 						echo '<label for="' . esc_attr( $taxo['name'] ) . '" >' . esc_html( $taxo['label'] ) . '</label><br />';
 					}
 					?>

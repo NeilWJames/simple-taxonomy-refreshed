@@ -184,8 +184,9 @@ class Test_STaxo_Post_Screens extends STaxo_Test_Case {
 	public function test_classic_below_minimum() {
 		$html = $this->post_screen( 'P5' );
 
-		$this->assertStringContainsString( 'class="notice notice-error" id="err-test_cntl"', $html );
+		$this->assertStringContainsString( 'class="notice notice-error" id="err-test_cntl" tabindex="-1"><p>', $html );
 		$this->assertStringContainsString( self::BELOW . '  Please review and add additional terms before trying to save.', $html );
+		$this->assertMatchesRegularExpression( '#id="err-test_cntl" tabindex="-1"><p>[^<]*</p></div>#', $html, 'The message paragraph is closed' );
 		$this->assertStringNotContainsString( 'createNotice', $this->inline( 'staxo_client' ), 'No block editor notice' );
 	}
 
@@ -205,7 +206,7 @@ class Test_STaxo_Post_Screens extends STaxo_Test_Case {
 		$this->set_cntl_terms( 'P1', array( 'red', 'green', 'blue' ) );
 		$html = $this->post_screen( 'P1' );
 
-		$this->assertStringContainsString( 'class="notice notice-error" id="err-test_cntl"', $html );
+		$this->assertStringContainsString( 'class="notice notice-error" id="err-test_cntl" tabindex="-1"><p>', $html );
 		$this->assertStringContainsString( 'The number of terms for taxonomy (Control Terms) is greater than the required maximum number 2.  Please review and remove terms before trying to save.', $html );
 	}
 
@@ -215,7 +216,7 @@ class Test_STaxo_Post_Screens extends STaxo_Test_Case {
 	public function test_classic_within_limits() {
 		$html = $this->post_screen( 'P1' );
 
-		$this->assertStringContainsString( '<div class="notice notice-error hidden" id="err-test_cntl">', $html );
+		$this->assertStringContainsString( '<div class="notice notice-error hidden" id="err-test_cntl" tabindex="-1">', $html, 'Focusable, so a blocked save can move focus to it' );
 		$this->assertStringNotContainsString( 'less than the required minimum', $html );
 		$this->assertStringNotContainsString( 'greater than the required maximum', $html );
 	}
@@ -275,6 +276,7 @@ class Test_STaxo_Post_Screens extends STaxo_Test_Case {
 
 		$this->assertStringNotContainsString( 'err-test_cntl', $html );
 		$this->assertTrue( wp_script_is( 'staxo_client', 'enqueued' ) );
+		$this->assertContains( 'wp-a11y', wp_scripts()->registered['staxo_client']->deps, 'Messages are announced with wp.a11y.speak' );
 		$this->assertStringContainsString( 'createNotice( "error", "' . self::BELOW . '  Please review and add additional terms before trying to save.', $script );
 		$this->assertStringContainsString( 'id: "str_notice_test_cntl"', $script );
 		$this->assertStringContainsString( 'removeNotice( "str_notice_test_cntl" )', $script );
@@ -317,6 +319,7 @@ class Test_STaxo_Post_Screens extends STaxo_Test_Case {
 		$this->assertStringContainsString( 'tax_cntl.push( ["test_cntl",2,1,"' . self::BELOW . ' Saving is blocked.",2,', $script );
 		$this->assertStringContainsString( ',0,"No term","publish",', $script, 'Flat, default "No term", post status' );
 		$this->assertStringContainsString( 'dom_tag_cntl_check( "test_cntl" )', $script );
+		$this->assertStringContainsString( ',"test_cntl","Taxonomy (Control Terms) has the maximum number of terms (2). Remove a term to add another.","Control Terms"] );', $script, 'REST base, the message for a full tags box, then the label (names radio groups)' );
 
 		$this->post_screen( 'P5', true );
 		$script = $this->inline( 'staxo_client' );
@@ -336,6 +339,7 @@ class Test_STaxo_Post_Screens extends STaxo_Test_Case {
 		);
 		$this->post_screen( 'P1' );
 		$this->assertStringContainsString( 'dom_hier_cntl_check( "test_hier" )', $this->inline( 'staxo_client' ) );
+		$this->assertContains( 'wp-a11y', wp_scripts()->registered['staxo_client']->deps, 'Classic editor messages are announced with wp.a11y.speak' );
 
 		// Users who cannot change the terms get no checks as they are changed.
 		$this->login( 'subscriber' );

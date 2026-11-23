@@ -47,6 +47,9 @@ class Test_STaxo_Merge extends STaxo_Ajax_Test_Case {
 			$this->assertStringContainsString( '>' . $name . '<', $response, "$name not listed" );
 		}
 		$this->assertStringContainsString( 'type="radio"', $response );
+		$this->assertStringNotContainsString( 'role="radio"', $response, 'Native radio buttons need no role' );
+		// The (hierarchical) list is a named group (review A15).
+		$this->assertStringContainsString( '<div role="radiogroup" class="staxo-radio-group" aria-label="Destination term">', $response );
 		$this->assertStringContainsString( 'id="phase" value="two"', $response );
 		$this->assertStringContainsString( 'id="control" value="0/0"', $response, 'No terms control on test_hier' );
 	}
@@ -69,6 +72,7 @@ class Test_STaxo_Merge extends STaxo_Ajax_Test_Case {
 		$response = $this->merge_phase( 'two', 'test_flat', array( 'term' => $red ) );
 
 		$this->assertStringContainsString( 'type="checkbox"', $response );
+		$this->assertStringContainsString( '<div role="group" class="staxo-checkbox-group" aria-label="Source terms">', $response );
 		$this->assertStringContainsString( 'id="tax_' . $red . '" value="' . $red . '" disabled', $response );
 		$this->assertStringContainsString( 'id="phase" value="three"', $response );
 		$this->assertStringContainsString( 'id="destination" value="' . $red . '"', $response );
@@ -476,6 +480,7 @@ class Test_STaxo_Merge extends STaxo_Ajax_Test_Case {
 		$page = ob_get_clean();
 
 		$this->assertMatchesRegularExpression( '#<input type="radio"[^>]*id="test_locked"[^>]*disabled=#', $page );
+		$this->assertMatchesRegularExpression( '#<fieldset>\s*<legend>Choose a taxonomy</legend>#', $page, 'The taxonomy choice is a named group' );
 		$this->assertDoesNotMatchRegularExpression( '#<input type="radio"[^>]*id="test_hier"[^>]*disabled=#', $page );
 	}
 

@@ -1,24 +1,10 @@
-/* exported str_admin_init, checkNameSet, linkAdm, ariaChk, hideSel, ccSel, cchSel, checkMinMax */
+/* exported str_admin_init, staxo_sortable, checkNameSet, linkAdm, hideSel, ccSel, cchSel, checkMinMax */
 
 /*
  * Admin screen scripts. Functions listed above are called from inline handlers output by PHP.
  */
 
 let panels, tabs, cb_types, cc_types, cc_hards;
-
-// For easy reference
-const keys = {
-	end: 35,
-	home: 36,
-	left: 37,
-	right: 39,
-};
-
-// Add or subtract depending on key pressed
-const direction = {
-	37: -1,
-	39: 1,
-};
 
 /**
  * Initialise the admin screen once the DOM is loaded.
@@ -39,7 +25,6 @@ function str_admin_init( evt ) {
 	for ( let i = 0; i < tabs.length; ++i ) {
 		tabs[ i ].addEventListener( 'click', clickEventListener );
 		tabs[ i ].addEventListener( 'keydown', keydownEventListener );
-		tabs[ i ].addEventListener( 'keyup', keyupEventListener );
 		// Build an array with all tabs (<button>s) in it
 		tabs[ i ].index = i;
 	}
@@ -86,42 +71,35 @@ function clickEventListener( event ) {
 	activateTab( tab, false );
 }
 
-// Handle keydown on tabs
+/**
+ * Keyboard use of the tabs (WAI-ARIA tabs pattern, automatic activation).
+ *
+ * Only the selected tab is in the Tab order (PHP outputs tabindex -1 on the others);
+ * Left and Right move to the previous or next tab (wrapping round), Home and End to the
+ * first or last, and the tab reached is selected and its panel shown.
+ *
+ * @param {KeyboardEvent} event The keydown event.
+ */
 function keydownEventListener( event ) {
-	const key = event.keyCode;
-	switch ( key ) {
-		case keys.end:
-			event.preventDefault();
-			// Activate last tab
-			activateTab( tabs[ tabs.length - 1 ] );
+	const index = event.currentTarget.index;
+	let target = null;
+	switch ( event.key ) {
+		case 'ArrowLeft':
+			target = tabs[ ( index - 1 + tabs.length ) % tabs.length ];
 			break;
-		case keys.home:
-			event.preventDefault();
-			// Activate first tab
-			activateTab( tabs[ 0 ] );
+		case 'ArrowRight':
+			target = tabs[ ( index + 1 ) % tabs.length ];
+			break;
+		case 'Home':
+			target = tabs[ 0 ];
+			break;
+		case 'End':
+			target = tabs[ tabs.length - 1 ];
 			break;
 	}
-}
-
-// Only left and right arrow function.
-function keyupEventListener( event ) {
-	const key = event.keyCode;
-	if ( key === keys.left || key === keys.right ) {
-		for ( let i = 0; i < tabs.length; ++i ) {
-			tabs[ i ].addEventListener( 'focus', focusEventHandler );
-		}
-		if ( direction[ key ] ) {
-			const target = event.target;
-			if ( target.index !== undefined ) {
-				if ( tabs[ target.index + direction[ key ] ] ) {
-					tabs[ target.index + direction[ key ] ].focus();
-				} else if ( key === keys.left ) {
-					tabs[ tabs.length - 1 ].focus();
-				} else if ( key === keys.right ) {
-					tabs[ 0 ].focus();
-				}
-			}
-		}
+	if ( null !== target ) {
+		event.preventDefault();
+		activateTab( target );
 	}
 }
 
@@ -130,8 +108,8 @@ function activateTab( tab, setFocus = true ) {
 	// Deactivate all other tabs
 	deactivateTabs();
 
-	// Remove tabindex attribute
-	tab.removeAttribute( 'tabindex' );
+	// The selected tab is the one in the Tab order.
+	tab.setAttribute( 'tabindex', '0' );
 
 	// Set the tab as selected
 	tab.setAttribute( 'aria-selected', 'true' );
@@ -160,26 +138,10 @@ function deactivateTabs() {
 	for ( let t = 0; t < tabs.length; t++ ) {
 		tabs[ t ].setAttribute( 'tabindex', '-1' );
 		tabs[ t ].setAttribute( 'aria-selected', 'false' );
-		tabs[ t ].removeEventListener( 'focus', focusEventHandler );
 	}
 
 	for ( let p = 0; p < panels.length; p++ ) {
 		panels[ p ].classList.add( 'is-hidden' );
-	}
-}
-
-function focusEventHandler( event ) {
-	const target = event.target;
-
-	setTimeout( checkTabFocus, 250, target );
-}
-
-// Only activate tab on focus if it still has focus after the delay
-function checkTabFocus( target ) {
-	const focused = target.ownerDocument.activeElement;
-
-	if ( target === focused ) {
-		activateTab( target, false );
 	}
 }
 
@@ -189,15 +151,18 @@ function checkNameSet( evt ) {
 	evt.stopPropagation();
 }
 
+/**
+ * A post type ticked or unticked in Objects: its Admin List Filter and Term Control boxes
+ * are only available (and only ticked) while it is ticked.
+ *
+ * @param {Event}  evt   The click event.
+ * @param {number} objNo The post type's position in the lists.
+ */
 function linkAdm( evt, objNo ) {
-	evt.currentTarget.setAttribute( 'aria-checked', evt.currentTarget.checked );
 	document.getElementById( 'admlist' + objNo ).disabled =
 		evt.currentTarget.checked === false;
 	if ( evt.currentTarget.checked === false ) {
 		document.getElementById( 'admlist' + objNo ).checked = false;
-		document
-			.getElementById( 'admlist' + objNo )
-			.setAttribute( 'aria-checked', 'false' );
 		document
 			.getElementById( 'admlist' + objNo )
 			.removeAttribute( 'checked' );
@@ -208,21 +173,9 @@ function linkAdm( evt, objNo ) {
 		document.getElementById( 'cclist' + objNo ).checked = false;
 		document
 			.getElementById( 'cclist' + objNo )
-			.setAttribute( 'aria-checked', 'false' );
-		document
-			.getElementById( 'cclist' + objNo )
 			.removeAttribute( 'checked' );
 	}
 	evt.stopPropagation();
-}
-
-function ariaChk( evt ) {
-	evt.currentTarget.setAttribute( 'aria-checked', evt.currentTarget.checked );
-	if ( evt.currentTarget.checked ) {
-		evt.currentTarget.setAttribute( 'checked', 'checked' );
-	} else {
-		evt.currentTarget.removeAttribute( 'checked' );
-	}
 }
 
 // Hierarchical changed: the hierarchical filter options only apply to hierarchical taxonomies.
@@ -257,18 +210,10 @@ function hideCnt( evt ) {
 			.getElementById( 'count_tab_0' )
 			.classList.remove( 'is-hidden' );
 		document.getElementById( 'count_tab_1' ).classList.add( 'is-hidden' );
+		// Native radio buttons: checked is their state (aria-selected is not valid on them).
 		document.getElementById( 'cb_sel' ).checked = false;
-		document
-			.getElementById( 'cb_sel' )
-			.setAttribute( 'aria-selected', 'false' );
 		document.getElementById( 'cb_any' ).checked = false;
-		document
-			.getElementById( 'cb_any' )
-			.setAttribute( 'aria-selected', 'false' );
 		document.getElementById( 'cb_std' ).checked = true;
-		document
-			.getElementById( 'cb_std' )
-			.setAttribute( 'aria-selected', 'false' );
 		hideSel( evt, 0 );
 	}
 	evt.stopPropagation();
@@ -278,13 +223,10 @@ function hideSel( evt, objNo ) {
 	if ( ! ( objNo in [ 0, 1, 2 ] ) ) {
 		objNo = 0;
 	}
+	// Native radio buttons manage their own focus (arrow keys) and state.
 	for ( let i = 0; i < cb_types.length; i++ ) {
-		cb_types[ i ].setAttribute( 'tabindex', '-1' );
-		cb_types[ i ].setAttribute( 'aria-selected', 'false' );
 		cb_types[ i ].removeAttribute( 'checked' );
 	}
-	cb_types[ objNo ].setAttribute( 'tabindex', '0' );
-	cb_types[ objNo ].setAttribute( 'aria-selected', 'true' );
 	cb_types[ objNo ].setAttribute( 'checked', 'checked' );
 	if ( objNo === 2 ) {
 		document.getElementById( 'count_sel_0' ).classList.add( 'is-hidden' );
@@ -313,20 +255,16 @@ function ccSel( evt, objNo ) {
 			.classList.remove( 'is-hidden' );
 	}
 	for ( let i = 0; i < cc_types.length; i++ ) {
-		cc_types[ i ].setAttribute( 'tabindex', '-1' );
 		cc_types[ i ].removeAttribute( 'checked' );
 	}
-	cc_types[ objNo ].setAttribute( 'tabindex', '0' );
 	cc_types[ objNo ].setAttribute( 'checked', 'checked' );
 	evt.stopPropagation();
 }
 
 function cchSel( evt, objNo ) {
 	for ( let i = 0; i < cc_hards.length; i++ ) {
-		cc_hards[ i ].setAttribute( 'tabindex', '-1' );
 		cc_hards[ i ].removeAttribute( 'checked' );
 	}
-	cc_hards[ objNo ].setAttribute( 'tabindex', '0' );
 	cc_hards[ objNo ].setAttribute( 'checked', 'checked' );
 	evt.stopPropagation();
 }
@@ -352,4 +290,105 @@ function checkMinMax( evt ) {
 		document.getElementById( 'st_cc_min' ).value = maxv;
 	}
 	evt.stopPropagation();
+}
+
+/**
+ * Sortable lists (Taxonomy List Order, and the export order on Configuration Export/Import).
+ *
+ * The list is output by PHP SimpleTaxonomyRefreshed_Admin::sortable_list(). Items can be dragged
+ * (jQuery UI Sortable) or moved with their Move up and Move down buttons, so the order can be
+ * set with a keyboard too. Each move by button is announced, and focus stays on the item.
+ *
+ * @param {string} list_id   The list element id.
+ * @param {string} arr_id    The hidden field that receives the names, as JSON.
+ * @param {string} submit_id The submit button to enable after a change (optional).
+ */
+function staxo_sortable( list_id, arr_id, submit_id ) {
+	const list = document.getElementById( list_id );
+	if ( null === list ) {
+		return;
+	}
+
+	// The first item cannot go up, nor the last one down.
+	const set_edges = function () {
+		const items = list.children;
+		for ( let i = 0; i < items.length; i++ ) {
+			for ( const btn of items[ i ].querySelectorAll(
+				'button[data-move]'
+			) ) {
+				const step = Number( btn.dataset.move );
+				btn.disabled =
+					( step < 0 && 0 === i ) ||
+					( step > 0 && items.length - 1 === i );
+			}
+		}
+	};
+
+	const changed = function () {
+		const names = [];
+		for ( const item of list.children ) {
+			names.push( item.dataset.name );
+		}
+		document.getElementById( arr_id ).value = JSON.stringify( names );
+		if ( submit_id ) {
+			const submit = document.getElementById( submit_id );
+			if ( null !== submit ) {
+				submit.disabled = false;
+			}
+		}
+		set_edges();
+	};
+
+	list.addEventListener( 'click', function ( event ) {
+		const btn = event.target.closest( 'button[data-move]' );
+		if ( null === btn || ! list.contains( btn ) ) {
+			return;
+		}
+		event.preventDefault();
+		const item = btn.closest( 'li' );
+		const step = Number( btn.dataset.move );
+		const other =
+			step < 0 ? item.previousElementSibling : item.nextElementSibling;
+		if ( null === other ) {
+			return;
+		}
+		if ( step < 0 ) {
+			list.insertBefore( item, other );
+		} else {
+			list.insertBefore( other, item );
+		}
+		changed();
+
+		// Moving the item can drop focus; keep it on the item, on the other button at an end.
+		if ( btn.disabled ) {
+			const rest = item.querySelector(
+				'button[data-move]:not(:disabled)'
+			);
+			if ( null !== rest ) {
+				rest.focus();
+			}
+		} else {
+			btn.focus();
+		}
+
+		const position =
+			Array.prototype.indexOf.call( list.children, item ) + 1;
+		const message = ( list.dataset.moved || '' )
+			.replace( '%1$s', item.dataset.name )
+			.replace( '%2$s', String( position ) )
+			.replace( '%3$s', String( list.children.length ) );
+		if ( window.wp && window.wp.a11y && window.wp.a11y.speak ) {
+			window.wp.a11y.speak( message );
+		}
+	} );
+
+	// Dragging, for pointer users. Buttons do not start a drag (jQuery UI's default "cancel").
+	if ( window.jQuery && window.jQuery.fn.sortable ) {
+		window.jQuery( list ).sortable( {
+			placeholder: 'ui-sortable-placeholder',
+			update: changed,
+		} );
+	}
+
+	set_edges();
 }

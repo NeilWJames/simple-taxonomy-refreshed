@@ -303,14 +303,14 @@ class SimpleTaxonomyRefreshed_Admin_Conversion {
 								?>
 								<tr id="taxonomy-<?php echo esc_attr( $i ); ?>">
 									<td><input type="checkbox" onclick="copy()" class="copy" id="copy[<?php echo esc_attr( $i ); ?>]" name="copy[<?php echo esc_attr( $i ); ?>]"
-									aria-describedby="descCopyFrom" aria-labelledby="<?php echo esc_html( $taxonomy->name ); ?>"
+									aria-describedby="descCopyFrom" aria-labelledby="labelFrom staxo-tax-<?php echo esc_attr( $taxonomy->name ); ?>"
 									title="<?php esc_html_e( 'Copy From', 'simple-taxonomy-refreshed' ); ?> checkbox <?php echo esc_html( $taxonomy->label ); ?>"
 									data-locked="<?php echo esc_attr( $can_from ? '0' : '1' ); ?>"<?php disabled( ! $can_from ); ?>></td>
 									<td><input type="checkbox" onclick="oput()" class="oput" id="oput[<?php echo esc_attr( $i ); ?>]" name="oput[<?php echo esc_attr( $i ); ?>]"
-									aria-describedby="descCopyTo" aria-labelledby="<?php echo esc_html( $taxonomy->name ); ?>"
+									aria-describedby="descCopyTo" aria-labelledby="labelTo staxo-tax-<?php echo esc_attr( $taxonomy->name ); ?>"
 									title="<?php esc_html_e( 'Copy To', 'simple-taxonomy-refreshed' ); ?> checkbox <?php echo esc_html( $taxonomy->label ); ?>"
 									data-locked="<?php echo esc_attr( $can_to ? '0' : '1' ); ?>"<?php disabled( ! $can_to ); ?>></td>
-									<td class="name column-name" id="<?php echo esc_html( $taxonomy->name ); ?>"><?php echo esc_html( $taxonomy->label ); ?></td>
+									<td class="name column-name" id="staxo-tax-<?php echo esc_attr( $taxonomy->name ); ?>"><?php echo esc_html( $taxonomy->label ); ?></td>
 									<td class="name column-name"><?php echo esc_html( $taxonomy->name ); ?>
 									<input type="hidden" id="name[<?php echo esc_attr( $i ); ?>]" name="name[<?php echo esc_attr( $i ); ?>]" value="<?php echo esc_html( $taxonomy->name ); ?>" /></td>
 									<td><?php echo esc_html( self::get_true_false( $taxonomy->hierarchical ) ); ?></td>

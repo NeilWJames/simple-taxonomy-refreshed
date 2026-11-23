@@ -185,7 +185,10 @@ class Test_STaxo_Convert extends STaxo_Ajax_Test_Case {
 	 * @return string the input tag.
 	 */
 	private function checkbox( $page, $group, $taxonomy ) {
-		$found = preg_match( '#<input type="checkbox"[^>]*class="' . $group . '"[^>]*aria-labelledby="' . $taxonomy . '"[^>]*>#s', $page, $match );
+		// Named by the column header and the taxonomy's label cell (review A15): "Copy From Categories".
+		$header = ( 'copy' === $group ? 'labelFrom' : 'labelTo' );
+		$found  = preg_match( '#<input type="checkbox"[^>]*class="' . $group . '"[^>]*aria-labelledby="' . $header . ' staxo-tax-' . $taxonomy . '"[^>]*>#s', $page, $match );
+		$this->assertStringContainsString( '<td class="name column-name" id="staxo-tax-' . $taxonomy . '">', $page );
 		$this->assertSame( 1, $found, "No $group checkbox for $taxonomy" );
 
 		return $match[0];

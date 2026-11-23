@@ -147,8 +147,8 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 	 * @return string|null value, null if none chosen.
 	 */
 	private function selected( $html, $name ) {
-		$this->assertMatchesRegularExpression( '#<select name="' . $name . '" id="' . $name . '">.*?</select>#s', $html, "No select $name" );
-		preg_match( '#<select name="' . $name . '" id="' . $name . '">(.*?)</select>#s', $html, $select );
+		$this->assertMatchesRegularExpression( '#<select name="' . $name . '" id="' . $name . '"[^>]*>.*?</select>#s', $html, "No select $name" );
+		preg_match( '#<select name="' . $name . '" id="' . $name . '"[^>]*>(.*?)</select>#s', $html, $select );
 		return ( preg_match( "/selected='selected' value=\"([^\"]*)\"/", $select[1], $match ) ? $match[1] : null );
 	}
 
@@ -306,9 +306,12 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 		$this->assertStringContainsString( '<input type="hidden" name="action" value="add-taxonomy" />', $html );
 		$this->assertStringContainsString( 'name="_wpnonce" value="' . wp_create_nonce( 'staxo_add_taxo' ) . '"', $html );
 		$this->assertStringContainsString( 'The taxonomy definition options are spread across 7 tabs.', $html );
+		$this->assertStringContainsString( '<div role="tablist" aria-label="Taxonomy settings">', $html );
 		foreach ( self::$tabs as $tab ) {
-			$this->assertStringContainsString( 'role="tab" aria-controls="' . $tab . '"', $html, "Tab $tab" );
-			$this->assertMatchesRegularExpression( '/<div id="' . $tab . '" class="meta-box-sortabless( is-hidden)?" role="tabpanel">/', $html, "Panel $tab" );
+			// Only the first tab is selected and in the Tab order (roving tabindex); each panel is named by its tab.
+			$selected = ( 'mainopts' === $tab );
+			$this->assertStringContainsString( '<button type="button" role="tab" id="tab-' . $tab . '" aria-controls="' . $tab . '" aria-selected="' . ( $selected ? 'true' : 'false' ) . '" tabindex="' . ( $selected ? '0' : '-1' ) . '">', $html, "Tab $tab" );
+			$this->assertMatchesRegularExpression( '/<div id="' . $tab . '" class="meta-box-sortabless( is-hidden)?" role="tabpanel" aria-labelledby="tab-' . $tab . '" tabindex="0">/', $html, "Panel $tab" );
 		}
 		$this->assertStringNotContainsString( 'id="the-list-custom"', $html, 'Only the form' );
 
@@ -318,7 +321,7 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 		$this->assertStringNotContainsString( 'readonly', $name );
 
 		// Defaults: no post type chosen, not hierarchical, public, labels and capabilities from WordPress.
-		$this->assertDoesNotMatchRegularExpression( '/aria-checked="true"[^>]*name="objects\[\]"/', $html );
+		$this->assertDoesNotMatchRegularExpression( "/<input [^>]*checked='checked'[^>]*name=\"objects\\[\\]\"/", $html );
 		$this->assertMatchesRegularExpression( '/name="objects\[\]" value="post"/', $html );
 		$this->assertSame( '0', $this->selected( $html, 'hierarchical' ) );
 		$this->assertSame( '1', $this->selected( $html, 'public' ) );
@@ -333,16 +336,27 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 		$this->assertSame( '', $this->value( $html, 'rest_base' ) );
 
 		// Term Count: the options (no own function), Standard chosen. Term Control: none.
-		$this->assertMatchesRegularExpression( '/<span id="count_tab_0" class="is-hidden">/', $html );
-		$this->assertMatchesRegularExpression( '/<span id="count_tab_1" >/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_tab_0" class="is-hidden">/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_tab_1" >/', $html );
 		$this->assertTrue( $this->is_checked( $html, 'cb_std' ) );
-		$this->assertMatchesRegularExpression( '/<span id="count_sel_1" class="is-hidden">/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_sel_1" class="is-hidden">/', $html );
 		$this->assertTrue( $this->is_checked( $html, 'cc_off' ) );
-		$this->assertMatchesRegularExpression( '/<span id="control_tab_1" class="is-hidden">/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="control_tab_1" class="is-hidden">/', $html );
 		$this->assertStringNotContainsString( 'id="st_cb_override"', $html, 'The count override is for external taxonomies' );
 
-		// Add is enabled by the script once a name is entered.
-		$this->assertMatchesRegularExpression( '/id="submit"[^>]*\sdisabled>Add taxonomy/', $html );
+		// Add is enabled by the script once a name is entered; the name is required and the hint says why Add is unavailable.
+		$this->assertMatchesRegularExpression( '/id="submit"[^>]*\saria-describedby="name-required" disabled>Add taxonomy/', $html );
+		$this->assertStringContainsString( 'id="name-required">Enter a Name (slug) to add the taxonomy', $html );
+		$this->assertStringContainsString( 'oninput="checkNameSet(event)"', $name );
+		$this->assertMatchesRegularExpression( '/\srequired aria-describedby="name-description name-required"/', $name );
+
+		// Field descriptions are read with their fields (aria-describedby).
+		$this->assertStringContainsString( '<select name="public" id="public" aria-describedby="public-description">', $html );
+		$this->assertStringContainsString( '<span class="description" id="public-description">', $html );
+		$this->assertStringContainsString( 'aria-describedby="labels-name-description"', $this->input( $html, 'labels-name' ) );
+		$this->assertStringNotContainsString( 'aria-describedby', $this->input( $html, 'labels-search_items' ), 'No description, nothing to describe it' );
+		$this->assertStringContainsString( 'aria-describedby="st_cc_min-description"', $this->input( $html, 'st_cc_min' ) );
+		$this->assertStringContainsString( 'id="st_cc_min-description"', $html );
 		$this->assertStringContainsString( 'hideSel(evt, 0)', $html );
 	}
 
@@ -364,8 +378,23 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 		$this->assertSame( '1', $this->selected( $html, 'hierarchical' ) );
 		$this->assertSame( 'content', $this->selected( $html, 'auto' ) );
 		$this->assertStringContainsString( "<option  selected='selected' value=\"0\">EP_NONE</option>", $html, 'No EP_MASK' );
-		$this->assertMatchesRegularExpression( '/aria-checked="true"[^>]*name="objects\[\]" value="post"/', $html );
-		$this->assertMatchesRegularExpression( '/aria-checked="false"[^>]*name="objects\[\]" value="page"/', $html );
+		$this->assertMatchesRegularExpression( "/<input type=\"checkbox\"\s+checked='checked'[^>]*name=\"objects\\[\\]\" value=\"post\"/", $html );
+		$this->assertDoesNotMatchRegularExpression( "/<input [^>]*checked='checked'[^>]*name=\"objects\\[\\]\" value=\"page\"/", $html );
+		// Grouping (review A14): header cells name the groups (no <label> without a control),
+		// no empty fieldsets, the yes/no rows are whole rows, and no paragraph or row is out of place.
+		$this->assertStringNotContainsString( '<label id=', $html );
+		$this->assertStringNotContainsString( '<fieldset>', $html );
+		$this->assertStringContainsString( '<th scope="row"><span id="cb_label">Count Options</span></th>', $html );
+		$this->assertStringContainsString( 'role="group" aria-labelledby="st_cb_status_label"', $html );
+		$this->assertStringNotContainsString( 'id="post_status"', $html, 'That id belongs to the post edit screen' );
+		$this->assertStringNotContainsString( 'Minimum Control', $html );
+		$this->assertDoesNotMatchRegularExpression( '#<td>\s*<tr>#', $html, 'No row inside a cell' );
+		$this->assertDoesNotMatchRegularExpression( '#<table[^>]*>\s*<p#', $html, 'No paragraph directly in a table' );
+		$this->assertStringNotContainsString( '</p></p>', $html );
+		// Native checkboxes: no role, aria-checked or tabindex added (review A13).
+		$this->assertStringNotContainsString( 'aria-checked', $html );
+		$this->assertStringNotContainsString( 'role="checkbox"', $html );
+		$this->assertStringNotContainsString( 'role="radio"', $html );
 		$this->assertSame( 'Test Terms', $this->value( $html, 'labels-name' ) );
 		$this->assertSame( 'Test Term', $this->value( $html, 'labels-singular_name' ) );
 		$this->assertSame( '', $this->value( $html, 'labels-menu_name' ), 'Menu name is kept for editing' );
@@ -384,7 +413,7 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 
 		$this->assertStringContainsString( 'Custom Taxonomy : Flat Terms', $html );
 		$this->assertSame( '0', $this->selected( $html, 'hierarchical' ) );
-		$this->assertMatchesRegularExpression( '/aria-checked="true"[^>]*name="objects\[\]" value="page"/', $html );
+		$this->assertMatchesRegularExpression( "/<input type=\"checkbox\"\s+checked='checked'[^>]*name=\"objects\\[\\]\" value=\"page\"/", $html );
 		$this->assertSame( 'flat-terms', $this->value( $html, 'rest_base' ) );
 		$this->assertSame( 'Unsorted', $this->value( $html, 'st_dft_name' ) );
 		$this->assertSame( 'Flat Term', $this->value( $html, 'labels-singular_name' ) );
@@ -399,8 +428,8 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 		$this->assertTrue( $this->is_checked( $html, 'cc_any' ) );
 		$this->assertFalse( $this->is_checked( $html, 'cc_off' ) );
 		$this->assertTrue( $this->is_checked( $html, 'cc_sft' ) );
-		$this->assertMatchesRegularExpression( '/<span id="control_tab_0" class="is-hidden">/', $html );
-		$this->assertMatchesRegularExpression( '/<span id="control_tab_1" >/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="control_tab_0" class="is-hidden">/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="control_tab_1" >/', $html );
 		$this->assertSame( '1', $this->selected( $html, 'st_cc_umin' ) );
 		$this->assertSame( '1', $this->selected( $html, 'st_cc_umax' ) );
 		$this->assertSame( '1', $this->value( $html, 'st_cc_min' ) );
@@ -417,8 +446,8 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 
 		$this->assertTrue( $this->is_checked( $html, 'cb_sel' ) );
 		$this->assertFalse( $this->is_checked( $html, 'cb_std' ) );
-		$this->assertMatchesRegularExpression( '/<span id="count_sel_0" class="is-hidden">/', $html );
-		$this->assertMatchesRegularExpression( '/<span id="count_sel_1" >/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_sel_0" class="is-hidden">/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_sel_1" >/', $html );
 		$statuses = array(
 			'st_cb_pub' => true,
 			'st_cb_fut' => false,
@@ -429,7 +458,6 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 		);
 		foreach ( $statuses as $id => $ticked ) {
 			$this->assertSame( $ticked, $this->is_checked( $html, $id ), $id );
-			$this->assertStringContainsString( 'aria-checked="' . ( $ticked ? 'true' : 'false' ) . '"', $this->input( $html, $id ), "$id: aria-checked" );
 		}
 		$this->assertStringContainsString( 'hideSel(evt, 2)', $html );
 	}
@@ -449,8 +477,8 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 
 		$this->assertSame( '_update_generic_term_count', $this->value( $html, 'st_update_count_callback' ) );
 		$this->assertStringContainsString( 'A function has been defined for calculating term counts. This function is therefore not available.', $html );
-		$this->assertMatchesRegularExpression( '/<span id="count_tab_0" >/', $html );
-		$this->assertMatchesRegularExpression( '/<span id="count_tab_1" class="is-hidden">/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_tab_0" >/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_tab_1" class="is-hidden">/', $html );
 		$this->assertStringNotContainsString( 'id="st_cb_override"', $html );
 	}
 
@@ -560,7 +588,9 @@ class Test_STaxo_Taxonomy_Form extends STaxo_Test_Case {
 		add_filter( 'staxo_can_edit_callbacks', '__return_false' );
 		$html = $this->edit_form( 'test_hier' );
 		foreach ( self::$callback_fields as $field ) {
-			$this->assertStringContainsString( 'readonly="readonly" aria-readonly="true"', $this->input( $html, $field ), "$field: read-only" );
+			$this->assertStringContainsString( 'readonly="readonly"', $this->input( $html, $field ), "$field: read-only" );
+			$this->assertMatchesRegularExpression( '/aria-describedby="([\w-]+ )?' . $field . '-readonly"/', $this->input( $html, $field ), "$field: the read-only reason is read with it" );
+			$this->assertStringContainsString( 'id="' . $field . '-readonly"', $html );
 		}
 		$this->assertSame( count( self::$callback_fields ), substr_count( $html, $notice ) );
 		$this->assertSame( 'post_categories_meta_box', $this->value( $html, 'st_meta_box_cb' ), 'The stored value is still shown' );

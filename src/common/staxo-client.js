@@ -11,7 +11,9 @@
  * Each entry (built by PHP term_limits_push()):
  * 0 slug, 1 post status control type, 2 minimum (or null), 3 minimum message,
  * 4 maximum (or null), 5 maximum message, 6 hierarchical, 7 "No term" label,
- * 8 post status, 9 "cannot convert to radio" message, 10 REST base.
+ * 8 post status, 9 "cannot convert to radio" message, 10 REST base,
+ * 11 "maximum reached" message (tags box; empty without a maximum),
+ * 12 taxonomy label (plain text, names the radio button groups).
  */
 const tax_cntl = [];
 
@@ -82,6 +84,59 @@ function get_post_doc() {
 	}
 	const frame = document.querySelector( 'iframe[name="editor-canvas"]' );
 	return frame && frame.contentDocument ? frame.contentDocument : document;
+}
+
+/**
+ * Functions to tell screen reader users about term control messages.
+ */
+
+/**
+ * Announce a message to screen readers (wp.a11y.speak), when it is available.
+ *
+ * @param {string} text       Plain text message.
+ * @param {string} politeness 'polite' (default) or 'assertive'.
+ */
+function staxo_speak( text, politeness = 'polite' ) {
+	if ( window.wp && window.wp.a11y && window.wp.a11y.speak && text ) {
+		window.wp.a11y.speak( text, politeness );
+	}
+}
+
+/**
+ * Error blocks whose save was blocked by the current event; announced together.
+ *
+ * @type {HTMLElement[]}
+ */
+let blocked_errblocks = [];
+
+/**
+ * A save (Publish, Update or Save Draft) was stopped because a taxonomy is outside its limits.
+ *
+ * Without this, a keyboard or screen reader user presses the button and nothing happens.
+ * The messages of every taxonomy that blocked the save are announced once the event has
+ * been handled, and focus moves to the first error notice (it has tabindex -1).
+ *
+ * @param {string} tax_slug The taxonomy slug for the taxonomy.
+ */
+function staxo_save_blocked( tax_slug ) {
+	const errblock = get_post_doc().getElementById( 'err-' + tax_slug );
+	if ( null === errblock ) {
+		return;
+	}
+	if ( 0 === blocked_errblocks.length ) {
+		setTimeout( function () {
+			const blocks = blocked_errblocks;
+			blocked_errblocks = [];
+			const texts = blocks
+				.map( ( block ) => block.textContent.trim() )
+				.filter( ( text ) => text.length > 0 );
+			blocks[ 0 ].focus();
+			staxo_speak( texts.join( ' ' ), 'assertive' );
+		}, 0 );
+	}
+	if ( ! blocked_errblocks.includes( errblock ) ) {
+		blocked_errblocks.push( errblock );
+	}
 }
 
 /**
@@ -201,7 +256,6 @@ function chk_radio_client( tax_slug, doc ) {
 		// avoid updating hidden one.
 		if ( item.type === 'checkbox' ) {
 			item.type = 'radio';
-			item.setAttribute( 'role', 'radio' );
 			item.addEventListener( 'click', () => {
 				adj_radio_client( tax_slug, item.value, doc );
 			} );
@@ -243,10 +297,15 @@ function dom_radio_client( tax_slug ) {
 	add_no_term( tax_slug, doc );
 	chk_radio_client( tax_slug, doc );
 
-	const tax_pop = doc.getElementById( tax_slug + '-pop' );
-	tax_pop.setAttribute( 'role', 'radiogroup' ); //
-	const tax_all = doc.getElementById( tax_slug + '-all' );
-	tax_all.setAttribute( 'role', 'radiogroup' ); //
+	// Each list of radio buttons is a group, named by the taxonomy.
+	const label = get_cntl( tax_slug )[ 12 ];
+	for ( const id of [ tax_slug + '-pop', tax_slug + '-all' ] ) {
+		const list = doc.getElementById( id );
+		list.setAttribute( 'role', 'radiogroup' );
+		if ( label ) {
+			list.setAttribute( 'aria-label', label );
+		}
+	}
 
 	const sub = doc.getElementById( tax_slug + '-add-submit' );
 	sub.addEventListener( 'click', () => {
@@ -283,6 +342,93 @@ function dom_radio_client( tax_slug ) {
  */
 
 /**
+ * Lock or unlock the Quick Edit Save button.
+ *
+ * The button is marked aria-disabled rather than disabled, so that it stays focusable and
+ * says why it cannot be used (aria-describedby points to the visible messages);
+ * qe_guard_save() stops the save and announces the messages.
+ *
+ * @param {HTMLElement} item   The quick edit row.
+ * @param {boolean}     locked Whether saving is to be stopped.
+ */
+function qe_save_lock( item, locked ) {
+	const save = item.getElementsByClassName( 'save' )[ 0 ];
+	if ( undefined === save ) {
+		return;
+	}
+	save.removeAttribute( 'disabled' );
+	if ( locked ) {
+		const ids = [];
+		for ( const note of item.querySelectorAll( '.notice-error.staxo' ) ) {
+			if ( ! note.classList.contains( 'hidden' ) && note.id ) {
+				ids.push( note.id );
+			}
+		}
+		save.setAttribute( 'aria-disabled', 'true' );
+		save.setAttribute( 'aria-describedby', ids.join( ' ' ) );
+		save.classList.add( 'disabled' );
+	} else {
+		save.removeAttribute( 'aria-disabled' );
+		save.removeAttribute( 'aria-describedby' );
+		save.classList.remove( 'disabled' );
+	}
+}
+
+/**
+ * Whether the Quick Edit save guard is in place.
+ *
+ * @type {boolean}
+ */
+let qe_guarded = false;
+
+/**
+ * Stop a Quick Edit save while a taxonomy is outside its limits, and say why.
+ *
+ * WordPress saves on a click of Save, and on Enter in any field of the row. Both are caught
+ * in the capture phase, before WordPress's handlers, while the row's Save is aria-disabled.
+ */
+function qe_guard_save() {
+	if ( qe_guarded ) {
+		return;
+	}
+	const list = document.getElementById( 'the-list' );
+	if ( null === list ) {
+		return;
+	}
+	qe_guarded = true;
+	const guard = ( event ) => {
+		const row = event.target.closest( '.inline-edit-row' );
+		if ( null === row ) {
+			return;
+		}
+		const save = row.querySelector( '.save[aria-disabled="true"]' );
+		if ( null === save ) {
+			return;
+		}
+		if ( 'click' === event.type && ! event.target.closest( '.save' ) ) {
+			return;
+		}
+		if (
+			'keydown' === event.type &&
+			( 'Enter' !== event.key || event.target.closest( '.cancel' ) )
+		) {
+			return;
+		}
+		event.preventDefault();
+		event.stopPropagation();
+		const texts = [];
+		for ( const note of row.querySelectorAll( '.notice-error.staxo' ) ) {
+			if ( ! note.classList.contains( 'hidden' ) ) {
+				texts.push( note.textContent.trim() );
+			}
+		}
+		staxo_speak( texts.join( ' ' ), 'assertive' );
+	};
+	list.parentElement.addEventListener( 'click', guard, true );
+	list.parentElement.addEventListener( 'keydown', guard, true );
+}
+
+/**
  * Writes an error message in the quick edit part..
  *
  * @param {HTMLCollection} item The list item output.
@@ -296,16 +442,18 @@ function qe_error_set_msg( item, tax, txt ) {
 		for ( const line of err ) {
 			// Is it mine.
 			if ( line.classList.contains( tax + '-err' ) ) {
+				const was_hidden = line.classList.contains( 'hidden' );
+				const msg = line.getElementsByTagName( 'p' );
+				const before = was_hidden ? '' : msg[ 0 ].textContent;
 				// remove hidden if there.
-				if ( line.classList.contains( 'hidden' ) ) {
+				if ( was_hidden ) {
 					line.classList.remove( 'hidden' );
 				}
-				const msg = line.getElementsByTagName( 'p' );
 				msg[ 0 ].innerHTML = txt;
-				item.getElementsByClassName( 'save' )[ 0 ].setAttribute(
-					'disabled',
-					'disabled'
-				);
+				if ( before !== msg[ 0 ].textContent ) {
+					staxo_speak( msg[ 0 ].textContent );
+				}
+				qe_save_lock( item, true );
 				return;
 			}
 		}
@@ -319,6 +467,7 @@ function qe_error_set_msg( item, tax, txt ) {
 			'staxo',
 			tax + '-err'
 		);
+		note_div.id = 'staxo-qe-err-' + tax;
 		const note_p = document.createElement( 'p' );
 		note_p.classList.add( 'error' );
 		note_p.innerHTML = txt;
@@ -326,10 +475,8 @@ function qe_error_set_msg( item, tax, txt ) {
 		// find the submit element - only one expected.
 		const sub = item.getElementsByClassName( 'submit' );
 		sub[ 0 ].appendChild( note_div );
-		item.getElementsByClassName( 'save' )[ 0 ].setAttribute(
-			'disabled',
-			'disabled'
-		);
+		staxo_speak( note_p.textContent );
+		qe_save_lock( item, true );
 	}
 }
 
@@ -361,11 +508,8 @@ function qe_error_clear_msg( item, tag ) {
 				all_hidden = false;
 			}
 		}
-		if ( all_hidden ) {
-			item.getElementsByClassName( 'save' )[ 0 ].removeAttribute(
-				'disabled'
-			);
-		}
+		// Unlock, or keep it locked with the remaining messages only.
+		qe_save_lock( item, ! all_hidden );
 	}
 }
 
@@ -422,6 +566,9 @@ function chk_qe_radio_client( tax_slug, evt ) {
 		const lst = item.getElementsByClassName( tax_slug + '-checklist' );
 		if ( chg < 2 ) {
 			lst[ 0 ].setAttribute( 'role', 'radiogroup' );
+			if ( cntl[ 12 ] ) {
+				lst[ 0 ].setAttribute( 'aria-label', cntl[ 12 ] );
+			}
 		} else {
 			// cannot change to radio.
 			qe_error_set_msg( item, tax_slug, cntl[ 9 ] );
@@ -436,7 +583,6 @@ function chk_qe_radio_client( tax_slug, evt ) {
 			// change to radio if not in error.
 			if ( chg < 2 && tax.type === 'checkbox' ) {
 				tax.type = 'radio';
-				tax.setAttribute( 'role', 'radio' );
 			}
 		}
 	}
@@ -461,12 +607,12 @@ function rst_qe_radio_client( tax_slug, evt ) {
 		// should we put out a message.
 		chk_qe_radio_client( tax_slug, evt );
 		const lst = item.getElementsByClassName( tax_slug + '-checklist' );
-		lst[ 0 ].removeAttribute( 'role' ); //
+		lst[ 0 ].removeAttribute( 'role' );
+		lst[ 0 ].removeAttribute( 'aria-label' );
 		const inp = lst[ 0 ].getElementsByTagName( 'input' );
 		for ( const tax of inp ) {
 			if ( tax.type === 'radio' ) {
 				tax.type = 'checkbox';
-				tax.removeAttribute( 'role' );
 			}
 		}
 	}
@@ -478,6 +624,7 @@ function rst_qe_radio_client( tax_slug, evt ) {
  * @param {string} tax_slug The taxonomy slug for the taxonomy.
  */
 function dom_qe_radio_client( tax_slug ) {
+	qe_guard_save();
 	const inp = document.getElementById( 'the-list' );
 	// add to parent to ensure elements attached to this are executed first.
 	inp.parentElement.addEventListener( 'click', ( event ) => {
@@ -552,10 +699,13 @@ function hier_cntl_check( tax_slug, doc, bail = false, evt = null ) {
 	const cnt = hier_tax_count( tax_slug, doc );
 	let err = false;
 
+	// A user action (an event) announces a new message.
+	const announce = null !== evt;
+
 	// if minimum defined, check value.
 	if ( null !== cntl[ 2 ] ) {
 		if ( cnt < cntl[ 2 ] ) {
-			set_errblock( tax_slug, cntl[ 3 ] );
+			set_errblock( tax_slug, cntl[ 3 ], announce );
 			err = true;
 		}
 	}
@@ -564,9 +714,9 @@ function hier_cntl_check( tax_slug, doc, bail = false, evt = null ) {
 	if ( null !== cntl[ 4 ] ) {
 		if ( cnt > cntl[ 4 ] ) {
 			if ( 1 === cntl[ 4 ] ) {
-				set_errblock( tax_slug, cntl[ 9 ] );
+				set_errblock( tax_slug, cntl[ 9 ], announce );
 			} else {
-				set_errblock( tax_slug, cntl[ 5 ] );
+				set_errblock( tax_slug, cntl[ 5 ], announce );
 			}
 			err = true;
 		}
@@ -579,6 +729,7 @@ function hier_cntl_check( tax_slug, doc, bail = false, evt = null ) {
 	if ( err && bail && evt ) {
 		evt.stopPropagation();
 		evt.preventDefault();
+		staxo_save_blocked( tax_slug );
 	}
 }
 
@@ -592,11 +743,12 @@ function dom_hier_cntl_check( tax_slug ) {
 	const tax = document.getElementById( 'taxonomy-' + tax_slug );
 	const inp = tax.getElementsByTagName( 'input' );
 	for ( const item of inp ) {
-		item.addEventListener( 'click', () => {
-			hier_cntl_check( tax_slug, doc );
+		// Pass the event, so that a new message is announced.
+		item.addEventListener( 'click', ( event ) => {
+			hier_cntl_check( tax_slug, doc, false, event );
 		} );
-		item.addEventListener( 'blur', () => {
-			hier_cntl_check( tax_slug, doc );
+		item.addEventListener( 'blur', ( event ) => {
+			hier_cntl_check( tax_slug, doc, false, event );
 		} );
 	}
 	doc.getElementById( 'publish' ).addEventListener( 'click', ( event ) => {
@@ -654,16 +806,21 @@ function tag_cntl_check( tax_slug, doc, special = false, evt = null ) {
 	doc.getElementById( 'link-' + tax_slug ).removeAttribute( 'disabled' );
 	const cloud = doc.getElementById( 'tagcloud-' + tax_slug );
 	if ( null !== cloud ) {
-		cloud.removeAttribute( 'disabled' );
+		// The most used tags are links: inert takes them out of use (disabled does nothing on a div).
+		cloud.inert = false;
 	}
+	let full = false;
 
 	const cnt = tag_tax_count( tax_slug, doc );
 	let err = false;
 
+	// A user action (an event) announces a new message; tag changes announce one when it changes.
+	const announce = null !== evt;
+
 	// if minimum defined, check value.
 	if ( null !== cntl[ 2 ] ) {
 		if ( cnt < cntl[ 2 ] ) {
-			set_errblock( tax_slug, cntl[ 3 ] );
+			set_errblock( tax_slug, cntl[ 3 ], announce );
 			err = true;
 		}
 	}
@@ -671,6 +828,7 @@ function tag_cntl_check( tax_slug, doc, special = false, evt = null ) {
 	// if maximum defined, check value.
 	if ( null !== cntl[ 4 ] ) {
 		if ( cnt >= cntl[ 4 ] ) {
+			full = true;
 			doc.getElementById( 'new-tag-' + tax_slug ).setAttribute(
 				'readonly',
 				'readonly'
@@ -680,14 +838,14 @@ function tag_cntl_check( tax_slug, doc, special = false, evt = null ) {
 				'disabled'
 			);
 			if ( null !== cloud ) {
-				cloud.setAttribute( 'disabled', 'disabled' );
+				cloud.inert = true;
 			}
 		}
 		if ( cnt > cntl[ 4 ] ) {
 			if ( 1 === cntl[ 4 ] ) {
-				set_errblock( tax_slug, cntl[ 9 ] );
+				set_errblock( tax_slug, cntl[ 9 ], announce );
 			} else {
-				set_errblock( tax_slug, cntl[ 5 ] );
+				set_errblock( tax_slug, cntl[ 5 ], announce );
 			}
 			err = true;
 		}
@@ -698,6 +856,9 @@ function tag_cntl_check( tax_slug, doc, special = false, evt = null ) {
 		clear_errblock( tax_slug );
 	}
 
+	// Say why no more terms can be added (the field is read-only).
+	tag_full_hint( tax_slug, doc, full && ! err, announce );
+
 	// special case when max = 1, then otherwise cannot change tag.
 	if ( 1 === cntl[ 4 ] && cnt >= 0 && cnt <= 2 && ! special ) {
 		return;
@@ -706,8 +867,56 @@ function tag_cntl_check( tax_slug, doc, special = false, evt = null ) {
 	if ( err && evt ) {
 		evt.stopPropagation();
 		evt.preventDefault();
+		staxo_save_blocked( tax_slug );
 	}
 }
+
+/**
+ * Tags box at its maximum: show (or remove) the reason that no more terms can be added.
+ *
+ * The hint is placed after the "Add" field, which it describes (aria-describedby), and is
+ * announced when it appears, unless the page is just loading.
+ *
+ * @param {string}   tax_slug The taxonomy slug for the taxonomy.
+ * @param {Document} doc      The containing document.
+ * @param {boolean}  show     Whether the box is full (and not already over the maximum).
+ * @param {boolean}  announce The check follows a user action.
+ */
+function tag_full_hint( tax_slug, doc, show, announce ) {
+	const input = doc.getElementById( 'new-tag-' + tax_slug );
+	const id = 'staxo-full-' + tax_slug;
+	let hint = doc.getElementById( id );
+	const text = get_cntl( tax_slug )[ 11 ];
+	const checked = true === tag_full_checked[ tax_slug ];
+	tag_full_checked[ tax_slug ] = true;
+	if ( ! show || ! text ) {
+		if ( null !== hint ) {
+			hint.remove();
+			input.removeAttribute( 'aria-describedby' );
+		}
+		return;
+	}
+	if ( null !== hint ) {
+		return;
+	}
+	hint = doc.createElement( 'p' );
+	hint.id = id;
+	hint.className = 'description staxo-full';
+	hint.innerHTML = text;
+	const ajaxtag = input.closest( '.ajaxtag' );
+	( ajaxtag || input ).after( hint );
+	input.setAttribute( 'aria-describedby', id );
+	if ( announce || checked ) {
+		staxo_speak( hint.textContent );
+	}
+}
+
+/**
+ * Taxonomies whose tags box has been checked at least once (keyed by slug).
+ *
+ * @type {Object<string, boolean>}
+ */
+const tag_full_checked = {};
 
 /**
  * Function to add the event listeners on document load.
@@ -792,6 +1001,27 @@ const block_limit = function ( wpx, slug ) {
 		}
 	}
 
+	/**
+	 * Mark the Publish button unavailable (aria-disabled) or available again.
+	 *
+	 * Unlike disabled, it stays focusable, so pressing it keeps focus there while
+	 * block_taxonomy() stops the click and shows the reason.
+	 *
+	 * @param {boolean} unavailable Required state.
+	 */
+	function set_publish_unavailable( unavailable ) {
+		const elts = document.getElementsByClassName(
+			'editor-post-publish-button__button'
+		);
+		if ( elts.length > 0 ) {
+			if ( unavailable ) {
+				elts[ 0 ].setAttribute( 'aria-disabled', 'true' );
+			} else {
+				elts[ 0 ].removeAttribute( 'aria-disabled' );
+			}
+		}
+	}
+
 	function block_taxonomy( event ) {
 		if ( event.target.tagName.toLowerCase() !== 'button' ) {
 			return;
@@ -810,7 +1040,9 @@ const block_limit = function ( wpx, slug ) {
 			);
 			event.stopPropagation();
 			event.preventDefault();
-			event.target.disabled = true;
+			// Not disabled: that would drop the keyboard focus. Say why, as the notice may already be shown.
+			set_publish_unavailable( true );
+			staxo_speak( notice_text( last_err ), 'assertive' );
 		}
 	}
 	function check_taxonomy( stat, cnt ) {
@@ -863,7 +1095,7 @@ const block_limit = function ( wpx, slug ) {
 
 			if ( ! nopubl ) {
 				nopubl = true;
-				set_disabled( 'editor-post-publish-button__button', true );
+				set_publish_unavailable( true );
 				dispatch( 'core/editor' ).disablePublishSidebar();
 			}
 		} else {
@@ -883,7 +1115,7 @@ const block_limit = function ( wpx, slug ) {
 			// remove publish block.
 			if ( nopubl ) {
 				nopubl = false;
-				set_disabled( 'editor-post-publish-button__button', false );
+				set_publish_unavailable( false );
 				dispatch( 'core/editor' ).enablePublishSidebar();
 			}
 		}
@@ -930,6 +1162,7 @@ const block_limit = function ( wpx, slug ) {
 function clear_errblock( tax_slug ) {
 	const doc = get_post_doc();
 	const errblock = doc.getElementById( 'err-' + tax_slug );
+	errblock_checked[ tax_slug ] = true;
 	if ( null !== errblock ) {
 		// Hide and clear if block was showing.
 		if ( ! errblock.classList.contains( 'hidden' ) ) {
@@ -940,21 +1173,45 @@ function clear_errblock( tax_slug ) {
 }
 
 /**
+ * Taxonomies whose error block has been checked at least once (keyed by slug).
+ *
+ * The first check usually runs as the page loads, and the notice printed by PHP is
+ * already on the screen, so only later changes are announced.
+ *
+ * @type {Object<string, boolean>}
+ */
+const errblock_checked = {};
+
+/**
  * Function to set the post taxonomy error block.
  *
- * @param {string} tax_slug The taxonomy slug for the taxonomy.
- * @param {string} message  The error message.
+ * A changed message is announced to screen readers when it follows a user action,
+ * or when the block has been checked before (term changes seen by a MutationObserver).
+ *
+ * @param {string}  tax_slug The taxonomy slug for the taxonomy.
+ * @param {string}  message  The error message (HTML-escaped).
+ * @param {boolean} announce The check follows a user action.
  */
-function set_errblock( tax_slug, message ) {
+function set_errblock( tax_slug, message, announce = false ) {
 	const doc = get_post_doc();
 	const errblock = doc.getElementById( 'err-' + tax_slug );
+	const checked = true === errblock_checked[ tax_slug ];
+	errblock_checked[ tax_slug ] = true;
 	if ( null !== errblock ) {
+		const para = errblock.getElementsByTagName( 'p' )[ 0 ];
+		const before = errblock.classList.contains( 'hidden' )
+			? ''
+			: para.textContent.trim();
 		// Show it if hidden.
 		if ( errblock.classList.contains( 'hidden' ) ) {
 			errblock.classList.remove( 'hidden' );
 		}
 		// set message.
-		errblock.getElementsByTagName( 'p' )[ 0 ].innerHTML = message;
+		para.innerHTML = message;
+		const after = para.textContent.trim();
+		if ( ( announce || checked ) && before !== after ) {
+			staxo_speak( after );
+		}
 	}
 }
 
@@ -1075,6 +1332,7 @@ function proc_qe_tax_cntl( tax_slug, hier, evt ) {
  * @param {number} hier     Taxonomy is hierarchical.
  */
 function dom_qe_cntl_check( tax_slug, hier ) {
+	qe_guard_save();
 	const inp = document.getElementById( 'the-list' );
 	// add to parent to ensure elements attached to this are executed first.
 	inp.parentElement.addEventListener( 'click', ( event ) => {

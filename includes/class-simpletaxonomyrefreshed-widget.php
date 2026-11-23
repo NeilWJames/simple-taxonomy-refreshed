@@ -18,6 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 
 	/**
+	 * Smallest text size allowed in a cloud (% of normal): smaller text is hard to read.
+	 *
+	 * @since 4.0.1
+	 */
+	const MIN_SMALL = 75;
+
+	/**
 	 * Defaults.
 	 *
 	 * @var mixed[] $defaults
@@ -26,7 +33,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		'title'     => '',
 		'taxonomy'  => 'post_tag',
 		'disptype'  => 'cloud',
-		'small'     => 50,
+		'small'     => 80,
 		'big'       => 150,
 		'alignment' => 'justify',
 		'orderby'   => 'count',
@@ -170,7 +177,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 				'staxo_widget_tag_cloud_args',
 				array(
 					'taxonomy'   => $current_taxonomy,
-					'smallest'   => $instance['small'],
+					'smallest'   => max( self::MIN_SMALL, (int) $instance['small'] ),
 					'largest'    => $instance['big'],
 					'unit'       => '%',
 					'number'     => $instance['numdisp'],
@@ -220,12 +227,13 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			if ( is_wp_error( $terms ) || empty( $terms ) ) {
 				echo '<p>' . esc_html__( 'No terms available for this taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>';
 			} else {
-				echo '<ul class="staxo-terms-list" role="grid">' . "\n";
+				// A plain list: no ARIA roles, so screen readers announce it as a list of links.
+				echo '<ul class="staxo-terms-list">' . "\n";
 				foreach ( (array) $terms as $term ) {
 					// Translators: Use WP test_domain so no need to translate.
 					$formatted_count = sprintf( translate_nooped_plural( _n_noop( '%s item', '%s items', 'simple-taxonomy-refreshed' ), $term->count ), number_format_i18n( $term->count ) );
-					echo '<li role="row"><a href="' . esc_url( get_term_link( $term, $current_taxonomy ) )
-					. '" role="link" aria-label="' . esc_html( $term->name ) . ' (' . esc_attr( $formatted_count ) . ')">'
+					echo '<li><a href="' . esc_url( get_term_link( $term, $current_taxonomy ) )
+					. '" aria-label="' . esc_html( $term->name ) . ' (' . esc_attr( $formatted_count ) . ')">'
 					. esc_html( $term->name ) . '</a>';
 					if ( $instance['showcount'] ) {
 						echo esc_html( ' (' . $term->count . ')' );
@@ -316,6 +324,8 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 			$instance[ $val ] = ( isset( $new_instance[ $val ] ) ? absint( $new_instance[ $val ] ) : self::$defaults[ $val ] );
 		}
 
+		$instance['small'] = max( self::MIN_SMALL, $instance['small'] );
+
 		// Checkbox.
 		$instance['showcount'] = ( isset( $new_instance['showcount'] ) ) ? true : false;
 
@@ -366,7 +376,7 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 
 		<p>
 			<label for="<?php echo esc_attr( $this->get_field_id( 'small' ) ); ?>"><?php esc_html_e( 'Small size:', 'simple-taxonomy-refreshed' ); ?></label><br />
-			<input class="small-text" id="<?php echo esc_attr( $this->get_field_id( 'small' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'small' ) ); ?>" type="number" value="<?php echo esc_attr( $instance['small'] ); ?>" min="40" max="100" />
+			<input class="small-text" id="<?php echo esc_attr( $this->get_field_id( 'small' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'small' ) ); ?>" type="number" value="<?php echo (int) max( self::MIN_SMALL, (int) $instance['small'] ); ?>" min="<?php echo (int) self::MIN_SMALL; ?>" max="100" />
 		</p>
 
 		<p>
@@ -524,11 +534,22 @@ class SimpleTaxonomyRefreshed_Widget extends WP_Widget {
 		);
 		$instance = wp_parse_args( $atts, self::$defaults );
 
-		// if header is set, then title at level h2.
-		if ( isset( $atts['header'] ) ) {
-			$args['before_title'] = '<h2>';
-			$args['after_title']  = '</h2>';
+		// The title is a heading: in the block, at its chosen level (default 2, 0 for none);
+		// otherwise level 2 if "header" is set.
+		$in_block = ( '' !== SimpleTaxonomyRefreshed_Client::get_block_attributes() );
+		if ( $in_block || isset( $atts['headingLevel'] ) ) {
+			$level = ( isset( $atts['headingLevel'] ) ? (int) $atts['headingLevel'] : 2 );
+		} else {
+			$level = ( isset( $atts['header'] ) ? 2 : 0 );
 		}
+		if ( $level >= 2 && $level <= 6 ) {
+			$args['before_title'] = '<h' . $level . ' class="staxo-widget-title">';
+			$args['after_title']  = '</h' . $level . '>';
+		} elseif ( $in_block ) {
+			$args['before_title'] = '<p class="staxo-widget-title">';
+			$args['after_title']  = '</p>';
+		}
+		unset( $instance['headingLevel'] );
 
 		// 'ordering' needs to be 'order'.
 		if ( isset( $instance['ordering'] ) ) {

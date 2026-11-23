@@ -3,6 +3,7 @@ import {
 	PanelBody,
 	RadioControl,
 	RangeControl,
+	SelectControl,
 	TextControl,
 	ToggleControl,
 } from '@wordpress/components';
@@ -36,6 +37,67 @@ export default function Edit( { attributes, setAttributes } ) {
 						value={ attributes.title }
 						label={ __( 'Title', 'simple-taxonomy-refreshed' ) }
 						onChange={ ( val ) => setAttributes( { title: val } ) }
+					/>
+
+					<SelectControl
+						label={ __(
+							'Title heading level',
+							'simple-taxonomy-refreshed'
+						) }
+						help={ __(
+							'A heading lets screen reader users find the cloud.',
+							'simple-taxonomy-refreshed'
+						) }
+						value={ String( attributes.headingLevel ?? 2 ) }
+						options={ [
+							{
+								label: __(
+									'Heading 2',
+									'simple-taxonomy-refreshed'
+								),
+								value: '2',
+							},
+							{
+								label: __(
+									'Heading 3',
+									'simple-taxonomy-refreshed'
+								),
+								value: '3',
+							},
+							{
+								label: __(
+									'Heading 4',
+									'simple-taxonomy-refreshed'
+								),
+								value: '4',
+							},
+							{
+								label: __(
+									'Heading 5',
+									'simple-taxonomy-refreshed'
+								),
+								value: '5',
+							},
+							{
+								label: __(
+									'Heading 6',
+									'simple-taxonomy-refreshed'
+								),
+								value: '6',
+							},
+							{
+								label: __(
+									'Not a heading',
+									'simple-taxonomy-refreshed'
+								),
+								value: '0',
+							},
+						] }
+						onChange={ ( val ) =>
+							setAttributes( {
+								headingLevel: parseInt( val, 10 ),
+							} )
+						}
 					/>
 
 					<RadioControl
@@ -83,7 +145,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						onChange={ ( val ) =>
 							setAttributes( { small: parseInt( val, 10 ) } )
 						}
-						min={ 40 }
+						min={ 75 }
 						max={ 100 }
 					/>
 

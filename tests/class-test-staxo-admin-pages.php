@@ -170,8 +170,14 @@ class Test_STaxo_Admin_Pages extends STaxo_Test_Case {
 		$output = $this->capture( $page );
 		$this->assertStringContainsString( 'You can reorder the custom taxonomies defined on export.', $output );
 		foreach ( self::$staxo_taxonomies as $taxonomy ) {
-			$this->assertStringContainsString( '<li class="sort-li" tabindex="0">' . $taxonomy . '</li>', $output );
+			// Each with Move up / Move down buttons, the keyboard alternative to dragging (review A1).
+			$this->assertStringContainsString( '<li class="sort-li" data-name="' . $taxonomy . '"><span class="sort-li-name">' . $taxonomy . '</span>', $output );
+			$this->assertStringContainsString( 'aria-label="Move down: ' . $taxonomy . '">Move down</button>', $output );
 		}
+		$this->assertStringContainsString( "staxo_sortable( 'taxo_list', 'taxo_list_arr' );", $output );
+		$this->assertStringContainsString( '<label for="config_file">Config file</label>', $output, 'The file field has a label (review A15)' );
+		$this->assertStringContainsString( '<input type="file" name="config_file" id="config_file" />', $output );
+		$this->assertStringContainsString( '<button type="button" class="button hide-if-no-js" id="toggle-import_form" aria-expanded="false" aria-controls="import_form">Import config file</button>', $output, 'A button that says whether the form is shown' );
 		$this->assertStringContainsString( 'name="taxo_list_arr"', $output );
 		$this->assertStringContainsString( 'name="' . SimpleTaxonomyRefreshed_Admin_Config::IMP_FILE_SLUG . '"', $output );
 

@@ -2,6 +2,7 @@
  * Shared helpers for the Simple Taxonomy Refreshed end-to-end tests.
  */
 import { expect } from '@wordpress/e2e-test-utils-playwright';
+import AxeBuilder from '@axe-core/playwright';
 
 /** Admin URL of the taxonomy list (Taxonomies > All Taxonomies). */
 export const LIST_URL = 'admin.php?page=staxo_settings';
@@ -169,4 +170,44 @@ export function collectPageErrors( page ) {
 	const errors = [];
 	page.on( 'pageerror', ( error ) => errors.push( error.message ) );
 	return errors;
+}
+
+/**
+ * WCAG levels A and AA (2.0, 2.1 and 2.2) checked by axe, and axe's best practices
+ * (such as ARIA roles that native elements do not need).
+ */
+export const AXE_TAGS = [
+	'wcag2a',
+	'wcag2aa',
+	'wcag21a',
+	'wcag21aa',
+	'wcag22aa',
+	'best-practice',
+];
+
+/**
+ * Run axe on part of the page and expect no WCAG A/AA or best-practice violations.
+ *
+ * Only the plugin's own markup is checked (`include`), so that WordPress core and theme
+ * issues do not fail the tests. A failure lists each rule with the elements it found.
+ *
+ * @param {import('@playwright/test').Page} page    Current page.
+ * @param {string|string[]}                 include CSS selector(s) of the parts to check.
+ * @param {string[]}                        exclude CSS selectors of parts to leave out.
+ */
+export async function expectNoAxeViolations( page, include, exclude = [] ) {
+	let builder = new AxeBuilder( { page } ).withTags( AXE_TAGS );
+	for ( const selector of [].concat( include ) ) {
+		builder = builder.include( selector );
+	}
+	for ( const selector of exclude ) {
+		builder = builder.exclude( selector );
+	}
+	const results = await builder.analyze();
+	const violations = results.violations.map( ( violation ) => ( {
+		rule: violation.id,
+		help: violation.help,
+		elements: violation.nodes.map( ( node ) => node.target.join( ' ' ) ),
+	} ) );
+	expect( violations ).toEqual( [] );
 }

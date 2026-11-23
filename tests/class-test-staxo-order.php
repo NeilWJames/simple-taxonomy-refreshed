@@ -182,4 +182,28 @@ class Test_STaxo_Order extends STaxo_Test_Case {
 
 		$this->assertNull( $this->stored_order( 'post' ) );
 	}
+
+	/**
+	 * The page lists each post type's taxonomies with Move up / Move down buttons (keyboard alternative to dragging).
+	 */
+	public function test_page_sortable_lists() {
+		$default = $this->default_order( 'post' );
+
+		ob_start();
+		SimpleTaxonomyRefreshed_Admin_Order::page_admin_order();
+		$page = ob_get_clean();
+
+		$this->assertStringContainsString( '<ul id="post_list" class="staxo-sortable" data-moved="%1$s moved to position %2$s of %3$s.">', $page );
+		foreach ( $default as $taxonomy ) {
+			$this->assertStringContainsString( '<li class="sort-li" data-name="' . $taxonomy . '">', $page );
+			$this->assertStringContainsString( 'data-move="-1" aria-label="Move up: ' . $taxonomy . '">Move up</button>', $page );
+			$this->assertStringContainsString( 'data-move="1" aria-label="Move down: ' . $taxonomy . '">Move down</button>', $page );
+		}
+		$this->assertStringNotContainsString( '<li class="sort-li" tabindex', $page, 'Items are not focus stops; their buttons are' );
+		// Tabs (review A6): the selected tab is the only one in the Tab order, and names its panel.
+		$this->assertStringContainsString( '<div role="tablist" aria-label="Post types"><button type="button" role="tab" id="tab-post_pnl" aria-controls="post_pnl" aria-selected="true" tabindex="0">Posts</button>', $page );
+		$this->assertStringContainsString( '<div id="post_pnl" class="meta-box-sortabless" role="tabpanel" aria-labelledby="tab-post_pnl" tabindex="0">', $page );
+		$this->assertStringContainsString( 'staxo_sortable( "post_list", "post_arr", "' . SimpleTaxonomyRefreshed_Admin_Order::ORDER_SLUG . '" );', $page );
+		$this->assertStringNotContainsString( 'staxo_sortable( "page_list"', $page, 'Pages have one taxonomy: nothing to order' );
+	}
 }

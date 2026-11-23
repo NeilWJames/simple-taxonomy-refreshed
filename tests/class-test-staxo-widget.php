@@ -153,7 +153,7 @@ class Test_STaxo_Widget extends STaxo_Test_Case {
 		$this->assertSame( 'count', $this->chosen( $html, 'orderby' ) );
 		$this->assertSame( 'DESC', $this->chosen( $html, 'order' ) );
 		$this->assertMatchesRegularExpression( '#id="widget-staxonomy-2-showcount" name="widget-staxonomy\[2\]\[showcount\]"\s+checked=\'checked\'#', $html );
-		$this->assertStringContainsString( 'name="widget-staxonomy[2][small]" type="number" value="50"', $html );
+		$this->assertStringContainsString( 'name="widget-staxonomy[2][small]" type="number" value="80" min="75" max="100"', $html, 'Smallest size: default 80%, at least 75%' );
 		$this->assertStringContainsString( 'name="widget-staxonomy[2][big]" type="number" value="150"', $html );
 		$this->assertStringContainsString( 'name="widget-staxonomy[2][numdisp]" type="number" value="45"', $html );
 		$this->assertStringContainsString( 'name="widget-staxonomy[2][minposts]" type="number" value="0"', $html );
@@ -241,14 +241,15 @@ class Test_STaxo_Widget extends STaxo_Test_Case {
 	}
 
 	/**
-	 * List items: link, accessible name with the count, and the count shown only when asked.
+	 * List items: a plain list (no ARIA roles), link, accessible name with the count, and the count shown only when asked.
 	 */
 	public function test_list_items() {
 		$output = $this->render( $this->instance() );
 		$jazz   = $this->term( 'test_hier', 'Jazz' );
 
-		$this->assertStringContainsString( '<ul class="staxo-terms-list" role="grid">', $output );
-		$this->assertStringContainsString( '<li role="row"><a href="' . esc_url( get_term_link( $jazz ) ) . '" role="link" aria-label="Jazz (2 items)">Jazz</a> (2)</li>', $output );
+		$this->assertStringContainsString( '<ul class="staxo-terms-list">', $output );
+		$this->assertStringContainsString( '<li><a href="' . esc_url( get_term_link( $jazz ) ) . '" aria-label="Jazz (2 items)">Jazz</a> (2)</li>', $output );
+		$this->assertStringNotContainsString( 'role=', $output, 'A plain list: no grid, row or link roles' );
 		$this->assertStringContainsString( 'aria-label="Big Band (1 item)">Big Band</a> (1)</li>', $output );
 
 		$output = $this->render( $this->instance( array( 'showcount' => false ) ) );
@@ -269,7 +270,7 @@ class Test_STaxo_Widget extends STaxo_Test_Case {
 			)
 		);
 
-		$this->assertSame( 2, substr_count( $output, '<li role="row">' ) );
+		$this->assertSame( 2, substr_count( $output, '<li><a ' ) );
 		$this->assertStringNotContainsString( '>Big Band</a>', $output, 'The term with fewest posts is left out' );
 	}
 
@@ -377,7 +378,7 @@ class Test_STaxo_Widget extends STaxo_Test_Case {
 	}
 
 	/**
-	 * Block rendering: with "header" the title is a level 2 heading.
+	 * Block rendering: with "header" the title is a level 2 heading; "headingLevel" chooses the level.
 	 */
 	public function test_block_display_header() {
 		global $strw;
@@ -392,7 +393,7 @@ class Test_STaxo_Widget extends STaxo_Test_Case {
 				'orderby'  => 'name',
 			)
 		);
-		$this->assertStringContainsString( '<h2>Genres</h2>', $output );
+		$this->assertStringContainsString( '<h2 class="staxo-widget-title">Genres</h2>', $output );
 		$this->assertLessThan( strpos( $output, '>Bebop</a>' ), strpos( $output, '>Jazz</a>' ), 'ordering DESC: Jazz before Bebop' );
 
 		$output = $strw->staxo_widget_display(
@@ -404,5 +405,39 @@ class Test_STaxo_Widget extends STaxo_Test_Case {
 		);
 		$this->assertStringNotContainsString( '<h2>', $output );
 		$this->assertStringContainsString( 'Genres', $output );
+
+		// The block's heading level (review A10): any of 2 to 6, or 0 for a paragraph.
+		$output = $strw->staxo_widget_display(
+			array(
+				'title'        => 'Genres',
+				'taxonomy'     => 'test_hier',
+				'disptype'     => 'list',
+				'headingLevel' => 3,
+			)
+		);
+		$this->assertStringContainsString( '<h3 class="staxo-widget-title">Genres</h3>', $output );
+		$this->assertStringNotContainsString( 'headingLevel', $output );
+	}
+
+	/**
+	 * Cloud: the smallest text size is at least 75% (review A10), in the output and when saved.
+	 */
+	public function test_cloud_minimum_size() {
+		$output = $this->render(
+			$this->instance(
+				array(
+					'disptype' => 'cloud',
+					'small'    => 40,
+				)
+			)
+		);
+		$this->assertStringNotContainsString( 'font-size: 40%', $output );
+		$this->assertStringContainsString( 'font-size: 75%', $output, 'The terms with fewest posts' );
+
+		global $strw;
+		$saved = $strw->update( array( 'small' => '40' ), array() );
+		$this->assertSame( 75, $saved['small'] );
+		$saved = $strw->update( array( 'small' => '90' ), array() );
+		$this->assertSame( 90, $saved['small'] );
 	}
 }

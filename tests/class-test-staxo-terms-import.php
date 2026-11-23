@@ -284,6 +284,21 @@ class Test_STaxo_Terms_Import extends STaxo_Test_Case {
 	}
 
 	/**
+	 * The terms list says how to leave it with the keyboard (the Tab key can type a tab).
+	 */
+	public function test_page_keyboard_help() {
+		ob_start();
+		SimpleTaxonomyRefreshed_Admin_Import::page_importation();
+		$page = ob_get_clean();
+
+		$this->assertMatchesRegularExpression( '#<textarea name="import_content"[^>]*aria-describedby="import_content_keys"#', $page );
+		$this->assertStringContainsString( 'id="import_content_keys"', $page );
+		$this->assertStringContainsString( 'press Escape and then Tab', $page );
+		$this->assertStringContainsString( 'function staxo_import_keydown', $page );
+		$this->assertStringNotContainsString( 'insertTab', $page );
+	}
+
+	/**
 	 * A bad nonce is rejected and nothing is created.
 	 */
 	public function test_bad_nonce_rejected() {

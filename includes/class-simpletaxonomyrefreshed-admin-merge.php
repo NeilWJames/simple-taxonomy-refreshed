@@ -685,10 +685,25 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 		foreach ( $children as $p => $row ) {
 			$dis = ( in_array( (int) $row['term_id'], $term_ids, true ) ? 'disabled' : '' );
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo $indent . '<span class="' . $class . '"><input type="' . $type . '" role="' . $type . '" name="term' . $arr . '" id="tax_' . esc_attr( $row['term_id'] ) . '" value="' . esc_attr( $row['term_id'] ) . '" ' . $dis . '/>';
+			echo $indent . '<span class="' . $class . '"><input type="' . $type . '" name="term' . $arr . '" id="tax_' . esc_attr( $row['term_id'] ) . '" value="' . esc_attr( $row['term_id'] ) . '" ' . $dis . '/>';
 			echo '<label for="tax_' . esc_attr( $row['term_id'] ) . '" >' . esc_html( $row['name'] ) . '</label></span><br />';
 			self::list_taxonomy_children( $taxonomy, $row['term_id'], $level + 1, $type, $term_ids );
 		}
+	}
+
+	/**
+	 * Opening tag of a list of terms: a group named for screen readers by what is chosen in it.
+	 *
+	 * @since 4.0.1
+	 *
+	 * @param string $type "radio" (the Destination term) or "checkbox" (the Source terms).
+	 * @return string
+	 */
+	private static function group_open( $type ) {
+		if ( 'checkbox' === $type ) {
+			return '<div role="group" class="staxo-checkbox-group" aria-label="' . esc_attr__( 'Source terms', 'simple-taxonomy-refreshed' ) . '">';
+		}
+		return '<div role="radiogroup" class="staxo-radio-group" aria-label="' . esc_attr__( 'Destination term', 'simple-taxonomy-refreshed' ) . '">';
 	}
 
 	/**
@@ -709,13 +724,11 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 			$term_idp   = ( $term_obj instanceof WP_Term ? $term_obj->parent : 0 );
 		}
 		ob_start();
-		if ( 'checkbox' === $type ) {
-			$output = '<div role="group" class="staxo-checkbox-group" >';
-		} else {
-			$output = '<div role="radiogroup" class="staxo-radio-group" >';
-		}
+		// The group was built but never output; it names the list for screen readers.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in group_open().
+		echo self::group_open( $type );
 		self::list_taxonomy_children( $taxonomy, 0, 0, $type, $term_ids );
-		$output .= '</div>';
+		echo '</div>';
 		return ob_get_clean();
 	}
 
@@ -744,21 +757,20 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 			ARRAY_A
 		);
 
+		$output .= self::group_open( $type );
 		if ( 'checkbox' === $type ) {
-			$arr     = '[]';
-			$output .= '<div role="group" class="staxo-checkbox-group" >';
-			$class   = ' class="staxo-checkbox-item"';
+			$arr   = '[]';
+			$class = ' class="staxo-checkbox-item"';
 		} else {
-			$arr     = '';
-			$output .= '<div role="radiogroup" class="staxo-radio-group" >';
-			$class   = ' class="staxo-radio-item"';
+			$arr   = '';
+			$class = ' class="staxo-radio-item"';
 		}
 
 		$i = 0;
 		foreach ( $all_terms as $p => $row ) {
 			$dis = ( (int) $row['term_id'] === $term_id ? 'disabled' : '' );
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			$output .= '<span ' . $class . '><input type="' . $type . '" role="' . $type . '" name="term' . $arr . '" id="tax_' . $row['term_id'] . '" value="' . $row['term_id'] . '" ' . $dis . '/> ';
+			$output .= '<span ' . $class . '><input type="' . $type . '" name="term' . $arr . '" id="tax_' . $row['term_id'] . '" value="' . $row['term_id'] . '" ' . $dis . '/> ';
 			$output .= '<label for="tax_' . $row['term_id'] . '" >' . esc_html( $row['name'] ) . '</label></span><br />';
 			++$i;
 		}
@@ -788,9 +800,9 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 			<p><?php esc_html_e( 'See Help above for more detailed information on usage.', 'simple-taxonomy-refreshed' ); ?></p>
 			<form id = "merge" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::MERGE_SLUG ) ); ?>" method="post">
 				<div id="tax_terms">
-				<p><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></p>
 				<fieldset>
-					<div role="radiogroup" class="staxo-radio-group" >
+					<legend><?php esc_html_e( 'Choose a taxonomy', 'simple-taxonomy-refreshed' ); ?></legend>
+					<div class="staxo-radio-group">
 					<?php
 					// build a list of taxonomies that can be processed.
 					$taxos = array();
@@ -811,13 +823,12 @@ class SimpleTaxonomyRefreshed_Admin_Merge {
 					ksort( $taxos );
 					foreach ( $taxos as $taxo => $value ) {
 						echo '<span class="staxo-radio-item" >';
-						echo '<input type="radio" role="radio" name="taxonomy" class="taxonomy" id="' . esc_attr( $value ) . '" value="' . esc_attr( $value ) . '" onclick="' . esc_attr( 'str_t(' . wp_json_encode( $value ) . ')' ) . '"' . disabled( ! $allowed[ $value ], true, false ) . ' >';
+						echo '<input type="radio" name="taxonomy" class="taxonomy" id="' . esc_attr( $value ) . '" value="' . esc_attr( $value ) . '" onclick="' . esc_attr( 'str_t(' . wp_json_encode( $value ) . ')' ) . '"' . disabled( ! $allowed[ $value ], true, false ) . ' >';
 						echo '<label for="' . esc_attr( $value ) . '" >' . esc_html( $taxo ) . '</label></span><br />';
 					}
 					?>
 					</div>
 				</fieldset>
-				</p>
 				<p><?php esc_html_e( 'Note: Standard WordPress Term caches will be cleared during the Rename process. However other caches may exist and cause some confusion until timed out.', 'simple-taxonomy-refreshed' ); ?></p>
 				<input type="hidden" name="phase" id="phase" value="one" />
 				</div>

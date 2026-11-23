@@ -487,8 +487,8 @@ class Test_STaxo_Externals extends STaxo_Test_Case {
 		ob_start();
 		SimpleTaxonomyRefreshed_Admin::page_manage();
 		$html = ob_get_clean();
-		$this->assertMatchesRegularExpression( '/<span id="count_tab_0" class="is-hidden">/', $html );
-		$this->assertMatchesRegularExpression( '/<span id="count_tab_1" >/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_tab_0" class="is-hidden">/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_tab_1" >/', $html );
 	}
 
 	/**
@@ -549,8 +549,8 @@ class Test_STaxo_Externals extends STaxo_Test_Case {
 
 		$html = $this->own_count_form();
 		$this->assertStringContainsString( 'This taxonomy has its own function for counting terms (_update_generic_term_count).', $html );
-		$this->assertMatchesRegularExpression( '/<span id="count_tab_0" >/', $html );
-		$this->assertMatchesRegularExpression( '/<span id="count_tab_1" >/', $html, 'The options are shown with the warning' );
+		$this->assertMatchesRegularExpression( '/<div id="count_tab_0" >/', $html );
+		$this->assertMatchesRegularExpression( '/<div id="count_tab_1" >/', $html, 'The options are shown with the warning' );
 		$this->assertMatchesRegularExpression( '/<input type="checkbox" id="st_cb_override" name="st_cb_override" value="1"\s*\/>/', $html, 'Not ticked' );
 	}
 

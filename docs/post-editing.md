@@ -36,6 +36,10 @@ With **When the post is saved**, a post outside the limits is not saved:
 
 With **As terms are changed and when the post is saved**, the block editor also checks the terms each time they change. While they are outside the limits, a notice is shown and the Save and Publish buttons are blocked.
 
+The classic editor and Quick Edit check the terms as they change too. In the classic editor, a tags box that has reached the maximum takes no more terms, and a note under its field says to remove a term first. In Quick Edit, **Update** stays unavailable while the terms are outside the limits.
+
+The messages are announced to screen reader users as they appear, and when a save or update is stopped, the reason is announced; in the classic editor, focus moves to the message.
+
 Posts are not checked when they are moved to the trash, or by WordPress's autosave.
 
 ### Notification only

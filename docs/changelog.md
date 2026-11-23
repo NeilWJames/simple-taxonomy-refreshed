@@ -1,6 +1,67 @@
 # Changelog
 
-## Version 4.0.0  (xx/xx/2026)
+## Version 4.0.1  (24/11/2026)
+
+Accessibility review of the admin screens, post editing screens and front-end output (WCAG 2.2 A and AA).
+
+### Breaking changes
+
+* Taxonomy Cloud block: the title is now a heading, level 2 by default. A new "Title heading level" setting chooses level 2 to 6, or "Not a heading" (a paragraph). Themes that styled the plain title text may show it differently.
+* Taxonomy Cloud block and widget: the smallest text size is now at least 75% (the default is now 80%, was 50%). Smaller saved sizes are shown, and saved by the widget form, as 75%.
+* Taxonomies defined by the plugin: an empty label is no longer registered as empty; WordPress's default label is used (for example "Choose from the most used tags").
+
+### Changes
+
+#### Post editing: Terms Control (block editor, classic editor, Quick Edit and REST API)
+
+* FIX: Classic editor and Quick Edit: Terms Control messages are announced to screen readers. When a save is stopped, the reason is announced, and in the classic editor focus moves to the message.
+* FIX: Quick Edit: while the terms are outside the limits, Update is marked unavailable (`aria-disabled`) but stays focusable and is described by the message; using it, or pressing Enter in a field, announces the reason instead of saving.
+* FIX: Classic editor: when a tags box reaches the Terms Control maximum, a note under the field says why no more terms can be added (and is announced to screen readers), and the "most used" tags can no longer be clicked. The note goes when a term is removed.
+* FIX: Block editor: when publishing is blocked by Terms Control, the Publish button is marked unavailable (`aria-disabled`) instead of being disabled, so keyboard focus stays on it, and the reason is announced.
+* FIX: Classic editor and Quick Edit: the radio buttons of a one-term taxonomy are a group named by the taxonomy, and no longer carry a redundant `role`.
+* FIX: Block editor radio term selector: while the terms load, "Loading terms…" is given to screen readers and the list is marked busy.
+
+#### Front end: post terms, blocks and widget
+
+* FIX: Taxonomy Cloud block and widget, list display: the terms are a plain list. The `grid`, `row` and `link` roles (not valid on a list) are removed, so screen readers announce a list of links.
+* CHG: Taxonomy Cloud block: the title is a heading (level 2 by default) with a "Title heading level" setting, so screen reader users can find the cloud.
+* CHG: Taxonomy Cloud block and widget: the smallest text size is at least 75% (default 80%), as smaller text is hard to read.
+
+#### Taxonomy settings screens (custom and external taxonomies)
+
+* FIX: Taxonomy settings tabs follow the WAI-ARIA tabs pattern: only the selected tab is in the Tab order, the arrow keys, Home and End move between tabs, each panel is named by its tab and can take focus, and focus is visible on every tab (it was hidden on the selected tab).
+* FIX: Field descriptions on the taxonomy form are read by screen readers with their fields (`aria-describedby`), including the read-only note on callback fields.
+* FIX: Add Taxonomy: the Name (slug) field is required, the Add taxonomy button is enabled as the name is typed (not when the field is left), and a note linked to both says why the button is unavailable.
+* FIX: Term Count options: the radio buttons no longer carry `aria-selected` (not valid on them), which screen readers announced wrongly.
+* FIX: Admin List Filter: each filter dropdown on the posts list has a label for screen readers (the taxonomy's "Filter by" label), as WordPress's own category filter has.
+* FIX: An empty label of a taxonomy defined by the plugin is no longer registered as empty, so WordPress's default is used: an empty "Choose from the most used tags" gave a button with no name in the classic editor.
+* FIX: Taxonomy form: checkboxes and radio buttons no longer carry ARIA that native controls do not need (`role`, `aria-checked`, `tabindex`, `aria-readonly`), and the Add/Update button lost its `role` and `tabindex` (and the double border that went with them). Screen readers announced some of these wrongly.
+* FIX: Taxonomy form: the groups of checkboxes and radio buttons are named by their header cell (no `<label>` without a field), the empty fieldsets inside them are gone, and the Minimum and Maximum Control settings are whole table rows (they were rows inside another row's cell, which screen readers read as an empty row). Paragraphs that were inside tables, tables inside inline elements and a stray `</p>` are fixed.
+
+#### Taxonomy List Order
+
+* NEW: Taxonomy List Order and the export order on Configuration Export/Import can be set with the keyboard: each taxonomy has Move up and Move down buttons as well as being draggable, and each move is announced to screen readers.
+* FIX: The Taxonomy List Order post type tabs follow the same keyboard and focus pattern as the taxonomy settings tabs.
+
+#### Term tools: Terms Import, Terms Merge, Terms Migrate and Rename Slug
+
+* FIX: Terms Import: the Tab key only types a tab when the hierarchy uses tabs, and Escape then Tab (or Shift+Tab) leaves the list, so keyboard users can reach the Import button. A note under the list says so.
+* FIX: Configuration import: the Config file field has a label.
+* FIX: Terms Merge and Rename Taxonomy Slug: "Choose a taxonomy" names its group of radio buttons (a fieldset legend). In Terms Merge the term lists are groups named "Destination term" and "Source terms"; the group around a hierarchical list was built but never output.
+* FIX: Taxonomy Values Migrator: each checkbox is announced with its column and taxonomy ("Copy From Categories"), not only the taxonomy, and the taxonomy cells' ids can no longer clash with other ids on the page.
+* FIX: Export/Import Configuration: "Import config file" is a button that says whether the import form is shown, and moves to the file field when it opens.
+* FIX: Taxonomy List Order: typos in two messages.
+
+#### Development
+
+* DEV: Development tools updated: `@wordpress/scripts` 37, `@wordpress/env` 12, `@wordpress/e2e-test-utils-playwright` 3, Playwright 1.65 and terser 5.51. They need Node.js 22.22.2 or later (`engines` in `package.json`; was 20).
+* DEV: Composer: `phpunit/phpunit` ^9.6 added, so `composer install` gives `bin/phpunit` (CI keeps its own PHPUnit); `yoast/phpunit-polyfills` limited to ^4.0 (was any version, which could pull in a PHPUnit the WordPress test suite does not support); PHPCSUtils ^1.2.3, the PHPCS installer ^1.2 and PHPStan ^2.3.
+* DEV: Accessibility end-to-end tests (`tests/e2e/specs/accessibility.spec.js`) with `@axe-core/playwright`: WCAG 2.2 A and AA checks of the plugin's admin screens (every tab of the taxonomy form), the posts list filters, the classic editor tags box and the front-end blocks, and keyboard tests of the tabs, Taxonomy List Order, Terms Import and the tags box.
+* DEV: The accessibility e2e tests also apply axe's best-practice rules.
+* DEV: CI runs the PHPUnit tests on PHP 8.5, and on PHP 8.6 with the latest WordPress. The PHP 8.6 job uses setup-php's 8.6 build without code coverage (Xdebug does not yet support PHP 8.6), and its failure does not fail the run.
+* DEV: The release leaves out `README.md` (`.distignore` named it `readme.md`) and `.phpunit.result.cache`.
+
+## Version 4.0.0  (08/10/2026)
 
 ### Breaking changes
 

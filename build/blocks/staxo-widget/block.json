@@ -24,7 +24,7 @@
     },
     "small": {
       "type": "number",
-      "default": 50
+      "default": 80
     },
     "big": {
       "type": "number",
@@ -53,6 +53,10 @@
     "minposts": {
       "type": "number",
       "default": 0
+    },
+    "headingLevel": {
+      "type": "number",
+      "default": 2
     }
   },
   "supports": {

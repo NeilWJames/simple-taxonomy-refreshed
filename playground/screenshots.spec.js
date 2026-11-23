@@ -428,7 +428,9 @@ test( 'Terms Migrate', async () => {
 	await shot( 'terms-migrate' );
 
 	const row = ( name ) =>
-		page.locator( 'tr', { has: page.locator( `td[id="${ name }"]` ) } );
+		page.locator( 'tr', {
+			has: page.locator( `td[id="staxo-tax-${ name }"]` ),
+		} );
 	await row( 'genre' ).locator( 'input.copy' ).check();
 	await row( 'category' ).locator( 'input.oput' ).check();
 	await shot( 'terms-migrate-choose' );

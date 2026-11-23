@@ -23,7 +23,7 @@ When a post type has several taxonomies, the admin list of its posts has a colum
 
 ![Taxonomy List Order](../images/list-order.png)
 
-There is a tab for each post type with more than one taxonomy. Drag the taxonomies into the order you want, then click **Save these orderings**. The demo orders the Posts columns as Genres, Topics, Sections, Audiences, Colours, Categories, Tags (see [the Posts list](post-editing.md#the-admin-post-lists)).
+There is a tab for each post type with more than one taxonomy. Drag the taxonomies into the order you want, or use each taxonomy's **Move up** and **Move down** buttons (these work with the keyboard, and screen readers announce the new position), then click **Save these orderings**. The demo orders the Posts columns as Genres, Topics, Sections, Audiences, Colours, Categories, Tags (see [the Posts list](post-editing.md#the-admin-post-lists)).
 
 Only the order of the taxonomy columns changes: they stay in the same place among the other columns. The menu item is only shown when a post type has more than one taxonomy.
 
@@ -31,7 +31,7 @@ Only the order of the taxonomy columns changes: they stay in the same place amon
 
 ![Configuration Export/Import](../images/config.png)
 
-**Export config file** downloads all the plugin's settings as a JSON file: the taxonomies it defines, the extra functions of other taxonomies, and the list orders. Before exporting, you can drag the taxonomies into the order you want them listed after an import.
+**Export config file** downloads all the plugin's settings as a JSON file: the taxonomies it defines, the extra functions of other taxonomies, and the list orders. Before exporting, you can drag the taxonomies (or use their **Move up** and **Move down** buttons) into the order you want them listed after an import.
 
 **Import config file** loads such a file, for example a backup, or the settings of another site:
 
@@ -68,6 +68,8 @@ This tool creates terms in a taxonomy from a list, one term per line. The terms 
    - **No hierarchy**: every line is a term at the top level (the only choice for a flat taxonomy).
    - **Hierarchy uses space for levels** or **Hierarchy uses tab for levels**: each extra leading space or tab puts the term one level below the line before it.
 3. Enter the terms, and click **Import these words as terms**.
+
+With **Hierarchy uses tab for levels**, the Tab key types a tab in the list. To leave the list with the keyboard, press **Escape** and then **Tab**, or press **Shift+Tab**. With the other choices, the Tab key moves on as usual, so the space choice is the easier one to type with a keyboard alone.
 
 Each term's slug is made from its name, with no description; change them on the taxonomy's terms screen if needed.
 

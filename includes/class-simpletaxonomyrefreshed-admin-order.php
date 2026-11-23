@@ -144,7 +144,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 					$multiple = true;
 				} else {
 					if ( ! $single ) {
-						echo '<p>' . esc_html__( 'Ordering is not relevant for these Post Type(s) as they contain only one taxonomy. .', 'simple-taxonomy-refreshed' ) . '</p>';
+						echo '<p>' . esc_html__( 'Ordering is not relevant for these Post Type(s) as they contain only one taxonomy.', 'simple-taxonomy-refreshed' ) . '</p>';
 						echo '<ul style="text-indent: 20px">';
 						$single = true;
 					}
@@ -156,7 +156,7 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			}
 			if ( ! $multiple ) {
 				// Nothing to do.
-				echo '<p><strong>' . esc_html__( 'There is no Post Type with more than one taxonomy.element. Nothing to do.', 'simple-taxonomy-refreshed' ) . '</strong></p></div>';
+				echo '<p><strong>' . esc_html__( 'There is no Post Type with more than one taxonomy. Nothing to do.', 'simple-taxonomy-refreshed' ) . '</strong></p></div>';
 				return;
 			}
 			?>
@@ -164,12 +164,12 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			<div id="post-body-content">
 				<?php
 				// create tabs for each post type.
-				echo '<div role="tablist">';
-				$active = 'true';
+				echo '<div role="tablist" aria-label="' . esc_attr__( 'Post types', 'simple-taxonomy-refreshed' ) . '">';
+				$active = true;
 				foreach ( $displ_ordering as $post_type => $tax ) {
 					if ( count( $tax ) > 1 ) {
-						echo '<button type="button" role="tab" aria-controls="' . esc_html( $post_type ) . '_pnl" aria-selected="' . esc_html( $active ) . '">' . esc_html( $wp_post_types[ $post_type ]->labels->name ) . '</button>';
-						$active = 'false';
+						SimpleTaxonomyRefreshed_Admin::tab_button( $post_type . '_pnl', $wp_post_types[ $post_type ]->labels->name, $active );
+						$active = false;
 					}
 				}
 				echo '</div>';
@@ -179,14 +179,12 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 				foreach ( $displ_ordering as $post_type => $tax ) {
 					if ( count( $tax ) > 1 ) {
 						// phpcs:ignore
-						echo '<div id="' . esc_html( $post_type ) . '_pnl" class="meta-box-sortabless' . $hidden . '" role="tabpanel">';
+						echo '<div id="' . esc_html( $post_type ) . '_pnl" class="meta-box-sortabless' . $hidden . '" role="tabpanel" aria-labelledby="tab-' . esc_attr( $post_type ) . '_pnl" tabindex="0">';
 						$hidden = ' is-hidden';
 						echo '<div class="postbox">';
-						echo '<div class="inside"><ul id="' . esc_html( $post_type ) . '_list">';
-						foreach ( $tax as $li ) {
-							echo '<li class="sort-li" tabindex="0">' . esc_html( $li ) . '</li>';
-						}
-						echo '</ul></div></div></div>';
+						echo '<div class="inside">';
+						SimpleTaxonomyRefreshed_Admin::sortable_list( $post_type . '_list', $tax );
+						echo '</div></div></div>';
 					}
 				}
 				?>
@@ -207,26 +205,13 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			</form>
 		</div>
 		<script type="text/javascript">
-		function setSortable(grp) {
-			jQuery( "#"+grp+"_list" ).sortable({
-				placeholder : "ui-sortable-placeholder",
-				update : function(event, ui) {
-					set_array = new Array();
-					var set = document.getElementById(grp+"_list").getElementsByClassName("sort-li");
-					for (const elt of set)  {
-						set_array.push(elt.innerText);
-					};
-					document.getElementById( grp+"_arr" ).value = JSON.stringify(set_array);
-					document.getElementById("<?php echo esc_html( self::ORDER_SLUG ); ?>").disabled = false;
-				}
-			});
-		}
-
-		document.addEventListener('DOMContentLoaded', function(evt) {	
+		document.addEventListener('DOMContentLoaded', function(evt) {
 			str_admin_init();
 			<?php
 			foreach ( $displ_ordering as $post_type => $tax ) {
-				echo 'setSortable("' . esc_html( $post_type ) . '");';
+				if ( count( $tax ) > 1 ) {
+					echo 'staxo_sortable( "' . esc_js( $post_type ) . '_list", "' . esc_js( $post_type ) . '_arr", "' . esc_js( self::ORDER_SLUG ) . '" );';
+				}
 			}
 			?>
 		});
@@ -316,11 +301,11 @@ class SimpleTaxonomyRefreshed_Admin_Order {
 			__( 'Overview', 'simple-taxonomy-refreshed' ) =>
 				'<p>' . __( 'This tool allows you to set the order of taxonomies displayed within post admin list pages.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'You will presented with a list of all publicly available taxonomies, not just those defined by this plugin.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'Drag the taxonomy names into the desired order for each post type.', 'simple-taxonomy-refreshed' ) . '</p><p>',
+				__( 'Drag the taxonomy names, or use their Move up and Move down buttons, to put them in the desired order for each post type.', 'simple-taxonomy-refreshed' ) . '</p><p>',
 			__( 'List Ordering', 'simple-taxonomy-refreshed' ) =>
 				'<p>' . __( 'When there are multiple taxonomies for a given post type, they are displayed in the order that they were defined.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'You may want them to be displayed in a different order.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
-				__( 'Simply drag the taxonomies into the required order and save them.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
+				__( 'Simply drag the taxonomies (or use the Move up and Move down buttons) into the required order and save them.', 'simple-taxonomy-refreshed' ) . '</p><p>' .
 				__( 'Note that the placing of the taxonomy columns relative to any other columns displayed cannot be changed.', 'simple-taxonomy-refreshed' ) . '</p>',
 		);
 
